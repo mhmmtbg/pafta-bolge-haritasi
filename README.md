@@ -16,6 +16,7 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 - **Pafta öğeleri:** Dereceli çerçeve ve koordinat kılavuzu, km ve deniz milli çift ölçek çubuğu, lejant, **bulduru haritası** ve başlık, ölçek, projeksiyon, datum, tarih ve kuzey okunu taşıyan **pafta künyesi**.
 - **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür. Bu ölçekte kıyı da ayrıntılı (1:10 milyon) veriye geçer.
 - **Zemin:** Harita ya da **uydu görüntüsü** (NASA Blue Marble, dosyaya gömülü). Dünya geneli **FIR sınırları ve adları**, ülke sınırları, şehirler.
+- **Haritadan seç:** Her koordinat listesinin yanında, renk seçicideki damlalık gibi bir konum seçici; haritaya tıklanan yerin koordinatı listeye eklenir.
 - **Proje dosyası (`.pafta`):** Tüm girdiler, renkler, ölçümler ve harita görünümü tek dosyada saklanır; haritaya sürükleyip bırakarak da açılır.
 - **Çıktı:** PNG (ekran, 2× ve 3× çözünürlük), KML (Google Earth), GeoJSON, CSV.
 

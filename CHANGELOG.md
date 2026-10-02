@@ -1,5 +1,9 @@
 # Değişiklik Günlüğü
 
+## v1.2.0 — 2026-10-03
+
+- **Haritadan seç:** Alanlar, Daireler, Noktalar ve kendi Mavi Vatan koordinatlarınızın listesinin yanında, renk seçicideki damlalık gibi çalışan bir konum seçici. Düğmeye basıp haritaya tıklayınca o yerin koordinatı (DMS) listeye eklenir ve çizim anında güncellenir. İmleç noktalara, alan köşelerine ve daire merkezlerine yapışır; `Esc` ya da "Bitti" ile biter. Alanlarda listeye boş satır eklemek yeni bir alan başlatır.
+
 ## v1.1.0 — 2026-10-03
 
 - **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür (OpenStreetMap, geoBoundaries üzerinden). İl sınırları ilçe sınırlarından türetildiği için birebir çakışır; merkez ilçe adları resmî biçimdedir ("Çanakkale Merkez"). Görünüm → "İl ve ilçe sınırları, adları" ile kapatılabilir.

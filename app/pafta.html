@@ -55,6 +55,21 @@
   .group{padding:4px 22px 18px}
   .group + .group{border-top:1px solid var(--line);padding-top:16px}
   .group h3{margin:0 0 10px;font-size:13.5px;font-weight:600;color:#c9d6db}
+  .group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
+  .group-head h3{margin:0}
+  .group-head[hidden]{display:none}
+  button.pick{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 9px 4px 7px;border-radius:6px;cursor:pointer;
+              border:1px solid var(--line);background:transparent;color:var(--dim)}
+  button.pick svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+  button.pick:hover{color:#fff;border-color:#35505c}
+  button.pick[aria-pressed="true"]{color:var(--ink);background:var(--amber);border-color:var(--amber);font-weight:600}
+  .pick-banner{position:absolute;top:66px;left:50%;transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:12px;
+               background:rgba(14,26,33,.92);color:#e8f0f3;border-radius:10px;padding:8px 8px 8px 14px;font-size:13px;
+               box-shadow:0 6px 24px rgba(10,20,26,.3);white-space:nowrap}
+  .pick-banner.on{display:flex}
+  .pick-banner::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(242,169,59,.2)}
+  .pick-banner small{color:#8fa6ae;font-size:12px}
+  .pick-banner button{border:0;border-radius:6px;background:var(--amber);color:var(--ink);font-weight:600;font-size:12.5px;padding:5px 11px;cursor:pointer}
 
   textarea{width:100%;height:180px;resize:vertical;font-family:var(--mono);font-size:12.5px;line-height:1.6;
            color:#eaf2f5;background:#08131a;border:1px solid var(--line);border-radius:6px;padding:10px 11px;
@@ -304,7 +319,7 @@
         <p>Köşe koordinatlarından kapalı bölgeler çizer; her bölgenin alanını ve çevresini hesaplar.</p>
       </header>
       <div class="group">
-        <h3>Koordinat listesi</h3>
+        <div class="group-head"><h3>Koordinat listesi</h3><button class="pick" data-hedef="input" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></div>
         <textarea id="input" spellcheck="false" placeholder="Bölge&#9;Nokta&#9;Enlem&#9;Boylam&#10;A bölgesi&#9;1&#9;41°30'00&quot;K&#9;30°15'00&quot;D&#10;&#9;2&#9;41°45'30&quot;K&#9;31°20'00&quot;D"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-draw">Bölgeleri çiz</button>
@@ -326,7 +341,7 @@
         <p>Bir veya birkaç merkezden, verilen yarıçaplarda gerçek sabit‑uzaklık halkaları çizer.</p>
       </header>
       <div class="group">
-        <h3>Merkezler</h3>
+        <div class="group-head"><h3>Merkezler</h3><button class="pick" data-hedef="c-center" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></div>
         <textarea id="c-center" class="short" spellcheck="false" placeholder="Merkez adı&#9;39°57'0&quot;K&#9;32°52'0&quot;D&#10;İkinci merkez&#9;41°1'0&quot;K&#9;28°58'0&quot;D"></textarea>
         <div class="grid2">
           <label class="fld">Yarıçaplar
@@ -386,6 +401,7 @@
             </select>
           </label>
           <p class="hint" id="r-mv-hint"></p>
+          <div class="group-head" id="r-mv-pick" hidden><h3 style="font-weight:500;color:var(--dim)">Köşe koordinatları</h3><button class="pick" data-hedef="r-mv-text" title="Haritaya tıklayarak köşe ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></div>
           <textarea id="r-mv-text" class="short" spellcheck="false" hidden placeholder="1&#9;36°0'0&quot;K&#9;28°0'0&quot;D&#10;2&#9;34°30'0&quot;K&#9;26°30'0&quot;D"></textarea>
         </div>
         <div class="row">
@@ -405,7 +421,7 @@
         <p>İsimli konumları işaretler; isimler noktanın üstünde yazar.</p>
       </header>
       <div class="group">
-        <h3>Nokta listesi</h3>
+        <div class="group-head"><h3>Nokta listesi</h3><button class="pick" data-hedef="p-input" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></div>
         <textarea id="p-input" spellcheck="false" placeholder="İsim&#9;Enlem&#9;Boylam&#10;Ankara&#9;39°55'0&quot;K&#9;32°51'0&quot;D&#10;Sinop&#9;42.0231&#9;35.1531"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-points">Noktaları işaretle</button>
@@ -622,6 +638,7 @@
       <button id="btn-out" title="Uzaklaş" aria-label="Uzaklaş"><svg viewBox="0 0 16 16"><path d="M3 8h10"/></svg></button>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="pick-banner" id="pick-banner" role="status"><span id="pick-text"></span><small>Esc ile bitir</small><button id="pick-done">Bitti</button></div>
     <div class="drop-hint"><span id="drop-text">Bırakın: .pafta projesi ya da koordinat listesi</span></div>
     <div class="hud readout" id="readout"><b>Enlem</b><span>—</span><b>Boylam</b><span>—</span></div>
   </main>
@@ -650,7 +667,7 @@
         <dt><kbd>Ctrl</kbd> <kbd>U</kbd></dt><dd>Uydu görüntüsünü aç/kapat</dd>
         <dt><kbd>Ctrl</kbd> <kbd>+</kbd> <kbd>−</kbd></dt><dd>Yakınlaş, uzaklaş</dd>
         <dt>Tekerlek, sürükle</dt><dd>Yakınlaş, haritayı kaydır</dd>
-        <dt><kbd>Esc</kbd></dt><dd>Ölçümde yeni hat başlat</dd>
+        <dt><kbd>Esc</kbd></dt><dd>Ölçümde yeni hat başlat; haritadan seçimi bitir</dd>
         <dt><kbd>Geri</kbd></dt><dd>Ölçümde son noktayı sil</dd>
         <dt><kbd>F1</kbd></dt><dd>Bu pencere</dd>
       </dl>
@@ -2231,6 +2248,7 @@ function draw(){
   if (opt("opt-title")) drawTitleBlock();
   else if (SAT) drawSatCredit();
   if (showLoc) drawLocator();
+  drawPick();
 }
 
 /* ============ sığdırma ============ */
@@ -2297,7 +2315,7 @@ cv.addEventListener("mousemove", e => {
   }
   const la = latAt(e.offsetY), lo = lonAt(e.offsetX);
   if (Math.abs(la) <= 90) $("readout").innerHTML = "<b>Enlem</b><span>" + dms(la, true) + "</span><b>Boylam</b><span>" + dms(lo, false) + "</span>";
-  if (MEASURE_ACTIVE){
+  if (MEASURE_ACTIVE || PICK){
     const sn = snapAt(e.offsetX, e.offsetY);
     HOVER = sn ? {x: sx(sn.lon), y: sy(sn.lat), lat: sn.lat, lon: sn.lon, name: sn.name}
                : {x: e.offsetX, y: e.offsetY, lat: la, lon: lo, name: null};
@@ -2306,6 +2324,7 @@ cv.addEventListener("mousemove", e => {
 });
 cv.addEventListener("mouseleave", () => { if (HOVER){ HOVER = null; scheduleDraw(); } });
 cv.addEventListener("click", e => {
+  if (PICK && !moved){ pickTikla(e); return; }
   if (!MEASURE_ACTIVE || moved) return;
   const sn = snapAt(e.offsetX, e.offsetY);
   const lat = sn ? sn.lat : latAt(e.offsetY), lon = sn ? sn.lon : lonAt(e.offsetX);
@@ -2343,6 +2362,7 @@ document.querySelectorAll(".tab[data-pane]").forEach(t => t.onclick = () => {
   document.querySelectorAll(".pane").forEach(x => x.classList.remove("active"));
   t.classList.add("active");
   $(t.dataset.pane).classList.add("active");
+  pickBitir();
   MEASURE_ACTIVE = t.dataset.pane === "pane-measure";
   cv.classList.toggle("measure", MEASURE_ACTIVE);
   if (!MEASURE_ACTIVE) HOVER = null;
@@ -2478,6 +2498,7 @@ $("r-mv").onchange = e => { $("r-mv-box").hidden = !e.target.checked; };
 $("r-mv-src").onchange = e => {
   const own = e.target.value === "own";
   $("r-mv-text").hidden = !own;
+  $("r-mv-pick").hidden = !own;
   $("r-mv-hint").textContent = own ? MV_HINT_OWN : MV_HINT_BUILTIN;
 };
 function ringList(){
@@ -2763,7 +2784,7 @@ window.addEventListener("resize", resize);
 resize();
 fitWorld(true);
 /* ============ uygulama: proje dosyası, masaüstü köprüsü, kısayollar ============ */
-const APP_VER = "1.1.0";
+const APP_VER = "1.2.0";
 const MASAUSTU = window.masaustu || null;          // exe sürümünde shim.js sağlar
 document.body.classList.toggle("desktop", !!MASAUSTU);
 $("ver-line").textContent = "Sürüm " + APP_VER + (MASAUSTU ? ", masaüstü" : ", tarayıcı");
@@ -2820,7 +2841,7 @@ PANEL.addEventListener("input", e => { if (e.target.id !== "proj-file") degisti(
 PANEL.addEventListener("change", e => { if (e.target.id !== "proj-file") degisti(); });
 PANEL.addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (!b || !b.isConnected || b.closest("#pane-export") || b.id === "btn-file") return;
+  if (!b || !b.isConnected || b.closest("#pane-export") || b.id === "btn-file" || b.classList.contains("pick")) return;
   degisti();
 });
 
@@ -2851,6 +2872,7 @@ function projeTopla(){
 }
 
 function katmanlariTemizle(){
+  pickBitir();
   ZONES = []; CIRCLES = []; RINGS = []; RING_SRC = null; RING_REF = null; POINTS = [];
   MEASURE = [{color: M_COLORS[0], pts: []}];
   renderZoneList(); circleList(); ringList(); pointList(); measureList();
@@ -3143,6 +3165,103 @@ if (MASAUSTU){
     else MASAUSTU.kurtarmaSil();
   })();
 }
+
+/* ============ haritadan konum seçici ============ */
+/* Renk seçicideki damlalık gibi: düğmeye basılır, haritaya tıklanan her yerin koordinatı ilgili listeye eklenir.
+   Tıklama noktalara, alan köşelerine ve daire merkezlerine 10 piksel içinde yapışır. Esc ya da "Bitti" ile biter. */
+var PICK = null;                          // {hedef, btn}; var: draw() uygulama kodundan önce de çağrılır
+const PICK_HEDEF = {
+  "input": {
+    ad: "alan köşesi",
+    satir(ta, enlem, boylam){
+      const metin = ta.value;
+      if (!metin.trim()) return "Yeni alan\t1\t" + enlem + "\t" + boylam;
+      if (/\n\s*\n\s*$/.test(metin)) return "\t1\t" + enlem + "\t" + boylam;           // boş satır: yeni alan
+      const z = parseText(metin).zones, son = z[z.length - 1];
+      return "\t" + ((son ? son.points.length : 0) + 1) + "\t" + enlem + "\t" + boylam;
+    },
+    ciz: () => build(),
+    ipucu: "Boş satır yeni alan başlatır."
+  },
+  "c-center": {
+    ad: "daire merkezi",
+    satir(ta, enlem, boylam){ return "Merkez " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    ciz: () => buildCircles()
+  },
+  "p-input": {
+    ad: "nokta",
+    satir(ta, enlem, boylam){ return "Nokta " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    ciz: () => buildPoints()
+  },
+  "r-mv-text": {
+    ad: "Mavi Vatan köşesi",
+    satir(ta, enlem, boylam){ return (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    ciz: null                                                                          // eğriler "Eğrileri çiz" ile
+  }
+};
+
+function pickBaslat(btn){
+  const hedef = btn.dataset.hedef;
+  if (PICK && PICK.hedef === hedef){ pickBitir(); return; }
+  pickBitir();
+  PICK = {hedef, btn};
+  btn.setAttribute("aria-pressed", "true");
+  const h = PICK_HEDEF[hedef];
+  $("pick-text").textContent = "Tıklanan yer " + h.ad + " olarak eklenir." + (h.ipucu ? " " + h.ipucu : "");
+  $("pick-banner").classList.add("on");
+  cv.classList.add("measure");
+  hideEmpty();
+}
+function pickBitir(){
+  if (!PICK) return;
+  PICK.btn.setAttribute("aria-pressed", "false");
+  PICK = null;
+  $("pick-banner").classList.remove("on");
+  cv.classList.toggle("measure", MEASURE_ACTIVE);
+  if (!MEASURE_ACTIVE) HOVER = null;
+  draw();
+}
+function pickTikla(e){
+  const sn = snapAt(e.offsetX, e.offsetY);
+  const lat = sn ? sn.lat : latAt(e.offsetY), lon = sn ? sn.lon : lonAt(e.offsetX);
+  if (Math.abs(lat) > 85) return;
+  const h = PICK_HEDEF[PICK.hedef], ta = $(PICK.hedef);
+  const satir = h.satir(ta, dms(lat, true), dms(lon, false));
+  ta.value = ta.value.replace(/[ \t]+$/, "") + (ta.value && !ta.value.endsWith("\n") ? "\n" : "") + satir;
+  ta.scrollTop = ta.scrollHeight;
+  ta.dispatchEvent(new Event("input", {bubbles: true}));               // proje kirlenir
+  if (h.ciz){ SUPPRESS_FIT = true; try { h.ciz(); } finally { SUPPRESS_FIT = false; } }
+  draw();
+  toast(dms(lat, true) + "  " + dms(lon, false) + (sn && sn.name ? "  (" + sn.name + ")" : "") + " eklendi");
+}
+function drawPick(){
+  if (!PICK || !HOVER) return;
+  const X = HOVER.x, Y = HOVER.y;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(14,26,33,.55)"; ctx.lineWidth = 3.4;
+  const artı = () => { ctx.beginPath(); ctx.arc(X, Y, 8, 0, 6.284);
+    ctx.moveTo(X - 15, Y); ctx.lineTo(X - 5, Y); ctx.moveTo(X + 5, Y); ctx.lineTo(X + 15, Y);
+    ctx.moveTo(X, Y - 15); ctx.lineTo(X, Y - 5); ctx.moveTo(X, Y + 5); ctx.lineTo(X, Y + 15); ctx.stroke(); };
+  artı();
+  ctx.strokeStyle = "#f2a93b"; ctx.lineWidth = 1.7; artı();
+  const t = dms(HOVER.lat, true) + "  " + dms(HOVER.lon, false) + (HOVER.name ? "  ·  " + HOVER.name : "");
+  ctx.font = "600 12px " + FONT();
+  const w = ctx.measureText(t).width + 14;
+  let bx = X + 18, by = Y + 14;
+  if (bx + w > W - 16) bx = X - 18 - w;
+  if (by + 22 > H - 16) by = Y - 36;
+  ctx.fillStyle = "rgba(14,26,33,.9)"; ctx.fillRect(bx, by, w, 22);
+  ctx.fillStyle = "#fff"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText(t, bx + 7, by + 11.5);
+  ctx.restore();
+}
+document.querySelectorAll("button.pick").forEach(b => b.onclick = () => pickBaslat(b));
+$("pick-done").onclick = pickBitir;
+document.addEventListener("keydown", e => {
+  if (PICK && e.key === "Escape" && $("ask").hidden && $("modal").hidden){ e.preventDefault(); e.stopPropagation(); pickBitir(); }
+}, true);
+
 baslikYaz();
 
 /* ---- açılış ekranı: ilk çizimden sonra, en az kısa bir an görünür kalıp çekilir ---- */

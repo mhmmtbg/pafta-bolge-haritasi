@@ -56,7 +56,7 @@ PANEL.addEventListener("input", e => { if (e.target.id !== "proj-file") degisti(
 PANEL.addEventListener("change", e => { if (e.target.id !== "proj-file") degisti(); });
 PANEL.addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (!b || !b.isConnected || b.closest("#pane-export") || b.id === "btn-file") return;
+  if (!b || !b.isConnected || b.closest("#pane-export") || b.id === "btn-file" || b.classList.contains("pick")) return;
   degisti();
 });
 
@@ -87,6 +87,7 @@ function projeTopla(){
 }
 
 function katmanlariTemizle(){
+  pickBitir();
   ZONES = []; CIRCLES = []; RINGS = []; RING_SRC = null; RING_REF = null; POINTS = [];
   MEASURE = [{color: M_COLORS[0], pts: []}];
   renderZoneList(); circleList(); ringList(); pointList(); measureList();
@@ -379,6 +380,103 @@ if (MASAUSTU){
     else MASAUSTU.kurtarmaSil();
   })();
 }
+
+/* ============ haritadan konum seçici ============ */
+/* Renk seçicideki damlalık gibi: düğmeye basılır, haritaya tıklanan her yerin koordinatı ilgili listeye eklenir.
+   Tıklama noktalara, alan köşelerine ve daire merkezlerine 10 piksel içinde yapışır. Esc ya da "Bitti" ile biter. */
+var PICK = null;                          // {hedef, btn}; var: draw() uygulama kodundan önce de çağrılır
+const PICK_HEDEF = {
+  "input": {
+    ad: "alan köşesi",
+    satir(ta, enlem, boylam){
+      const metin = ta.value;
+      if (!metin.trim()) return "Yeni alan\t1\t" + enlem + "\t" + boylam;
+      if (/\n\s*\n\s*$/.test(metin)) return "\t1\t" + enlem + "\t" + boylam;           // boş satır: yeni alan
+      const z = parseText(metin).zones, son = z[z.length - 1];
+      return "\t" + ((son ? son.points.length : 0) + 1) + "\t" + enlem + "\t" + boylam;
+    },
+    ciz: () => build(),
+    ipucu: "Boş satır yeni alan başlatır."
+  },
+  "c-center": {
+    ad: "daire merkezi",
+    satir(ta, enlem, boylam){ return "Merkez " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    ciz: () => buildCircles()
+  },
+  "p-input": {
+    ad: "nokta",
+    satir(ta, enlem, boylam){ return "Nokta " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    ciz: () => buildPoints()
+  },
+  "r-mv-text": {
+    ad: "Mavi Vatan köşesi",
+    satir(ta, enlem, boylam){ return (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    ciz: null                                                                          // eğriler "Eğrileri çiz" ile
+  }
+};
+
+function pickBaslat(btn){
+  const hedef = btn.dataset.hedef;
+  if (PICK && PICK.hedef === hedef){ pickBitir(); return; }
+  pickBitir();
+  PICK = {hedef, btn};
+  btn.setAttribute("aria-pressed", "true");
+  const h = PICK_HEDEF[hedef];
+  $("pick-text").textContent = "Tıklanan yer " + h.ad + " olarak eklenir." + (h.ipucu ? " " + h.ipucu : "");
+  $("pick-banner").classList.add("on");
+  cv.classList.add("measure");
+  hideEmpty();
+}
+function pickBitir(){
+  if (!PICK) return;
+  PICK.btn.setAttribute("aria-pressed", "false");
+  PICK = null;
+  $("pick-banner").classList.remove("on");
+  cv.classList.toggle("measure", MEASURE_ACTIVE);
+  if (!MEASURE_ACTIVE) HOVER = null;
+  draw();
+}
+function pickTikla(e){
+  const sn = snapAt(e.offsetX, e.offsetY);
+  const lat = sn ? sn.lat : latAt(e.offsetY), lon = sn ? sn.lon : lonAt(e.offsetX);
+  if (Math.abs(lat) > 85) return;
+  const h = PICK_HEDEF[PICK.hedef], ta = $(PICK.hedef);
+  const satir = h.satir(ta, dms(lat, true), dms(lon, false));
+  ta.value = ta.value.replace(/[ \t]+$/, "") + (ta.value && !ta.value.endsWith("\n") ? "\n" : "") + satir;
+  ta.scrollTop = ta.scrollHeight;
+  ta.dispatchEvent(new Event("input", {bubbles: true}));               // proje kirlenir
+  if (h.ciz){ SUPPRESS_FIT = true; try { h.ciz(); } finally { SUPPRESS_FIT = false; } }
+  draw();
+  toast(dms(lat, true) + "  " + dms(lon, false) + (sn && sn.name ? "  (" + sn.name + ")" : "") + " eklendi");
+}
+function drawPick(){
+  if (!PICK || !HOVER) return;
+  const X = HOVER.x, Y = HOVER.y;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "rgba(14,26,33,.55)"; ctx.lineWidth = 3.4;
+  const artı = () => { ctx.beginPath(); ctx.arc(X, Y, 8, 0, 6.284);
+    ctx.moveTo(X - 15, Y); ctx.lineTo(X - 5, Y); ctx.moveTo(X + 5, Y); ctx.lineTo(X + 15, Y);
+    ctx.moveTo(X, Y - 15); ctx.lineTo(X, Y - 5); ctx.moveTo(X, Y + 5); ctx.lineTo(X, Y + 15); ctx.stroke(); };
+  artı();
+  ctx.strokeStyle = "#f2a93b"; ctx.lineWidth = 1.7; artı();
+  const t = dms(HOVER.lat, true) + "  " + dms(HOVER.lon, false) + (HOVER.name ? "  ·  " + HOVER.name : "");
+  ctx.font = "600 12px " + FONT();
+  const w = ctx.measureText(t).width + 14;
+  let bx = X + 18, by = Y + 14;
+  if (bx + w > W - 16) bx = X - 18 - w;
+  if (by + 22 > H - 16) by = Y - 36;
+  ctx.fillStyle = "rgba(14,26,33,.9)"; ctx.fillRect(bx, by, w, 22);
+  ctx.fillStyle = "#fff"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText(t, bx + 7, by + 11.5);
+  ctx.restore();
+}
+document.querySelectorAll("button.pick").forEach(b => b.onclick = () => pickBaslat(b));
+$("pick-done").onclick = pickBitir;
+document.addEventListener("keydown", e => {
+  if (PICK && e.key === "Escape" && $("ask").hidden && $("modal").hidden){ e.preventDefault(); e.stopPropagation(); pickBitir(); }
+}, true);
+
 baslikYaz();
 
 /* ---- açılış ekranı: ilk çizimden sonra, en az kısa bir an görünür kalıp çekilir ---- */

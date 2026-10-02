@@ -15,6 +15,17 @@ Bütün araçlar aynı ayrıştırıcıyı kullanır. Tablolar Excel veya Word'd
 - Sırası ters yazılmış çiftler (önce boylam) yön harflerinden anlaşılır.
 - Okunamayan satırlar listenin altında satır numarasıyla gösterilir.
 
+## Haritadan seç
+
+Alanlar, Daireler ve Noktalar listelerinin başlığında (ve Mavi Vatan için kendi koordinatlarınız seçildiğinde) **Haritadan seç** düğmesi vardır. Renk seçicideki damlalık gibi çalışır:
+
+1. Düğmeye basın; düğme turuncu olur, imleç artıya döner ve imlecin koordinatı yanında görünür.
+2. Haritaya her tıklama, o yerin koordinatını listeye yeni bir satır olarak ekler ve çizim hemen güncellenir. Haritayı sürüklemek nokta eklemez.
+3. İmleç 10 piksel içindeki noktalara, alan köşelerine ve daire merkezlerine yapışır; adı yanında yazar.
+4. `Esc`, **Bitti** ya da düğmeye yeniden basmak seçimi bitirir.
+
+Alanlarda her tıklama son alana yeni bir köşe ekler; listeye boş bir satır eklerseniz sonraki tıklamalar yeni bir alan başlatır. Noktalar "Nokta 1, Nokta 2…", daire merkezleri "Merkez 1…" diye adlandırılır; adları listede değiştirebilirsiniz.
+
 ## Araçlar
 
 Sol şeritteki araçlar birbirinden bağımsız katmanlar üretir; hepsi aynı anda haritada durabilir. Katmanlar **Görünüm** bölümünden tek tek gizlenir.
@@ -120,5 +131,5 @@ Dosya adları künye başlığından türetilir (`Karadeniz Test Bölgeleri` →
 | `Ctrl+U` | Uydu görüntüsü |
 | `Ctrl++` / `Ctrl+−` | Yakınlaş / uzaklaş |
 | Tekerlek, sürükleme | Yakınlaş, kaydır |
-| `Esc` / `Geri` | Ölçümde yeni hat / son noktayı sil |
+| `Esc` / `Geri` | Ölçümde yeni hat / son noktayı sil; haritadan seçimi bitir |
 | `F1` | Kısayollar ve veri kaynakları |
