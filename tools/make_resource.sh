@@ -29,7 +29,7 @@ BEGIN
       VALUE "FileDescription", "PAFTA — koordinatlardan ölçekli harita"
       VALUE "FileVersion", "$SURUM"
       VALUE "InternalName", "PAFTA"
-      VALUE "LegalCopyright", "Harita verileri: Natural Earth, VATSpy (CC BY-SA 4.0), NASA"
+      VALUE "LegalCopyright", "Harita verileri: Natural Earth, © OpenStreetMap katkıcıları (ODbL), VATSpy (CC BY-SA 4.0), NASA"
       VALUE "OriginalFilename", "PAFTA.exe"
       VALUE "ProductName", "PAFTA"
       VALUE "ProductVersion", "$SURUM"

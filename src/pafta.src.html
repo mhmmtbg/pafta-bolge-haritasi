@@ -514,6 +514,7 @@
         <label class="check">Koordinat kılavuzu ve çerçeve <input type="checkbox" class="toggle" id="opt-grid" checked></label>
         <label class="check">FIR sınırları ve adları <input type="checkbox" class="toggle" id="opt-fir" checked></label>
         <label class="check">Ülke sınırları <input type="checkbox" class="toggle" id="opt-borders" checked></label>
+        <label class="check">İl ve ilçe sınırları, adları <input type="checkbox" class="toggle" id="opt-adm" checked></label>
         <label class="check">Şehirler <input type="checkbox" class="toggle" id="opt-cities" checked></label>
         <label class="check">Alan köşe numaraları <input type="checkbox" class="toggle" id="opt-nums" checked></label>
         <label class="check">Alanların içini doldur <input type="checkbox" class="toggle" id="opt-fill" checked></label>
@@ -666,6 +667,7 @@
       <ul class="src">
         <li><b>Natural Earth</b>, kıyı, sınır, göl ve şehirler. Kamu malı.</li>
         <li><b>VATSpy Data Project</b>, FIR sınırları ve adları (VATSIM). CC BY-SA 4.0; sadeleştirilmiş türev.</li>
+        <li><b>OpenStreetMap</b> (geoBoundaries üzerinden), Türkiye il ve ilçe sınırları ve adları. © OpenStreetMap katkıcıları, ODbL 1.0.</li>
         <li><b>NASA Blue Marble Next Generation</b>, uydu görüntüsü. Kamu malı.</li>
         <li><b>Mavi Vatan</b>, medyan hat kuralıyla geometrik yeniden kurulum; resmî koordinat değildir.</li>
       </ul>
@@ -680,6 +682,8 @@ const WORLD = /*__WORLD__*/null;
 const FIR = /*__FIR__*/null;
 const TR = /*__TR__*/null;
 const MAVI_VATAN = /*__MV__*/null;
+const TR_ADM = /*__ADM__*/null;
+const KARA10 = /*__KD__*/null;      // Türkiye ve çevresi için 1:10m kara ve göller (yaklaşınca)     // il ve ilçe sınırları, etiket noktaları (OpenStreetMap / geoBoundaries)
 const SAT_SRC = "/*__SAT__*/";      // NASA Blue Marble NG, eşdikdörtgen, 5400×2700
 
 /* ============ yardımcılar ============ */
@@ -1024,11 +1028,21 @@ function tracePaths(list, bbs, closed){
   }
 }
 
+/* Bölge ölçeğinde (görünüm 1:10m kutusunun içindeyse) ayrıntılı kıyı; aksi halde 1:50m taban harita */
+const KD_LAND_BB = KARA10.land.map(bbOf), KD_LAKE_BB = KARA10.lakes.map(bbOf);
+function kiyi(){
+  const b = viewBounds(), k = KARA10.kutu;
+  const ic = b.lonMin >= k[0] && b.lonMax <= k[2] && b.latMin >= k[1] && b.latMax <= k[3];
+  return ic && metersPerPixel() < 2200
+    ? {land: KARA10.land, lbb: KD_LAND_BB, lakes: KARA10.lakes, gbb: KD_LAKE_BB}
+    : {land: WORLD.land, lbb: LAND_BB, lakes: WORLD.lakes, gbb: LAKE_BB};
+}
 function drawBase(){
+  const K = kiyi();
   if (SAT){
     ctx.fillStyle = "#0b1a2a"; ctx.fillRect(0,0,W,H);
     drawSatellite();
-    ctx.beginPath(); tracePaths(WORLD.land, LAND_BB, true);
+    ctx.beginPath(); tracePaths(K.land, K.lbb, true);
     ctx.strokeStyle = "rgba(255,255,255,.3)"; ctx.lineWidth = .8; ctx.stroke();
     if (opt("opt-borders")){
       ctx.save();
@@ -1040,10 +1054,10 @@ function drawBase(){
     return;
   }
   ctx.fillStyle = "#e6eff2"; ctx.fillRect(0,0,W,H);
-  ctx.beginPath(); tracePaths(WORLD.land, LAND_BB, true);
+  ctx.beginPath(); tracePaths(K.land, K.lbb, true);
   ctx.fillStyle = "#f4ecda"; ctx.fill("evenodd");
   ctx.strokeStyle = "#a49c88"; ctx.lineWidth = 1; ctx.stroke();
-  ctx.beginPath(); tracePaths(WORLD.lakes, LAKE_BB, true);
+  ctx.beginPath(); tracePaths(K.lakes, K.gbb, true);
   ctx.fillStyle = "#dcebf1"; ctx.fill("evenodd");
   ctx.strokeStyle = "#a8bcc4"; ctx.lineWidth = .8; ctx.stroke();
   if (opt("opt-borders")){
@@ -1080,7 +1094,8 @@ function firContains(f, lon, lat){
   }
   return inside;
 }
-function drawFIR(){
+/* part: "lines" yalnız çizgiler, "labels" yalnız adlar; adlar kullanıcı katmanlarından ve il/ilçe adlarından sonra yer bulur */
+function drawFIR(part){
   const b = viewBounds();
   ctx.save();
   ctx.beginPath();
@@ -1097,10 +1112,13 @@ function drawFIR(){
       ctx.closePath();
     });
   });
-  ctx.strokeStyle = SAT ? "rgba(0,0,0,.4)" : "rgba(105,140,200,.22)"; ctx.lineWidth = SAT ? 3.2 : 5; ctx.stroke();
-  ctx.setLineDash([9,3,2,3]);
-  ctx.strokeStyle = SAT ? "rgba(150,210,255,.95)" : "rgba(58,86,140,.62)"; ctx.lineWidth = 1.3; ctx.stroke();
-  ctx.setLineDash([]);
+  if (part !== "labels"){
+    ctx.strokeStyle = SAT ? "rgba(0,0,0,.4)" : "rgba(105,140,200,.22)"; ctx.lineWidth = SAT ? 3.2 : 5; ctx.stroke();
+    ctx.setLineDash([9,3,2,3]);
+    ctx.strokeStyle = SAT ? "rgba(150,210,255,.95)" : "rgba(58,86,140,.62)"; ctx.lineWidth = 1.3; ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (part === "lines"){ ctx.restore(); return; }
 
   ctx.font = "600 11.5px " + FONT();
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -2105,6 +2123,80 @@ function drawLocator(){
   ctx.restore();
 }
 
+
+/* ============ il ve ilçe sınırları ============ */
+/* Türkiye'ye yaklaştıkça önce il sınırları ve adları, daha yakında ilçe sınırları ve adları görünür. */
+const ADM_IL_BB = TR_ADM.ilSinir.map(bbOf), ADM_ILCE_BB = TR_ADM.ilceSinir.map(bbOf);
+const ADM_IL_SIRA = TR_ADM.il.map((_, i) => i).sort((a, b) => TR_ADM.il[b][3] - TR_ADM.il[a][3]);
+const ADM_ILCE_SIRA = TR_ADM.ilce.map((_, i) => i).sort((a, b) => TR_ADM.ilce[b][4] - TR_ADM.ilce[a][4]);
+const TR_KUTU = [25.5, 35.7, 45.0, 42.2];
+const ADM = {IL_CIZGI: 4500, IL_AD: 2700, ILCE_CIZGI: 700, ILCE_AD: 330};   // metre / piksel eşikleri
+
+function admSeviye(){
+  if (!opt("opt-adm")) return 0;
+  const b = viewBounds();
+  if (b.lonMax < TR_KUTU[0] || b.lonMin > TR_KUTU[2] || b.latMax < TR_KUTU[1] || b.latMin > TR_KUTU[3]) return 0;
+  const m = metersPerPixel();
+  return m > ADM.IL_CIZGI ? 0 : m > ADM.ILCE_CIZGI ? 1 : 2;
+}
+
+function drawAdmLines(sev){
+  ctx.save();
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (sev >= 2){
+    ctx.beginPath(); tracePaths(TR_ADM.ilceSinir, ADM_ILCE_BB, false);
+    ctx.strokeStyle = SAT ? "rgba(255,255,255,.5)" : "rgba(112,98,76,.62)";
+    ctx.lineWidth = .9; ctx.stroke();
+  }
+  ctx.beginPath(); tracePaths(TR_ADM.ilSinir, ADM_IL_BB, false);
+  ctx.strokeStyle = SAT ? "rgba(0,0,0,.35)" : "rgba(255,255,255,.6)";
+  ctx.lineWidth = sev >= 2 ? 3.2 : 2.6; ctx.stroke();
+  ctx.setLineDash(sev >= 2 ? [8, 3, 1.5, 3] : [6, 2.5, 1.2, 2.5]);
+  ctx.strokeStyle = SAT ? "rgba(255,238,205,.9)" : "rgba(98,84,64,.82)";
+  ctx.lineWidth = sev >= 2 ? 1.35 : 1.05; ctx.stroke();
+  ctx.restore();
+}
+
+function drawAdmLabels(sev){
+  const m = metersPerPixel();
+  if (m > ADM.IL_AD) return;
+  const icerde = (X, Y) => X > 34 && X < W - 34 && Y > 26 && Y < H - 26;
+  const yaz = (t, X, Y, renk) => {
+    ctx.strokeStyle = SAT ? "rgba(0,0,0,.72)" : "rgba(255,255,255,.88)";
+    ctx.lineWidth = 3.4; ctx.lineJoin = "round";
+    ctx.strokeText(t, X, Y);
+    ctx.fillStyle = renk; ctx.fillText(t, X, Y);
+  };
+  ctx.save();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  // il adları: aralıklı büyük harf, alanı büyük olan önce yer bulur
+  const ilBoy = sev >= 2 ? 13.5 : m > 1800 ? 10.5 : 11.5;
+  ctx.font = "600 " + ilBoy + "px " + FONT();
+  if ("letterSpacing" in ctx) ctx.letterSpacing = (sev >= 2 ? 2.2 : 1.4) + "px";
+  for (const i of ADM_IL_SIRA){
+    const r = TR_ADM.il[i], X = sx(r[1]), Y = sy(r[2]);
+    if (!icerde(X, Y)) continue;
+    const t = r[0].toLocaleUpperCase("tr-TR"), w = ctx.measureText(t).width;
+    if (!claim(X - w/2 - 3, Y - ilBoy/2 - 3, w + 6, ilBoy + 6)) continue;
+    yaz(t, X, Y, SAT ? "#fff6e4" : "#5a4a35");
+  }
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+  // ilçe adları
+  if (sev >= 2 && m <= ADM.ILCE_AD){
+    ctx.font = "11.5px " + FONT();
+    let n = 0;
+    for (const i of ADM_ILCE_SIRA){
+      const r = TR_ADM.ilce[i], X = sx(r[2]), Y = sy(r[3]);
+      if (!icerde(X, Y)) continue;
+      const w = ctx.measureText(r[0]).width;
+      if (!claim(X - w/2 - 2, Y - 8, w + 4, 16)) continue;
+      yaz(r[0], X, Y, SAT ? "#eef2f3" : "#5d5141");
+      if (++n > 300) break;
+    }
+  }
+  ctx.restore();
+}
+
 /* ============ çizim sırası ============ */
 function draw(){
   if (!W || !H) return;
@@ -2115,7 +2207,9 @@ function draw(){
   cv.parentElement.classList.toggle("sat", SAT);
   $("btn-sat").setAttribute("aria-pressed", opt("opt-sat") ? "true" : "false");
   drawBase();
-  if (opt("opt-fir")) drawFIR();
+  const sev = admSeviye();
+  if (sev) drawAdmLines(sev);
+  if (opt("opt-fir")) drawFIR("lines");
   const g = gridLines();
   if (opt("opt-grid")) drawGrid(g);
   if (opt("opt-legend")){ const lr = legendRows(); if (lr.length){ const q = legendRect(lr); LABELS.push([q[0] - 6, q[1] - 6, q[0] + q[2] + 6, q[1] + q[3] + 6]); } }
@@ -2128,6 +2222,8 @@ function draw(){
   if (opt("opt-layer-areas")) drawZones();
   if (opt("opt-layer-points")) drawPointsLayer();
   if (opt("opt-layer-measure")) drawMeasureLayer();
+  if (sev) drawAdmLabels(sev);
+  if (opt("opt-fir")) drawFIR("labels");
   if (opt("opt-cities")) drawCities();
   if (opt("opt-grid")) drawNeatline(g);
   if (opt("opt-legend")) drawLegend();
@@ -2235,7 +2331,7 @@ function toggleSat(){ $("opt-sat").checked = !$("opt-sat").checked; $("opt-sat")
 $("btn-sat").onclick = toggleSat;
 $("opt-sat").addEventListener("change", e => { $("sat-box").hidden = !e.target.checked; draw(); });
 $("opt-sat-alpha").addEventListener("input", draw);
-["opt-grid","opt-nums","opt-fill","opt-cities","opt-borders","opt-fir","opt-legend",
+["opt-grid","opt-nums","opt-fill","opt-cities","opt-borders","opt-adm","opt-fir","opt-legend",
  "opt-layer-areas","opt-layer-circles","opt-layer-rings","opt-layer-points",
  "opt-layer-measure","opt-title","opt-locator","p-shape","p-size","p-coords"].forEach(id => $(id).addEventListener("change", draw));
 ["t-title","t-sub"].forEach(id => $(id).addEventListener("input", draw));

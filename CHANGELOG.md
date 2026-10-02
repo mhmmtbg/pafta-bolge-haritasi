@@ -1,5 +1,11 @@
 # Değişiklik Günlüğü
 
+## v1.1.0 — 2026-10-03
+
+- **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür (OpenStreetMap, geoBoundaries üzerinden). İl sınırları ilçe sınırlarından türetildiği için birebir çakışır; merkez ilçe adları resmî biçimdedir ("Çanakkale Merkez"). Görünüm → "İl ve ilçe sınırları, adları" ile kapatılabilir.
+- **Ayrıntılı kıyı:** Türkiye ve çevresinde yaklaşınca taban harita 1:50m yerine 1:10m kara ve göllere geçer (ör. İstanbul Boğazı ve Haliç, Ege adaları).
+- FIR adları artık kullanıcı katmanlarından ve il/ilçe adlarından sonra yer bulur; yakın ölçekte ilçe adlarını kapatmaz.
+
 ## v1.0.0 — 2026-10-02
 
 İlk yayımlanan sürüm.

@@ -14,6 +14,7 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 - **Noktalar:** İsimli konumlar; beş işaret şekli, tek tek renk.
 - **Ölçüm:** Haritaya tıklayarak noktalar ekleyin; her parçanın mesafesi (km / NM) ve kerterizi hatta yazılır, toplam hat sonunda gösterilir. Mesafeler WGS84 elipsoidi üzerinde Vincenty yöntemiyle hesaplanır.
 - **Pafta öğeleri:** Dereceli çerçeve ve koordinat kılavuzu, km ve deniz milli çift ölçek çubuğu, lejant, **bulduru haritası** ve başlık, ölçek, projeksiyon, datum, tarih ve kuzey okunu taşıyan **pafta künyesi**.
+- **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür. Bu ölçekte kıyı da ayrıntılı (1:10 milyon) veriye geçer.
 - **Zemin:** Harita ya da **uydu görüntüsü** (NASA Blue Marble, dosyaya gömülü). Dünya geneli **FIR sınırları ve adları**, ülke sınırları, şehirler.
 - **Proje dosyası (`.pafta`):** Tüm girdiler, renkler, ölçümler ve harita görünümü tek dosyada saklanır; haritaya sürükleyip bırakarak da açılır.
 - **Çıktı:** PNG (ekran, 2× ve 3× çözünürlük), KML (Google Earth), GeoJSON, CSV.
@@ -24,8 +25,8 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 
 | Sürüm | Dosya | Nasıl çalışır |
 |---|---|---|
-| **Masaüstü (Windows)** | `PAFTA.exe` ([Releases](../../releases) sayfasından, ~11 MB) | Çift tıklayın. Kurulum ve yönetici yetkisi gerekmez. Kendi penceresinde açılır; dosyalar Windows'un aç/kaydet pencereleriyle açılıp kaydedilir. |
-| **Tarayıcı** | [`app/pafta.html`](app/pafta.html) (~4 MB) | Dosyayı indirip Edge veya Chrome ile açın. İnternet gerekmez. |
+| **Masaüstü (Windows)** | `PAFTA.exe` ([Releases](../../releases) sayfasından, ~12 MB) | Çift tıklayın. Kurulum ve yönetici yetkisi gerekmez. Kendi penceresinde açılır; dosyalar Windows'un aç/kaydet pencereleriyle açılıp kaydedilir. |
+| **Tarayıcı** | [`app/pafta.html`](app/pafta.html) (~5 MB) | Dosyayı indirip Edge veya Chrome ile açın. İnternet gerekmez. |
 
 > Exe sürümü ekranı göstermek için Windows'ta yerleşik gelen **Microsoft Edge WebView2** bileşenini kullanır (Windows 10/11'de normalde yüklüdür).
 > Exe dijital imzalı değildir; kurum güvenlik politikası engellerse HTML sürümünü kullanın.
@@ -47,6 +48,10 @@ Kısayolların tamamı uygulamada `F1` ile görünür. Ayrıntılı kullanım: *
 |---|---|
 | ![Sınır mesafesi](docs/images/ekran-mesafe.png) | ![Uydu](docs/images/ekran-uydu.png) |
 
+| İl ve ilçe sınırları (Ankara) |
+|---|
+| ![İl ve ilçe](docs/images/ekran-il-ilce.png) |
+
 | Ölçüm | Proje ve çıktı |
 |---|---|
 | ![Ölçüm](docs/images/ekran-olcum.png) | ![Çıktı](docs/images/ekran-cikti.png) |
@@ -60,7 +65,8 @@ Kısayolların tamamı uygulamada `F1` ile görünür. Ayrıntılı kullanım: *
 - **Mesafe ve kerteriz:** WGS84 elipsoidi, Vincenty ters problemi (standart referans vakasında milimetre doğruluğu).
 - **Daireler ve alan hesabı:** Küre üzerinde (R = 6371,0088 km).
 - **Sınır mesafe eğrileri:** Eş uzaklıklı azimutal projeksiyonda kurulan sayısal mesafe alanından üretilir. Çizim sonrasında çözünürlük yazılır (tipik olarak 1–3 km); sapma 250 km'de ±2 km, 1000 km'de yaklaşık %1 mertebesindedir.
-- **Kıyı ve sınırlar:** Natural Earth 1:50 milyon (taban harita) ve 1:10 milyon (Türkiye). Bölge ölçeğinde doğrudur; birkaç kilometreden yakında kıyı köşeli görünür.
+- **Kıyı ve sınırlar:** Natural Earth 1:50 milyon (taban harita); Türkiye ve çevresinde yaklaşınca 1:10 milyon. Bölge ölçeğinde doğrudur; birkaç kilometreden yakında kıyı köşeli görünür.
+- **İl ve ilçe sınırları:** OpenStreetMap (geoBoundaries, 2021–2023), yaklaşık 250 m'ye sadeleştirilmiş. İl sınırları ilçe sınırlarından türetildiği için ikisi birebir çakışır.
 - **Uydu görüntüsü:** ~7 km/piksel. Bölge ölçeğinde nettir, çok yakınlaşınca yumuşar.
 - **FIR ve Mavi Vatan sınırları bilgi amaçlıdır.** Seyrüsefer ve resmî işlemler için AIP ve resmî kaynaklar esas alınmalıdır.
 
@@ -83,6 +89,7 @@ Ege ve Akdeniz arasındaki fark, iki denizi ayırmak için kullanılan 28,55°D 
 | Veri | Kaynak | Lisans |
 |---|---|---|
 | Kıyı, göller, ülke sınırları, şehirler, Türkiye sınırı | [Natural Earth](https://www.naturalearthdata.com) | Kamu malı |
+| Türkiye il ve ilçe sınırları ve adları | [OpenStreetMap](https://www.openstreetmap.org/copyright), [geoBoundaries](https://www.geoboundaries.org) üzerinden | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) — © OpenStreetMap katkıcıları; `data/tr_idari.json` aynı lisansla paylaşılır |
 | FIR sınırları ve adları | [VATSpy Data Project](https://github.com/vatsimnetwork/vatspy-data-project) (VATSIM) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) — `data/fir.json` sadeleştirilmiş bir türevdir ve aynı lisansla paylaşılır |
 | Uydu görüntüsü | NASA Blue Marble Next Generation | Kamu malı |
 | Mavi Vatan sınırı | Bu projede medyan hat kuralıyla üretildi (`tools/veri/mavi_vatan.py`) | — |

@@ -72,7 +72,8 @@ Her satır: `isim, enlem, boylam`. Satıra `#d62828` gibi bir renk kodu eklenirs
 | Bulduru haritası | Görüntülenen alanı daha geniş bir çevre içinde gösteren küçük harita (künyenin üstünde) |
 | Lejant | Tüm katmanlar, alanlar ve toplamlarla (sol üst) |
 | Koordinat kılavuzu ve çerçeve | Yakınlaşmaya göre sıklaşan kılavuz; dört kenarda dereceli çerçeve ve etiketler |
-| FIR sınırları ve adları, ülke sınırları, şehirler | Taban harita öğeleri |
+| İl ve ilçe sınırları, adları | Türkiye'ye yaklaştıkça: yaklaşık 1:17 milyondan itibaren il sınırları, 1:10 milyondan itibaren il adları, 1:2,6 milyondan itibaren ilçe sınırları, 1:1,2 milyondan itibaren ilçe adları. Adlar sığdığı kadar yazılır; alanı büyük olan önce yer bulur. |
+| FIR sınırları ve adları, ülke sınırları, şehirler | Taban harita öğeleri. Türkiye ve çevresinde yaklaşınca kıyı ayrıntılı veriye geçer. |
 | Alanların içini doldur | Alanlar, daire bantları ve mesafe bantları için |
 
 ## Proje dosyası

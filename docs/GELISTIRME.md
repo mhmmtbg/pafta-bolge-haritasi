@@ -29,6 +29,8 @@ Uygulama saf HTML, CSS ve JavaScript'tir; harita `<canvas>` üzerine çizilir. H
 | `/*__FIR__*/` | `data/fir.json`: FIR sınırları ve adları |
 | `/*__TR__*/` | `data/turkey.json`: Türkiye sınırı (1:10m) |
 | `/*__MV__*/` | `data/mavivatan.json`: Mavi Vatan dış sınırı |
+| `/*__ADM__*/` | `data/tr_idari.json`: il ve ilçe sınırları, adları, etiket noktaları |
+| `/*__KD__*/` | `data/kara_detay.json`: Türkiye ve çevresi için 1:10m kara ve göller |
 | `/*__SAT__*/` | `data/bluemarble.jpg`, base64 |
 | `/*__APP__*/` | `src/app.js` (`/*__VER__*/` → `VERSION`) |
 
@@ -38,7 +40,8 @@ Uygulama saf HTML, CSS ve JavaScript'tir; harita `<canvas>` üzerine çizilir. H
 |---|---|
 | koordinat ayrıştırma | DMS, boşluklu DMS ve ondalık biçimler; bölge/nokta tablosu |
 | görünüm / projeksiyon | Mercator ve eş uzaklıklı silindirik; yumuşak kamera geçişleri |
-| taban harita | Kara, göller, sınırlar, FIR (etiket yerleşimi FIR poligonunun görünen kısmının içinde), uydu zemini |
+| taban harita | Kara, göller, sınırlar (bölge ölçeğinde 1:10m kıyıya geçiş), FIR (etiket yerleşimi FIR poligonunun görünen kısmının içinde), uydu zemini |
+| il ve ilçe sınırları | Ölçeğe göre seviye (metre/piksel eşikleri `ADM` sabitinde), alan sırasına göre etiket yerleşimi |
 | kılavuz, çerçeve, ölçek | Dereceli çerçeve, km ve NM çift ölçek çubuğu |
 | 1 · alanlar / 2 · daireler | Küresel alan ve çevre; jeodezik halkalar |
 | 3 · sınırdan mesafe | Eş uzaklıklı azimutal projeksiyonda ızgara, birleşim maskesi, tam Öklid mesafe dönüşümü (Felzenszwalb), marching squares, kapalı eğrilere birleştirme |
@@ -68,7 +71,7 @@ Uygulama saf HTML, CSS ve JavaScript'tir; harita `<canvas>` üzerine çizilir. H
 
 `desktop/` klasörü, aynı HTML'i bir Windows penceresinde gösteren küçük bir Go programıdır:
 
-- **[go-webview2](https://github.com/jchv/go-webview2):** Saf Go, CGO gerektirmez. Windows'taki Edge WebView2 motorunu kullanır. Exe ~11 MB'tır (4 MB'ı gömülü harita verisi ve uydu görüntüsü).
+- **[go-webview2](https://github.com/jchv/go-webview2):** Saf Go, CGO gerektirmez. Windows'taki Edge WebView2 motorunu kullanır. Exe ~12 MB'tır (5 MB'ı gömülü harita verisi ve uydu görüntüsü).
 - HTML `go:embed` ile exe'ye gömülür ve yalnızca `127.0.0.1` üzerinden, rastgele bir jetonlu adreste sunulur.
 - `desktop/shim.js` sayfaya `window.masaustu` arayüzünü sağlar; Go tarafındaki `native*` fonksiyonlarına bağlanır:
   - Windows **Aç / Farklı kaydet** pencereleri; dosya okuma ve yazma (yarım yazmaya karşı geçici dosya + yeniden adlandırma)
@@ -115,10 +118,12 @@ cd tools/veri
 python dunya.py        # data/world.json
 python fir.py          # data/fir.json
 python turkiye.py      # data/turkey.json
+python kara_detay.py   # data/kara_detay.json
+python il_ilce.py      # data/tr_idari.json
 python mavi_vatan.py   # data/mavivatan.json (numpy, scipy, matplotlib, scikit-image gerekir)
 ```
 
-`dunya.py`, `turkiye.py` ve `mavi_vatan.py` güncel kaynaklardan birebir aynı dosyaları üretir. VATSpy verisi VATSIM ağı için sık güncellenir ve gerçek ICAO yapısından ayrışabilir (ör. Çin FIR'ları); `fir.py` çıktısını kullanmadan önce Türkiye ve çevresindeki FIR'ları karşılaştırın.
+`dunya.py`, `turkiye.py`, `kara_detay.py`, `il_ilce.py` ve `mavi_vatan.py` güncel kaynaklardan birebir aynı dosyaları üretir. VATSpy verisi VATSIM ağı için sık güncellenir ve gerçek ICAO yapısından ayrışabilir (ör. Çin FIR'ları); `fir.py` çıktısını kullanmadan önce Türkiye ve çevresindeki FIR'ları karşılaştırın.
 
 Uydu görüntüsü NASA Blue Marble Next Generation'ın 5400×2700 eşdikdörtgen sürümüdür (`basemap-data` Python paketindeki `bmng.jpg`).
 
