@@ -1,0 +1,15 @@
+# Derleme çıktıları (exe GitHub Releases üzerinden dağıtılır)
+dist/
+*.exe
+# Derleme sırasında app/ klasöründen kopyalanır
+desktop/app.html
+# go mod tidy ile derlemede üretilir
+desktop/go.sum
+# Ham kaynak veriler (tools/veri/indir.sh ile indirilir)
+tools/veri/ham/
+__pycache__/
+# Kullanıcı proje dosyaları (örnekler hariç)
+*.pafta
+!ornekler/*.pafta
+.DS_Store
+Thumbs.db

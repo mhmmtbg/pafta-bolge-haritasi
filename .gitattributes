@@ -1,0 +1,10 @@
+* text=auto
+*.bat text eol=crlf
+*.sh text eol=lf
+*.syso binary
+*.ico binary
+*.png binary
+*.jpg binary
+# derlenmiş tek dosyalık uygulama: satır farkı yerine bütün olarak izlenir
+app/pafta.html -diff linguist-generated
+data/*.json -diff linguist-generated

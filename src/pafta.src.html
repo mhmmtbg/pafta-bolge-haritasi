@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAFTA — koordinatlardan ölçekli harita</title>
+<style>
+  :root{
+    --ink:#0e1a21;          /* panel */
+    --ink-2:#15252e;        /* yüzey */
+    --ink-3:#1c2f39;        /* yükseltilmiş yüzey */
+    --line:#22363f;
+    --text:#dce6e9;
+    --dim:#8aa0a8;
+    --magenta:#c4146a;      /* havacılık haritalarında kısıtlı saha rengi */
+    --magenta-2:#a20f57;
+    --airspace:#3a568c;
+    --amber:#f2a93b;
+    --chart-ink:#16222a;
+    --chart:"Bahnschrift","DIN Alternate","DIN Next","Barlow","Segoe UI",system-ui,sans-serif;
+    --ui:"Bahnschrift","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --prose:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --mono:Consolas,"Cascadia Mono","DejaVu Sans Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:var(--ui);color:var(--chart-ink);background:var(--ink);overflow:hidden}
+  .app{display:flex;height:100vh;width:100vw}
+  button,select,input,textarea{font-family:inherit}
+  :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* ---------- araç şeridi ---------- */
+  .rail{width:72px;flex:0 0 72px;background:#0a141a;border-right:1px solid #050b0f;
+        display:flex;flex-direction:column;align-items:stretch;padding:10px 0}
+  .mark{display:flex;justify-content:center;padding:4px 0 14px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+  .mark svg{width:38px;height:38px}
+  .tab{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;
+       padding:10px 2px 9px;border:0;background:transparent;color:var(--dim);cursor:pointer;
+       font-size:11px;letter-spacing:.01em;line-height:1.1}
+  .tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .tab:hover{color:#fff;background:#101d25}
+  .tab.active{color:#fff;background:var(--ink)}
+  .tab.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--magenta)}
+  .rail .spacer{flex:1}
+  .rail .sep{height:1px;background:var(--line);margin:6px 14px}
+
+  /* ---------- panel ---------- */
+  .panel{width:340px;flex:0 0 340px;background:var(--ink);color:var(--text);overflow-y:auto;border-right:1px solid #050b0f}
+  .pane{display:none}
+  .pane.active{display:block}
+  .pane-head{padding:22px 22px 16px}
+  .pane-head h2{margin:0;font-family:var(--chart);font-weight:600;font-size:22px;letter-spacing:.005em;color:#fff}
+  .pane-head p{margin:6px 0 0;font-family:var(--prose);font-size:12.5px;line-height:1.55;color:var(--dim);max-width:34ch}
+  .group{padding:4px 22px 18px}
+  .group + .group{border-top:1px solid var(--line);padding-top:16px}
+  .group h3{margin:0 0 10px;font-size:13.5px;font-weight:600;color:#c9d6db}
+
+  textarea{width:100%;height:180px;resize:vertical;font-family:var(--mono);font-size:12.5px;line-height:1.6;
+           color:#eaf2f5;background:#08131a;border:1px solid var(--line);border-radius:6px;padding:10px 11px;
+           white-space:pre;overflow-x:auto}
+  textarea.short{height:108px}
+  textarea::placeholder,input::placeholder{color:#4f6670}
+  label.fld{display:block;font-size:12.5px;color:var(--dim);margin-top:12px}
+  label.fld input:not([type=color]):not([type=range]),label.fld select{
+       display:block;width:100%;margin-top:5px;background:#08131a;color:#eaf2f5;border:1px solid var(--line);
+       border-radius:6px;padding:7px 9px;font-size:13.5px}
+  label.fld input.mono{font-family:var(--mono);font-size:12.5px}
+  label.fld input[type=color]{display:block;margin-top:5px;width:100%;height:33px;padding:3px;background:#08131a;
+       border:1px solid var(--line);border-radius:6px;cursor:pointer}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  button.btn{font-size:13.5px;padding:8px 13px;border-radius:6px;cursor:pointer;border:1px solid var(--line);
+             background:var(--ink-2);color:var(--text)}
+  button.btn:hover{background:var(--ink-3);border-color:#2e4652}
+  button.btn.primary{background:var(--magenta);border-color:var(--magenta);color:#fff;font-weight:600}
+  button.btn.primary:hover{background:var(--magenta-2)}
+  button.btn.quiet{background:transparent;border-color:transparent;color:var(--dim);padding-left:6px;padding-right:6px}
+  button.btn.quiet:hover{color:#fff;background:transparent;text-decoration:underline}
+  .hint{margin:12px 0 0;font-family:var(--prose);font-size:12px;line-height:1.6;color:var(--dim);max-width:38ch}
+  .msg{margin-top:12px;font-family:var(--prose);font-size:12.5px;line-height:1.6}
+  .msg:empty{display:none}
+  .msg .ok{color:#8fd0a6}
+  .msg .warn{color:#ffcd6b}
+  .busy{opacity:.55;pointer-events:none}
+
+  /* anahtar düğmeler */
+  label.check{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;
+              padding:6px 0;cursor:pointer;color:var(--text)}
+  input.toggle{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;flex:0 0 32px;border-radius:9px;
+               background:#2a3f49;position:relative;cursor:pointer;transition:background .15s}
+  input.toggle::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+               background:#c5d2d7;transition:transform .15s}
+  input.toggle:checked{background:var(--magenta)}
+  input.toggle:checked::after{transform:translateX(14px);background:#fff}
+  input[type=range]{width:100%;accent-color:var(--magenta);margin-top:8px}
+
+  /* sonuç listeleri */
+  .zone{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a2c35}
+  .zone:last-child{border-bottom:0}
+  .sw{width:20px;height:20px;flex:0 0 20px;padding:0;border-radius:5px;cursor:pointer;
+      border:1px solid rgba(255,255,255,.25);background:none}
+  .sw::-webkit-color-swatch{border:none;border-radius:4px}
+  .sw::-webkit-color-swatch-wrapper{padding:1px}
+  .zone-name{flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .zone-meta{display:block;margin-top:2px;font-family:var(--mono);font-size:11px;color:var(--dim);white-space:normal;line-height:1.45}
+  .icon-btn{font-size:12px;padding:3px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--line);
+            background:transparent;color:var(--dim)}
+  .icon-btn:hover{color:#fff;border-color:#35505c}
+  .zone.off .zone-name,.zone.off .zone-meta{opacity:.42}
+  #zones:not(:empty),#c-list:not(:empty),#r-list:not(:empty),#p-list:not(:empty),#m-list:not(:empty){margin-top:14px}
+
+  /* ölçüm listesi */
+  .mode-on{display:flex;align-items:center;gap:8px;margin-top:2px;font-size:12.5px;color:var(--amber)}
+  .mode-on::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px rgba(242,169,59,.18)}
+  .chain-head{display:flex;align-items:center;gap:10px;margin:16px 0 2px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .chain-head:first-child{margin-top:0}
+  .chain-head b{flex:1;font-size:14px;font-weight:600;color:#fff}
+  .chain-head span{font-family:var(--mono);font-size:12px;color:var(--amber)}
+  .mpt{display:grid;grid-template-columns:24px 1fr auto;gap:3px 10px;align-items:start;padding:8px 0;border-bottom:1px solid #1a2c35}
+  .mpt .no{font-size:12px;font-weight:700;text-align:center;border-radius:12px;color:#fff;padding:2px 0}
+  .mpt .c{font-family:var(--mono);font-size:12px;color:#eaf2f5;line-height:1.5}
+  .mpt .c small{display:block;color:var(--dim);font-size:11px}
+  .mpt .seg{grid-column:2 / 3;font-family:var(--mono);font-size:11.5px;color:var(--amber)}
+
+  /* ---------- harita ---------- */
+  .stage{position:relative;flex:1;min-width:0;background:#e6eff2}
+  .stage.sat{background:#0b1a2a}
+  canvas{display:block;width:100%;height:100%;cursor:grab}
+  canvas.drag{cursor:grabbing}
+  canvas.measure{cursor:crosshair}
+  .hud{position:absolute;z-index:2}
+  .toolbar{top:18px;right:18px;display:flex;border-radius:8px;overflow:hidden;
+           box-shadow:0 1px 2px rgba(10,20,26,.25),0 4px 14px rgba(10,20,26,.14)}
+  .toolbar button,.zoom button{display:flex;align-items:center;gap:7px;border:0;cursor:pointer;
+           background:rgba(255,255,255,.96);color:var(--chart-ink);font-size:13px;padding:8px 12px}
+  .toolbar button + button{border-left:1px solid #d5dfe3}
+  .toolbar button:hover,.zoom button:hover{background:#fff;color:#000}
+  .toolbar svg,.zoom svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .toolbar button[aria-pressed="true"],.toolbar button[aria-pressed="true"]:hover{background:var(--ink);color:#fff}
+  .zoom{right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;border-radius:8px;overflow:hidden;
+        box-shadow:0 1px 2px rgba(10,20,26,.25),0 4px 14px rgba(10,20,26,.14)}
+  .zoom button{justify-content:center;width:36px;height:36px;padding:0}
+  .zoom button + button{border-top:1px solid #d5dfe3}
+  .readout{left:50%;bottom:22px;transform:translateX(-50%);pointer-events:none;
+           background:rgba(14,26,33,.86);color:#e8f0f3;border-radius:16px;padding:5px 14px;
+           font-family:var(--mono);font-size:12px;white-space:nowrap;letter-spacing:.01em}
+  .readout b{font-family:var(--ui);font-weight:400;color:#8fa6ae;margin-right:5px}
+  .readout b + span{margin-right:14px}
+  .stage-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1}
+  .empty-card{background:rgba(255,255,255,.95);border:1px solid #cad6db;border-radius:10px;padding:22px 26px;max-width:380px;
+              box-shadow:0 8px 30px rgba(10,20,26,.16)}
+  .empty-card h2{margin:0;font-family:var(--chart);font-weight:600;font-size:21px;color:var(--chart-ink)}
+  .empty-card p{margin:8px 0 14px;font-family:var(--prose);font-size:13px;line-height:1.6;color:#4d626b}
+  .empty-card ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+  .empty-card li{display:flex;gap:10px;align-items:baseline;font-size:13.5px;color:var(--chart-ink)}
+  .empty-card li span{flex:0 0 118px;font-weight:600}
+  .empty-card li em{font-style:normal;font-family:var(--prose);font-size:12.5px;color:#5b6f79}
+
+  /* açılış ekranı */
+  #splash{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+          background-color:var(--ink);
+          background-image:linear-gradient(rgba(220,230,233,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(220,230,233,.045) 1px,transparent 1px);
+          background-size:72px 72px;background-position:center;transition:opacity .45s ease,visibility .45s}
+  #splash.gone{opacity:0;visibility:hidden}
+  #splash svg{width:96px;height:96px;filter:drop-shadow(0 10px 28px rgba(0,0,0,.45))}
+  #splash .word{font-family:var(--chart);font-weight:600;font-size:34px;letter-spacing:.42em;margin-right:-.42em;color:#fff}
+  #splash .tag{font-family:var(--prose);font-size:13px;color:var(--dim);margin-top:-10px}
+  #splash .coords{position:absolute;bottom:26px;font-family:var(--mono);font-size:11.5px;color:#4f6670;letter-spacing:.04em}
+
+  /* bildirim */
+  .toast{position:absolute;left:50%;bottom:64px;transform:translate(-50%,8px);z-index:5;pointer-events:none;opacity:0;
+         background:var(--ink);color:#fff;border-radius:8px;padding:9px 16px 9px 14px;font-size:13.5px;white-space:nowrap;
+         display:flex;align-items:center;gap:9px;box-shadow:0 6px 24px rgba(10,20,26,.3);transition:opacity .2s,transform .2s}
+  .toast::before{content:"";width:8px;height:8px;border-radius:50%;background:#5fcf8f}
+  .toast.warn::before{background:var(--amber)}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+
+  /* sürükle-bırak */
+  .drop-hint{position:absolute;inset:14px;z-index:6;display:none;align-items:center;justify-content:center;pointer-events:none;
+             border:2px dashed var(--magenta);border-radius:12px;background:rgba(196,20,106,.07)}
+  .stage.drop .drop-hint{display:flex}
+  .drop-hint span{background:var(--ink);color:#fff;border-radius:8px;padding:12px 18px;font-size:14px}
+
+  /* yardım penceresi */
+  .modal{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(6,12,16,.55);padding:20px}
+  .modal[hidden]{display:none}
+  .modal-card{position:relative;background:#fff;color:var(--chart-ink);border-radius:12px;max-width:820px;width:100%;max-height:calc(100vh - 40px);
+              overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.4);display:grid;grid-template-columns:1fr 1fr}
+  .modal-card section{padding:26px 28px}
+  .modal-card section + section{background:#f3f6f7;border-left:1px solid #dde5e8}
+  .modal-card h2{margin:0 0 4px;font-family:var(--chart);font-weight:600;font-size:21px}
+  .modal-card h3{margin:20px 0 8px;font-size:13px;font-weight:600;color:#4d626b}
+  .modal-card p{margin:6px 0;font-family:var(--prose);font-size:13px;line-height:1.6;color:#33454d}
+  .modal-card small{font-family:var(--prose);font-size:12px;color:#5b6f79;line-height:1.55;display:block}
+  .modal-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;border-radius:8px;background:transparent;
+           font-size:20px;line-height:1;color:#5b6f79;cursor:pointer}
+  .modal-x:hover{background:#e7eef0;color:#000}
+  .keys{display:grid;grid-template-columns:auto 1fr;gap:7px 14px;align-items:baseline;margin-top:14px;font-size:13px}
+  .keys dt{white-space:nowrap}
+  .keys dd{margin:0;font-family:var(--prose);color:#33454d}
+  kbd{display:inline-block;min-width:22px;text-align:center;font-family:var(--ui);font-size:11.5px;padding:2px 6px;border-radius:5px;
+      background:#fff;border:1px solid #c9d4d8;border-bottom-width:2px;color:var(--chart-ink)}
+  .src{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+  .src li{font-family:var(--prose);font-size:12.5px;line-height:1.5;color:#33454d}
+  .src b{font-family:var(--ui);font-weight:600;color:var(--chart-ink)}
+  .ver{font-family:var(--mono);font-size:12px;color:#5b6f79}
+  .recent{margin-top:16px}
+  .recent h4{margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--dim)}
+  .recent ul{list-style:none;margin:0;padding:0}
+  .recent li button{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--text);cursor:pointer;
+                    padding:6px 8px;margin:0 -8px;border-radius:6px;font-size:13.5px}
+  .recent li button:hover{background:var(--ink-2)}
+  .recent li small{display:block;font-family:var(--mono);font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-line{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:13px;color:var(--text)}
+  .file-line svg{width:15px;height:15px;flex:0 0 15px;fill:none;stroke:var(--dim);stroke-width:1.6}
+  .file-line .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);display:none}
+  .file-line.dirty .dot{display:inline-block}
+
+  /* soru penceresi */
+  .ask-card{background:#fff;color:var(--chart-ink);border-radius:12px;width:100%;max-width:440px;padding:24px 26px 20px;
+            box-shadow:0 20px 60px rgba(0,0,0,.4);border-top:4px solid var(--airspace)}
+  .ask-card.warning{border-top-color:var(--amber)}
+  .ask-card.error{border-top-color:#c0392b}
+  .ask-card h2{margin:0;font-family:var(--chart);font-weight:600;font-size:18px;line-height:1.35}
+  .ask-card p{margin:8px 0 0;font-family:var(--prose);font-size:13.5px;line-height:1.6;color:#33454d}
+  .ask-card p:empty{display:none}
+  .ask-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+  .ask-btns button{font-size:13.5px;padding:8px 14px;border-radius:6px;cursor:pointer;border:1px solid #c9d4d8;background:#fff;color:var(--chart-ink)}
+  .ask-btns button:hover{background:#f0f4f5}
+  .ask-btns button.primary{background:var(--magenta);border-color:var(--magenta);color:#fff;font-weight:600}
+  .ask-btns button.primary:hover{background:var(--magenta-2)}
+
+  @media (max-width:900px){
+    .modal-card{grid-template-columns:1fr}
+    .modal-card section + section{border-left:0;border-top:1px solid #dde5e8}
+    body{overflow:auto}
+    .app{flex-direction:column;height:auto}
+    .rail{width:100%;flex:none;flex-direction:row;overflow-x:auto;padding:0}
+    .mark{display:none}
+    .rail .spacer,.rail .sep{display:none}
+    .tab{flex:1 0 64px}
+    .tab.active::before{left:8px;right:8px;top:auto;bottom:0;width:auto;height:3px;border-radius:3px 3px 0 0}
+    .panel{width:100%;flex:none}
+    .stage{height:72vh;flex:none}
+  }
+</style>
+</head>
+<body>
+<div id="splash" aria-hidden="true">
+  <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="4" width="56" height="56" fill="#f4ecda"/><path d="M24.5 8v48M39.5 8v48M8 24.5h48M8 39.5h48" stroke="#cdbfa3" stroke-width=".9"/><g fill="#fff"><rect x="12" y="4" width="8" height="4"/><rect x="56" y="12" width="4" height="8"/><rect x="12" y="56" width="8" height="4"/><rect x="4" y="12" width="4" height="8"/><rect x="28" y="4" width="8" height="4"/><rect x="56" y="28" width="4" height="8"/><rect x="28" y="56" width="8" height="4"/><rect x="4" y="28" width="4" height="8"/><rect x="44" y="4" width="8" height="4"/><rect x="56" y="44" width="4" height="8"/><rect x="44" y="56" width="8" height="4"/><rect x="4" y="44" width="4" height="8"/></g><g fill="#16222a"><rect x="4" y="4" width="8" height="4"/><rect x="56" y="4" width="4" height="8"/><rect x="4" y="56" width="8" height="4"/><rect x="4" y="4" width="4" height="8"/><rect x="20" y="4" width="8" height="4"/><rect x="56" y="20" width="4" height="8"/><rect x="20" y="56" width="8" height="4"/><rect x="4" y="20" width="4" height="8"/><rect x="36" y="4" width="8" height="4"/><rect x="56" y="36" width="4" height="8"/><rect x="36" y="56" width="8" height="4"/><rect x="4" y="36" width="4" height="8"/><rect x="52" y="4" width="8" height="4"/><rect x="56" y="52" width="4" height="8"/><rect x="52" y="56" width="8" height="4"/><rect x="4" y="52" width="4" height="8"/></g><g fill="none" stroke="#16222a" stroke-width="1.1"><rect x="4" y="4" width="56" height="56"/><rect x="8" y="8" width="48" height="48"/></g><path d="M17 23 34 16 47.5 27.5 42.5 46 21.5 43.5Z" fill="rgba(196,20,106,.25)" stroke="#c4146a" stroke-width="2.8" stroke-linejoin="round"/><g fill="#fff" stroke="#c4146a" stroke-width="1.6"><circle cx="17" cy="23" r="2.5"/><circle cx="34" cy="16" r="2.5"/><circle cx="47.5" cy="27.5" r="2.5"/><circle cx="42.5" cy="46" r="2.5"/><circle cx="21.5" cy="43.5" r="2.5"/></g></svg>
+  <div class="word">PAFTA</div>
+  <div class="tag">Koordinatlardan ölçekli harita</div>
+  <div class="coords">39°55'K  32°51'D</div>
+</div>
+<div class="app">
+
+  <nav class="rail" aria-label="Araçlar">
+    <div class="mark" title="PAFTA">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="4" width="56" height="56" fill="#f4ecda"/><path d="M24.5 8v48M39.5 8v48M8 24.5h48M8 39.5h48" stroke="#cdbfa3" stroke-width=".9"/><g fill="#fff"><rect x="12" y="4" width="8" height="4"/><rect x="56" y="12" width="4" height="8"/><rect x="12" y="56" width="8" height="4"/><rect x="4" y="12" width="4" height="8"/><rect x="28" y="4" width="8" height="4"/><rect x="56" y="28" width="4" height="8"/><rect x="28" y="56" width="8" height="4"/><rect x="4" y="28" width="4" height="8"/><rect x="44" y="4" width="8" height="4"/><rect x="56" y="44" width="4" height="8"/><rect x="44" y="56" width="8" height="4"/><rect x="4" y="44" width="4" height="8"/></g><g fill="#16222a"><rect x="4" y="4" width="8" height="4"/><rect x="56" y="4" width="4" height="8"/><rect x="4" y="56" width="8" height="4"/><rect x="4" y="4" width="4" height="8"/><rect x="20" y="4" width="8" height="4"/><rect x="56" y="20" width="4" height="8"/><rect x="20" y="56" width="8" height="4"/><rect x="4" y="20" width="4" height="8"/><rect x="36" y="4" width="8" height="4"/><rect x="56" y="36" width="4" height="8"/><rect x="36" y="56" width="8" height="4"/><rect x="4" y="36" width="4" height="8"/><rect x="52" y="4" width="8" height="4"/><rect x="56" y="52" width="4" height="8"/><rect x="52" y="56" width="8" height="4"/><rect x="4" y="52" width="4" height="8"/></g><g fill="none" stroke="#16222a" stroke-width="1.1"><rect x="4" y="4" width="56" height="56"/><rect x="8" y="8" width="48" height="48"/></g><path d="M17 23 34 16 47.5 27.5 42.5 46 21.5 43.5Z" fill="rgba(196,20,106,.25)" stroke="#c4146a" stroke-width="2.8" stroke-linejoin="round"/><g fill="#fff" stroke="#c4146a" stroke-width="1.6"><circle cx="17" cy="23" r="2.5"/><circle cx="34" cy="16" r="2.5"/><circle cx="47.5" cy="27.5" r="2.5"/><circle cx="42.5" cy="46" r="2.5"/><circle cx="21.5" cy="43.5" r="2.5"/></g></svg>
+    </div>
+    <button class="tab active" data-pane="pane-areas" title="Koordinat listesinden kapalı bölgeler">
+      <svg viewBox="0 0 24 24"><path d="M5 7.5 12.5 4 19.5 9 17 19 6.5 19.5Z"/><circle cx="5" cy="7.5" r="1.3"/><circle cx="12.5" cy="4" r="1.3"/><circle cx="19.5" cy="9" r="1.3"/><circle cx="17" cy="19" r="1.3"/><circle cx="6.5" cy="19.5" r="1.3"/></svg>
+      Alanlar
+    </button>
+    <button class="tab" data-pane="pane-circles" title="Merkezden yarıçap halkaları">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><path d="M12 10.5v3M10.5 12h3"/></svg>
+      Daireler
+    </button>
+    <button class="tab" data-pane="pane-rings" title="Türkiye sınırından mesafe eğrileri">
+      <svg viewBox="0 0 24 24"><path d="M7 9.5c1.5-2.5 5-3 7.5-2s4 3 3 5.5-4 4.5-7.5 3.5S5.5 12 7 9.5Z"/><path d="M4.2 8.3C6.5 3.8 12.5 2.5 17 4.5s5.5 7 3.6 10.6-7.5 7.3-12.7 5.4S2 12.8 4.2 8.3Z" stroke-dasharray="2.2 2.2"/></svg>
+      Sınır mesafesi
+    </button>
+    <button class="tab" data-pane="pane-points" title="İsimli nokta konumları">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11A6.5 6.5 0 0 1 18.5 10c0 4.8-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+      Noktalar
+    </button>
+    <button class="tab" data-pane="pane-measure" title="Haritadan tıklayarak mesafe ölç">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M11 6.2 5.5 20.5M13 6.2l5.5 14.3"/><path d="M7.4 15.5a7.5 7.5 0 0 0 9.2 0"/></svg>
+      Ölçüm
+    </button>
+    <div class="spacer"></div>
+    <div class="sep"></div>
+    <button class="tab" data-pane="pane-view" title="Zemin, harita öğeleri ve katmanlar">
+      <svg viewBox="0 0 24 24"><path d="M12 4 21 8.5 12 13 3 8.5Z"/><path d="M3 12.5 12 17l9-4.5"/><path d="M3 16.5 12 21l9-4.5"/></svg>
+      Görünüm
+    </button>
+    <button class="tab" data-pane="pane-export" title="Proje dosyası, künye ve dışa aktarım">
+      <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6Z"/><path d="M14 3v4h4"/><path d="M12 10.5v6.5M9.3 14.5 12 17.2l2.7-2.7"/></svg>
+      Çıktı
+    </button>
+    <button class="tab" id="btn-help" title="Kısayollar ve hakkında (F1)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.2-2.5 3.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+      Yardım
+    </button>
+  </nav>
+
+  <aside class="panel">
+
+    <!-- ALANLAR -->
+    <div class="pane active" id="pane-areas">
+      <header class="pane-head">
+        <h2>Alanlar</h2>
+        <p>Köşe koordinatlarından kapalı bölgeler çizer; her bölgenin alanını ve çevresini hesaplar.</p>
+      </header>
+      <div class="group">
+        <h3>Koordinat listesi</h3>
+        <textarea id="input" spellcheck="false" placeholder="Bölge&#9;Nokta&#9;Enlem&#9;Boylam&#10;A bölgesi&#9;1&#9;41°30'00&quot;K&#9;30°15'00&quot;D&#10;&#9;2&#9;41°45'30&quot;K&#9;31°20'00&quot;D"></textarea>
+        <div class="row">
+          <button class="btn primary" id="btn-draw">Bölgeleri çiz</button>
+          <button class="btn" id="btn-file">Dosyadan al</button>
+          <button class="btn quiet" id="btn-sample">Örnek</button>
+          <button class="btn quiet" id="btn-clear">Temizle</button>
+          <input type="file" id="file" accept=".txt,.csv,.tsv" hidden>
+        </div>
+        <p class="hint">Tabloyu Excel veya Word'den olduğu gibi yapıştırın. Derece‑dakika‑saniye (41°30'15"K) ve ondalık derece (41.5042) okunur. Bölge adı boş satırlar üstteki bölgeye eklenir, boş satır yeni bölge başlatır.</p>
+        <div class="msg" id="msg"></div>
+        <div id="zones"></div>
+      </div>
+    </div>
+
+    <!-- DAİRELER -->
+    <div class="pane" id="pane-circles">
+      <header class="pane-head">
+        <h2>Daireler</h2>
+        <p>Bir veya birkaç merkezden, verilen yarıçaplarda gerçek sabit‑uzaklık halkaları çizer.</p>
+      </header>
+      <div class="group">
+        <h3>Merkezler</h3>
+        <textarea id="c-center" class="short" spellcheck="false" placeholder="Merkez adı&#9;39°57'0&quot;K&#9;32°52'0&quot;D&#10;İkinci merkez&#9;41°1'0&quot;K&#9;28°58'0&quot;D"></textarea>
+        <div class="grid2">
+          <label class="fld">Yarıçaplar
+            <input id="c-radii" class="mono" value="100, 250, 500" spellcheck="false">
+          </label>
+          <label class="fld">Birim
+            <select id="c-unit">
+              <option value="km">kilometre</option>
+              <option value="nm">deniz mili</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btn-circles">Daireleri çiz</button>
+          <button class="btn quiet" id="btn-circles-sample">Örnek</button>
+          <button class="btn quiet" id="btn-circles-clear">Temizle</button>
+        </div>
+        <p class="hint">Her satır bir merkez; yarıçapların hepsi her merkeze uygulanır ve her yarıçap kendi rengini alır.</p>
+        <div class="msg" id="c-msg"></div>
+        <div id="c-list"></div>
+      </div>
+    </div>
+
+    <!-- SINIR MESAFESİ -->
+    <div class="pane" id="pane-rings">
+      <header class="pane-head">
+        <h2>Sınır mesafesi</h2>
+        <p>Türkiye kara sınırından ve kıyısından, isterseniz Mavi Vatan sınırından, eşit uzaklık eğrileri çizer.</p>
+      </header>
+      <div class="group">
+        <h3>Mesafeler</h3>
+        <div class="grid2">
+          <label class="fld" style="margin-top:0">Değerler
+            <input id="r-dist" class="mono" value="100, 250, 500" spellcheck="false">
+          </label>
+          <label class="fld" style="margin-top:0">Birim
+            <select id="r-unit">
+              <option value="km">kilometre</option>
+              <option value="nm">deniz mili</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="group">
+        <label class="check" style="padding-top:0">Mavi Vatan'ı hesaba kat <input type="checkbox" class="toggle" id="r-mv"></label>
+        <div id="r-mv-box" hidden>
+          <label class="fld">Mesafeler nereden ölçülsün?
+            <select id="r-from">
+              <option value="mv">Mavi Vatan dış sınırından</option>
+              <option value="tr">Türkiye kara sınırından</option>
+            </select>
+          </label>
+          <label class="fld">Mavi Vatan sınırı
+            <select id="r-mv-src">
+              <option value="builtin">Gömülü rekonstrüksiyon (medyan hat)</option>
+              <option value="own">Kendi koordinatlarım</option>
+            </select>
+          </label>
+          <p class="hint" id="r-mv-hint"></p>
+          <textarea id="r-mv-text" class="short" spellcheck="false" hidden placeholder="1&#9;36°0'0&quot;K&#9;28°0'0&quot;D&#10;2&#9;34°30'0&quot;K&#9;26°30'0&quot;D"></textarea>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btn-rings">Eğrileri çiz</button>
+          <button class="btn quiet" id="btn-rings-clear">Temizle</button>
+        </div>
+        <p class="hint">Eğriler NE 1:10m sınırından, eş uzaklıklı azimutal projeksiyonda kurulan mesafe alanından üretilir; çözünürlük her çizimden sonra yazılır.</p>
+        <div class="msg" id="r-msg"></div>
+        <div id="r-list"></div>
+      </div>
+    </div>
+
+    <!-- NOKTALAR -->
+    <div class="pane" id="pane-points">
+      <header class="pane-head">
+        <h2>Noktalar</h2>
+        <p>İsimli konumları işaretler; isimler noktanın üstünde yazar.</p>
+      </header>
+      <div class="group">
+        <h3>Nokta listesi</h3>
+        <textarea id="p-input" spellcheck="false" placeholder="İsim&#9;Enlem&#9;Boylam&#10;Ankara&#9;39°55'0&quot;K&#9;32°51'0&quot;D&#10;Sinop&#9;42.0231&#9;35.1531"></textarea>
+        <div class="row">
+          <button class="btn primary" id="btn-points">Noktaları işaretle</button>
+          <button class="btn quiet" id="btn-points-sample">Örnek</button>
+          <button class="btn quiet" id="btn-points-clear">Temizle</button>
+        </div>
+        <p class="hint">Satıra #d62828 gibi bir renk kodu eklerseniz o nokta o renkte çizilir.</p>
+        <div class="msg" id="p-msg"></div>
+        <div id="p-list"></div>
+      </div>
+      <div class="group">
+        <h3>İşaret</h3>
+        <div class="grid2">
+          <label class="fld" style="margin-top:0">Şekil
+            <select id="p-shape">
+              <option value="circle">daire</option>
+              <option value="triangle">üçgen</option>
+              <option value="square">kare</option>
+              <option value="diamond">elmas</option>
+              <option value="cross">artı</option>
+            </select>
+          </label>
+          <label class="fld" style="margin-top:0">Boyut
+            <select id="p-size">
+              <option value="4">küçük</option>
+              <option value="6" selected>orta</option>
+              <option value="9">büyük</option>
+            </select>
+          </label>
+        </div>
+        <label class="fld">Varsayılan renk
+          <input type="color" id="p-color" value="#b3541e">
+        </label>
+        <label class="check" style="margin-top:8px">Etikette koordinatı da göster <input type="checkbox" class="toggle" id="p-coords"></label>
+      </div>
+    </div>
+
+    <!-- ÖLÇÜM -->
+    <div class="pane" id="pane-measure">
+      <header class="pane-head">
+        <h2>Ölçüm</h2>
+        <p>Haritaya tıklayarak noktalar ekleyin; her nokta bir öncekine bağlanır, mesafe hattın üzerinde kalır.</p>
+      </header>
+      <div class="group">
+        <div class="mode-on">Ölçüm modu açık</div>
+        <div class="row">
+          <button class="btn" id="btn-m-new" title="Kısayol: Esc">Yeni hat</button>
+          <button class="btn" id="btn-m-undo" title="Kısayol: Geri tuşu">Geri al</button>
+          <button class="btn quiet" id="btn-m-clear">Temizle</button>
+        </div>
+        <p class="hint">Sürüklemek haritayı kaydırır. Tıklama; nokta, alan köşesi ve daire merkezlerine 10 piksel içinde yapışır. Esc yeni hat başlatır, Geri tuşu son noktayı siler.</p>
+        <label class="fld">Koordinatla nokta ekle
+          <input id="m-coord" class="mono" placeholder="39°55'0&quot;K 32°51'0&quot;D" spellcheck="false">
+        </label>
+        <div class="row" style="margin-top:8px"><button class="btn" id="btn-m-add">Noktayı ekle</button></div>
+        <div class="msg" id="m-msg"></div>
+        <div id="m-list"></div>
+      </div>
+      <div class="group">
+        <h3>Gösterim</h3>
+        <div class="grid2">
+          <label class="fld" style="margin-top:0">Birim
+            <select id="m-unit">
+              <option value="both">km ve NM</option>
+              <option value="km">kilometre</option>
+              <option value="nm">deniz mili</option>
+            </select>
+          </label>
+          <label class="fld" style="margin-top:0">Etkin hat rengi
+            <input type="color" id="m-color" value="#d1495b">
+          </label>
+        </div>
+        <label class="check" style="margin-top:8px">Kerterizi hatta yaz <input type="checkbox" class="toggle" id="m-bearing" checked></label>
+        <label class="check">Hat sonunda toplamı yaz <input type="checkbox" class="toggle" id="m-total" checked></label>
+        <p class="hint">Mesafeler WGS84 elipsoidi üzerinde Vincenty yöntemiyle hesaplanır; hat büyük daire yayı olarak çizilir.</p>
+      </div>
+    </div>
+
+    <!-- GÖRÜNÜM -->
+    <div class="pane" id="pane-view">
+      <header class="pane-head">
+        <h2>Görünüm</h2>
+        <p>Harita zemini, paftadaki öğeler ve çizim katmanları.</p>
+      </header>
+      <div class="group">
+        <h3>Zemin</h3>
+        <label class="check">Uydu görüntüsü <input type="checkbox" class="toggle" id="opt-sat"></label>
+        <div id="sat-box" hidden>
+          <label class="fld" style="margin-top:4px">Görüntü yoğunluğu
+            <input type="range" id="opt-sat-alpha" min="25" max="100" value="100">
+          </label>
+          <p class="hint">NASA Blue Marble Next Generation, dosyaya gömülü. Yaklaşık 7 km/piksel: bölge ölçeğinde net, çok yakında yumuşar.</p>
+        </div>
+        <label class="fld">Projeksiyon
+          <select id="opt-proj">
+            <option value="mercator">Mercator (açı koruyan)</option>
+            <option value="equirect">Eş uzaklıklı silindirik</option>
+          </select>
+        </label>
+      </div>
+      <div class="group">
+        <h3>Pafta öğeleri</h3>
+        <label class="check">Pafta künyesi <input type="checkbox" class="toggle" id="opt-title" checked></label>
+        <label class="check">Bulduru haritası <input type="checkbox" class="toggle" id="opt-locator" checked></label>
+        <label class="check">Lejant <input type="checkbox" class="toggle" id="opt-legend" checked></label>
+        <label class="check">Koordinat kılavuzu ve çerçeve <input type="checkbox" class="toggle" id="opt-grid" checked></label>
+        <label class="check">FIR sınırları ve adları <input type="checkbox" class="toggle" id="opt-fir" checked></label>
+        <label class="check">Ülke sınırları <input type="checkbox" class="toggle" id="opt-borders" checked></label>
+        <label class="check">Şehirler <input type="checkbox" class="toggle" id="opt-cities" checked></label>
+        <label class="check">Alan köşe numaraları <input type="checkbox" class="toggle" id="opt-nums" checked></label>
+        <label class="check">Alanların içini doldur <input type="checkbox" class="toggle" id="opt-fill" checked></label>
+      </div>
+      <div class="group">
+        <h3>Katmanlar</h3>
+        <label class="check">Alanlar <input type="checkbox" class="toggle" id="opt-layer-areas" checked></label>
+        <label class="check">Daireler <input type="checkbox" class="toggle" id="opt-layer-circles" checked></label>
+        <label class="check">Sınır mesafeleri <input type="checkbox" class="toggle" id="opt-layer-rings" checked></label>
+        <label class="check">Noktalar <input type="checkbox" class="toggle" id="opt-layer-points" checked></label>
+        <label class="check">Ölçüm hatları <input type="checkbox" class="toggle" id="opt-layer-measure" checked></label>
+      </div>
+    </div>
+
+    <!-- ÇIKTI -->
+    <div class="pane" id="pane-export">
+      <header class="pane-head">
+        <h2>Çıktı</h2>
+        <p>Projeyi kaydedin, paftayı künyesiyle görüntü olarak alın ya da çizimleri veri olarak dışa aktarın.</p>
+      </header>
+      <div class="group">
+        <h3>Proje</h3>
+        <div class="file-line" id="file-line">
+          <svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9Z"/><path d="M9.5 1.5v3h3"/></svg>
+          <span id="file-name">Adsız pafta</span><span class="dot" title="Kaydedilmemiş değişiklik var"></span>
+        </div>
+        <div class="row" style="margin-top:0">
+          <button class="btn" id="btn-proj-save" title="Ctrl+S">Kaydet</button>
+          <button class="btn" id="btn-proj-saveas" title="Ctrl+Shift+S">Farklı kaydet</button>
+          <button class="btn" id="btn-proj-open" title="Ctrl+O">Aç</button>
+          <button class="btn quiet" id="btn-proj-new">Yeni</button>
+          <input type="file" id="proj-file" accept=".pafta,.json" hidden>
+        </div>
+        <div class="recent desk-only" id="recent" hidden>
+          <h4>Son açılanlar</h4>
+          <ul id="recent-list"></ul>
+          <div class="row" style="margin-top:6px">
+            <button class="btn quiet" id="btn-proj-where">Dosya konumunu aç</button>
+            <button class="btn quiet" id="btn-recent-clear">Listeyi temizle</button>
+          </div>
+        </div>
+        <p class="hint">Bir .pafta dosyası tüm girdileri, renkleri, ölçümleri ve harita görünümünü saklar. Haritaya sürükleyip bırakarak da açabilirsiniz.</p>
+      </div>
+      <div class="group">
+        <h3>Pafta künyesi</h3>
+        <label class="fld" style="margin-top:0">Başlık
+          <input id="t-title" value="Bölge Haritası" spellcheck="false">
+        </label>
+        <label class="fld">Alt satır
+          <input id="t-sub" placeholder="Hazırlayan, proje veya doküman no" spellcheck="false">
+        </label>
+        <p class="hint">Künye haritanın sağ altında durur: başlık, ölçek, projeksiyon, datum, tarih ve kuzey yönü. Görünüm bölümünden gizlenebilir.</p>
+      </div>
+      <div class="group">
+        <h3>Görüntü</h3>
+        <div class="grid2" style="align-items:end">
+          <label class="fld" style="margin-top:0">Çözünürlük
+            <select id="png-scale">
+              <option value="1">ekran (1×)</option>
+              <option value="2" selected>baskı (2×)</option>
+              <option value="3">yüksek (3×)</option>
+            </select>
+          </label>
+          <button class="btn primary" id="btn-png" style="height:36px">PNG kaydet</button>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Veri</h3>
+        <div class="row" style="margin-top:0">
+          <button class="btn" id="btn-kml">KML</button>
+          <button class="btn" id="btn-geojson">GeoJSON</button>
+          <button class="btn" id="btn-csv">CSV</button>
+        </div>
+        <p class="hint">KML Google Earth'te açılır. CSV ondalık virgüllü ve noktalı virgül ayraçlıdır, Excel'de doğrudan açılır.</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <canvas id="map"></canvas>
+    <div class="stage-empty" id="stage-empty">
+      <div class="empty-card">
+        <h2>Boş pafta</h2>
+        <p>Soldaki şeritten bir araç seçip koordinatlarınızı girin. Tekerlekle yakınlaşır, sürükleyerek gezinirsiniz.</p>
+        <ul>
+          <li><span>Alanlar</span><em>köşe koordinatlarından bölgeler</em></li>
+          <li><span>Daireler</span><em>merkezden yarıçap halkaları</em></li>
+          <li><span>Sınır mesafesi</span><em>Türkiye ve Mavi Vatan'dan eğriler</em></li>
+          <li><span>Noktalar</span><em>isimli konumlar</em></li>
+          <li><span>Ölçüm</span><em>tıklayarak mesafe ve kerteriz</em></li>
+        </ul>
+        <p style="margin:14px 0 0">Bir .pafta projesini ya da koordinat listesini buraya sürükleyip bırakabilirsiniz. Kısayollar: <kbd>F1</kbd></p>
+      </div>
+    </div>
+    <div class="hud toolbar">
+      <button id="btn-fit" title="Tüm çizimleri ekrana sığdır">
+        <svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>Çizime sığdır</button>
+      <button id="btn-world" title="Tüm dünyayı göster">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2.6 4 2.6 6S10 12 8 14c-2-2-2.6-4-2.6-6S6 4 8 2Z"/></svg>Dünya</button>
+      <button id="btn-sat" title="Uydu görüntüsünü aç/kapat" aria-pressed="false">
+        <svg viewBox="0 0 16 16"><rect x="6" y="6" width="4" height="4" transform="rotate(45 8 8)"/><path d="M3.5 3.5 6 6M10 10l2.5 2.5M2 5l3-3M11 14l3-3"/></svg>Uydu</button>
+    </div>
+    <div class="hud zoom">
+      <button id="btn-in" title="Yakınlaş" aria-label="Yakınlaş"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button>
+      <button id="btn-out" title="Uzaklaş" aria-label="Uzaklaş"><svg viewBox="0 0 16 16"><path d="M3 8h10"/></svg></button>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="drop-hint"><span id="drop-text">Bırakın: .pafta projesi ya da koordinat listesi</span></div>
+    <div class="hud readout" id="readout"><b>Enlem</b><span>—</span><b>Boylam</b><span>—</span></div>
+  </main>
+</div>
+
+<div class="modal" id="ask" hidden>
+  <div class="ask-card" role="alertdialog" aria-modal="true" aria-labelledby="ask-title" aria-describedby="ask-text">
+    <h2 id="ask-title"></h2>
+    <p id="ask-text"></p>
+    <div class="ask-btns" id="ask-btns"></div>
+  </div>
+</div>
+<div class="modal" id="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <button class="modal-x" id="modal-x" aria-label="Kapat">×</button>
+    <section>
+      <h2 id="help-title">Kısayollar</h2>
+      <dl class="keys">
+        <dt><kbd>Ctrl</kbd> <kbd>S</kbd></dt><dd>Projeyi kaydet</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>S</kbd></dt><dd>Farklı kaydet</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>O</kbd></dt><dd>Proje aç</dd>
+        <dt class="desk-only"><kbd>Ctrl</kbd> <kbd>N</kbd></dt><dd class="desk-only">Yeni pafta</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>Haritayı PNG olarak kaydet</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>7</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Görünüm, Çıktı</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>0</kbd></dt><dd>Çizime sığdır</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>U</kbd></dt><dd>Uydu görüntüsünü aç/kapat</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>+</kbd> <kbd>−</kbd></dt><dd>Yakınlaş, uzaklaş</dd>
+        <dt>Tekerlek, sürükle</dt><dd>Yakınlaş, haritayı kaydır</dd>
+        <dt><kbd>Esc</kbd></dt><dd>Ölçümde yeni hat başlat</dd>
+        <dt><kbd>Geri</kbd></dt><dd>Ölçümde son noktayı sil</dd>
+        <dt><kbd>F1</kbd></dt><dd>Bu pencere</dd>
+      </dl>
+      <h3>Sürükle-bırak</h3>
+      <p>Bir <b>.pafta</b> projesini haritaya bırakmak onu açar. Bir koordinat listesini (.txt, .csv) bırakmak, açık araçtaki listeye yükleyip çizer.</p>
+    </section>
+    <section>
+      <h2>PAFTA</h2>
+      <div class="ver" id="ver-line"></div>
+      <p>Koordinat listelerinden ölçekli harita: alanlar, daireler, sınır mesafe eğrileri, noktalar ve ölçümler. İnternet ve kurulum gerektirmez.</p>
+      <h3>Hesap</h3>
+      <small>Mesafe ve kerteriz WGS84 elipsoidi üzerinde Vincenty yöntemiyle; daireler ve alanlar küre üzerinde; sınır mesafe eğrileri eş uzaklıklı azimutal projeksiyonda kurulan mesafe alanından üretilir.</small>
+      <h3>Veri kaynakları</h3>
+      <ul class="src">
+        <li><b>Natural Earth</b>, kıyı, sınır, göl ve şehirler. Kamu malı.</li>
+        <li><b>VATSpy Data Project</b>, FIR sınırları ve adları (VATSIM). CC BY-SA 4.0; sadeleştirilmiş türev.</li>
+        <li><b>NASA Blue Marble Next Generation</b>, uydu görüntüsü. Kamu malı.</li>
+        <li><b>Mavi Vatan</b>, medyan hat kuralıyla geometrik yeniden kurulum; resmî koordinat değildir.</li>
+      </ul>
+      <small class="desk-only" id="data-dir" style="margin-top:14px"></small>
+      <small style="margin-top:14px">FIR ve Mavi Vatan sınırları bilgi amaçlıdır; seyrüsefer ve resmî işlemler için AIP ve resmî kaynaklar esas alınmalıdır.</small>
+    </section>
+  </div>
+</div>
+<script>
+"use strict";
+const WORLD = /*__WORLD__*/null;
+const FIR = /*__FIR__*/null;
+const TR = /*__TR__*/null;
+const MAVI_VATAN = /*__MV__*/null;
+const SAT_SRC = "/*__SAT__*/";      // NASA Blue Marble NG, eşdikdörtgen, 5400×2700
+
+/* ============ yardımcılar ============ */
+const R_EARTH = 6371008.8;
+const rad = d => d * Math.PI / 180;
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const PALETTE = ["#c8156f","#2f4b9a","#0d7a68","#b3541e","#6a3d9a","#8f1d1d","#3c6e2a","#00688b","#a8901c","#4b4b4b"];
+const UNIT = {km: 1000, nm: 1852};
+const CHART_FONT = getComputedStyle(document.documentElement).getPropertyValue("--chart").trim() || "sans-serif";
+const FONT = () => CHART_FONT;
+const $ = id => document.getElementById(id);
+
+function dms(value, isLat){
+  const neg = value < 0;
+  let v = Math.abs(value);
+  let d = Math.floor(v);
+  let m = Math.floor((v - d) * 60);
+  let s = Math.round(((v - d) * 60 - m) * 60);
+  if (s === 60){ s = 0; m++; }
+  if (m === 60){ m = 0; d++; }
+  const suf = isLat ? (neg ? "G" : "K") : (neg ? "B" : "D");
+  return d + "°" + String(m).padStart(2,"0") + "'" + String(s).padStart(2,"0") + '"' + suf;
+}
+function hexA(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  return "rgba(" + ((n>>16)&255) + "," + ((n>>8)&255) + "," + (n&255) + "," + a + ")";
+}
+const esc = s => String(s).replace(/[<&>"]/g, c => ({"<":"&lt;","&":"&amp;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============ koordinat ayrıştırma ============ */
+const DMS_RE = /(\d{1,3})\s*[°º]\s*(?:(\d{1,2})\s*['’′]\s*)?(?:(\d{1,2}(?:[.,]\d+)?)\s*(?:["”″]|''))?\s*([KGNSDBEWkgnsdbew])?/g;
+const SPACE_DMS_RE = /(\d{1,3})\s+(\d{1,2})\s+(\d{1,2}(?:[.,]\d+)?)\s*([KGNSDBEWkgnsdbew])\b/g;
+const NUM_RE = /([+-]?\d{1,3}(?:[.,]\d+)?)\s*°?\s*([KGNSDBEWkgnsdbew])?/g;
+
+function hemiSign(letter){
+  if (!letter) return null;
+  const c = letter.toUpperCase();
+  if (c === "K" || c === "N") return {sign:1, axis:"lat"};
+  if (c === "G" || c === "S") return {sign:-1, axis:"lat"};
+  if (c === "D" || c === "E") return {sign:1, axis:"lon"};
+  if (c === "B" || c === "W") return {sign:-1, axis:"lon"};
+  return null;
+}
+
+function scanCoords(line){
+  let hits = [], m;
+  DMS_RE.lastIndex = 0;
+  while ((m = DMS_RE.exec(line)) !== null){
+    const deg = parseFloat(m[1]);
+    const min = m[2] ? parseFloat(m[2]) : 0;
+    const sec = m[3] ? parseFloat(m[3].replace(",", ".")) : 0;
+    hits.push({value: deg + min/60 + sec/3600, hemi: hemiSign(m[4]), start: m.index, end: m.index + m[0].length});
+  }
+  if (hits.length >= 2) return hits;
+
+  hits = [];
+  SPACE_DMS_RE.lastIndex = 0;
+  while ((m = SPACE_DMS_RE.exec(line)) !== null){
+    hits.push({value: parseFloat(m[1]) + parseFloat(m[2])/60 + parseFloat(m[3].replace(",", "."))/3600,
+               hemi: hemiSign(m[4]), start: m.index, end: m.index + m[0].length});
+  }
+  if (hits.length >= 2) return hits;
+
+  hits = [];
+  NUM_RE.lastIndex = 0;
+  while ((m = NUM_RE.exec(line)) !== null){
+    const raw = m[1].replace(",", ".");
+    const plain = !/[.]/.test(raw) && !m[2];
+    hits.push({value: parseFloat(raw), hemi: hemiSign(m[2]), start: m.index, end: m.index + m[0].length, plain});
+  }
+  if (hits.length >= 2){
+    const a = hits[hits.length-2], b = hits[hits.length-1];
+    if (a.plain && b.plain) return [];
+  }
+  return hits;
+}
+
+/* son iki eşleşmeden enlem/boylam çifti; hata varsa null */
+function coordPair(hits){
+  const a = hits[hits.length-2], b = hits[hits.length-1];
+  let A = a, B = b;
+  if (a.hemi && a.hemi.axis === "lon" && (!b.hemi || b.hemi.axis === "lat")){ A = b; B = a; }
+  let lat = A.value * (A.hemi ? A.hemi.sign : 1);
+  let lon = B.value * (B.hemi ? B.hemi.sign : 1);
+  if (Math.abs(lat) > 90 && Math.abs(lon) <= 90){ const t = lat; lat = lon; lon = t; }
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  return {lat, lon, start: a.start};
+}
+
+function parseText(text){
+  const zones = [], errors = [];
+  let cur = null, breakPending = false, autoNo = 0;
+
+  const newZone = name => {
+    autoNo++;
+    let auto = "Bölge " + autoNo, guard = autoNo;
+    while (zones.some(z => z.name === auto)) auto = "Bölge " + (++guard);
+    cur = {name: name || auto, points: [], visible: true, color: PALETTE[(autoNo-1) % PALETTE.length]};
+    zones.push(cur);
+    breakPending = false;
+    return cur;
+  };
+
+  text.split(/\r?\n/).forEach((raw, idx) => {
+    const line = raw.trim();
+    if (!line){ breakPending = true; return; }
+    if (/enlem|boylam|latitude|longitude|bölge\s*$|nokta\s*$/i.test(line) && !/\d/.test(line)) return;
+
+    const hits = scanCoords(line);
+    let prefix = line, pair = null;
+    if (hits.length >= 2){
+      pair = coordPair(hits);
+      if (!pair){ errors.push((idx+1) + ". satır: koordinat sınır dışı"); return; }
+      prefix = line.slice(0, pair.start);
+    }
+
+    let name = "", pno = "";
+    prefix = prefix.replace(/[\t;,|]+/g, " ").trim().replace(/[-–:]+$/,"").trim();
+    if (prefix){
+      if (/^\d+[.)]?$/.test(prefix)) pno = prefix.replace(/[.)]/,"");
+      else {
+        const m2 = prefix.match(/^(.*?)\s+(\d+)[.)]?$/);
+        if (m2 && m2[1].trim()){ name = m2[1].trim(); pno = m2[2]; }
+        else name = prefix;
+      }
+    }
+
+    if (!pair){
+      if (name || pno) newZone(name || prefix);
+      else errors.push((idx+1) + ". satır okunamadı: " + line.slice(0,40));
+      return;
+    }
+    if (name && (!cur || cur.name !== name)) newZone(name);
+    else if (!cur || breakPending) newZone(null);
+    cur.points.push({no: pno || String(cur.points.length + 1), lat: pair.lat, lon: pair.lon});
+  });
+  return {zones: zones.filter(z => z.points.length > 0), errors};
+}
+
+/* nokta listesi: her satır = isim + koordinat (+ isteğe bağlı #renk) */
+function parsePoints(text){
+  const pts = [], errors = [];
+  text.split(/\r?\n/).forEach((raw, idx) => {
+    let line = raw.trim();
+    if (!line) return;
+    if (/enlem|boylam|latitude|longitude/i.test(line) && !/\d/.test(line)) return;
+    let color = null;
+    const cm = line.match(/#[0-9a-fA-F]{6}\b/);
+    if (cm){ color = cm[0].toLowerCase(); line = line.replace(cm[0], " ").trim(); }
+    const hits = scanCoords(line);
+    if (hits.length < 2){ errors.push((idx+1) + ". satır okunamadı: " + line.slice(0,40)); return; }
+    const pair = coordPair(hits);
+    if (!pair){ errors.push((idx+1) + ". satır: koordinat sınır dışı"); return; }
+    let name = line.slice(0, pair.start).replace(/[\t;,|]+/g, " ").trim().replace(/[-–:]+$/,"").trim();
+    if (!name) name = "Nokta " + (pts.length + 1);
+    pts.push({name, lat: pair.lat, lon: pair.lon, color});
+  });
+  return {pts, errors};
+}
+
+function numList(str){
+  return str.split(/[;,\s]+/).map(v => parseFloat(v)).filter(v => isFinite(v) && v > 0);
+}
+
+/* ============ ölçüm ============ */
+function haversine(p1, p2){
+  const dLat = rad(p2.lat - p1.lat), dLon = rad(p2.lon - p1.lon);
+  const a = Math.sin(dLat/2)**2 + Math.cos(rad(p1.lat))*Math.cos(rad(p2.lat))*Math.sin(dLon/2)**2;
+  return 2 * R_EARTH * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function perimeter(pts){
+  if (pts.length < 2) return 0;
+  let s = 0;
+  for (let i = 0; i < pts.length; i++) s += haversine(pts[i], pts[(i+1) % pts.length]);
+  return s;
+}
+function sphericalArea(pts){
+  if (pts.length < 3) return 0;
+  let total = 0;
+  for (let i = 0; i < pts.length; i++){
+    const p1 = pts[i], p2 = pts[(i+1) % pts.length];
+    total += rad(p2.lon - p1.lon) * (2 + Math.sin(rad(p1.lat)) + Math.sin(rad(p2.lat)));
+  }
+  return Math.abs(total * R_EARTH * R_EARTH / 2);
+}
+function fmtArea(m2){
+  const km2 = m2 / 1e6;
+  return km2 >= 1 ? km2.toLocaleString("tr-TR", {maximumFractionDigits: km2 > 100 ? 0 : 2}) + " km²"
+                  : Math.round(m2).toLocaleString("tr-TR") + " m²";
+}
+function fmtLen(m){
+  const km = m / 1000;
+  return km >= 1 ? km.toLocaleString("tr-TR", {maximumFractionDigits: km > 100 ? 0 : 2}) + " km"
+                 : Math.round(m) + " m";
+}
+
+/* ============ görünüm / projeksiyon ============ */
+const cv = $("map");
+const ctx = cv.getContext("2d");
+let W = 0, H = 0, dpr = 1;
+const view = {mode:"mercator", cx:0, cy:0, k:2, phi0:0};
+
+const mercY = lat => 180/Math.PI * Math.log(Math.tan(Math.PI/4 + rad(clamp(lat,-85.05,85.05))/2));
+const invMercY = y => 2 * Math.atan(Math.exp(rad(y))) * 180/Math.PI - 90;
+function wx(lon){ return view.mode === "mercator" ? lon : lon * Math.cos(rad(view.phi0)); }
+function wy(lat){ return view.mode === "mercator" ? mercY(lat) : lat; }
+function invX(x){ return view.mode === "mercator" ? x : x / Math.cos(rad(view.phi0)); }
+function invY(y){ return view.mode === "mercator" ? invMercY(y) : y; }
+function sx(lon){ return W/2 + (wx(lon) - view.cx) * view.k; }
+function sy(lat){ return H/2 - (wy(lat) - view.cy) * view.k; }
+function lonAt(px){ return invX((px - W/2)/view.k + view.cx); }
+function latAt(py){ return invY((H/2 - py)/view.k + view.cy); }
+function viewBounds(){ return {lonMin: lonAt(0), lonMax: lonAt(W), latMin: latAt(H), latMax: latAt(0)}; }
+
+function resize(){
+  dpr = window.devicePixelRatio || 1;
+  const r = cv.getBoundingClientRect();
+  W = r.width; H = r.height;
+  cv.width = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  draw();
+}
+
+/* hedef görünüme yumuşak geçiş: yakınlaşma logaritmik, merkez doğrusal; hareket azaltma tercihinde anında */
+const REDUCED_MOTION = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+let viewAnim = 0;
+function stopAnim(){ if (viewAnim){ cancelAnimationFrame(viewAnim); viewAnim = 0; } }
+function animateView(t, instant){
+  stopAnim();
+  if (instant || REDUCED_MOTION || !W || !isFinite(view.k)){ Object.assign(view, t); draw(); return; }
+  const s0 = {cx: view.cx, cy: view.cy, k: view.k, phi0: view.phi0};
+  const ratio = t.k / s0.k, far = Math.abs(Math.log(ratio));
+  const D = clamp(380 + far * 70, 380, 720), t0 = performance.now();
+  const step = now => {
+    let u = Math.min(1, (now - t0) / D);
+    u = u < .5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2;
+    view.k = s0.k * Math.pow(ratio, u);
+    view.cx = s0.cx + (t.cx - s0.cx) * u;
+    view.cy = s0.cy + (t.cy - s0.cy) * u;
+    view.phi0 = s0.phi0 + (t.phi0 - s0.phi0) * u;
+    draw();
+    viewAnim = u < 1 ? requestAnimationFrame(step) : 0;
+  };
+  viewAnim = requestAnimationFrame(step);
+}
+function fitBounds(latMin, lonMin, latMax, lonMax, pad, instant){
+  const keep = view.phi0;
+  view.phi0 = (latMin + latMax) / 2;                       // eş uzaklıklı silindirikte wx() buna bağlı
+  const x1 = wx(lonMin), x2 = wx(lonMax), y1 = wy(latMin), y2 = wy(latMax);
+  const t = {phi0: view.phi0, cx: (x1 + x2)/2, cy: (y1 + y2)/2};
+  view.phi0 = keep;
+  const dx = Math.max(1e-6, Math.abs(x2 - x1)), dy = Math.max(1e-6, Math.abs(y2 - y1));
+  t.k = Math.min((W * (1 - pad)) / dx, (H * (1 - pad)) / dy);
+  animateView(t, instant);
+}
+function fitWorld(instant){ fitBounds(-72, -180, 78, 180, 0.06, instant); }
+
+/* ============ etiket çakışma kontrolü ============ */
+let LABELS = [];
+function claim(x, y, w, h){
+  for (const b of LABELS)
+    if (x < b[2] && x + w > b[0] && y < b[3] && y + h > b[1]) return false;
+  LABELS.push([x, y, x + w, y + h]);
+  return true;
+}
+
+/* ============ taban harita ============ */
+const opt = id => $(id).checked;
+
+function bbOf(flat){
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  for (let i = 0; i < flat.length; i += 2){
+    if (flat[i] < x0) x0 = flat[i]; if (flat[i] > x1) x1 = flat[i];
+    if (flat[i+1] < y0) y0 = flat[i+1]; if (flat[i+1] > y1) y1 = flat[i+1];
+  }
+  return [x0, y0, x1, y1];
+}
+/* ---- uydu görüntüsü (ilk açılışta çözülür) ---- */
+let SAT_IMG = null;
+function satOn(){
+  if (!opt("opt-sat")) return false;
+  if (!SAT_IMG){
+    SAT_IMG = new Image();
+    SAT_IMG.onload = () => draw();
+    SAT_IMG.src = "data:image/jpeg;base64," + SAT_SRC;
+  }
+  return SAT_IMG.complete && SAT_IMG.naturalWidth > 0;
+}
+function drawSatellite(){
+  const img = SAT_IMG, IW = img.naturalWidth, IH = img.naturalHeight;
+  const ppx = IW / 360, ppy = IH / 180, b = viewBounds();
+  const lim = view.mode === "mercator" ? 85.05 : 90;
+  const latTop = Math.min(b.latMax, lim), latBot = Math.max(b.latMin, -lim);
+  if (latTop <= latBot) return;
+  const yTop = sy(latTop), yBot = sy(latBot);
+  const n = Math.max(1, Math.ceil((yBot - yTop) / 36));         // Mercator için yatay şeritlerle bük
+  ctx.save();
+  ctx.globalAlpha = $("opt-sat-alpha").value / 100;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  for (let k = -1; k <= 1; k++){                                  // tarih çizgisinde tekrar
+    const lonA = -180 + 360*k, lonB = 180 + 360*k;
+    const l0 = Math.max(lonA, b.lonMin - 0.5), l1 = Math.min(lonB, b.lonMax + 0.5);
+    if (l1 <= l0) continue;
+    const srcX = (l0 - lonA) * ppx, srcW = (l1 - l0) * ppx;
+    const dstX = sx(l0), dstW = sx(l1) - dstX;
+    for (let i = 0; i < n; i++){
+      const yA = yTop + (yBot - yTop) * i / n, yB = yTop + (yBot - yTop) * (i + 1) / n;
+      const laA = latAt(yA), laB = latAt(yB);
+      let srcY = (90 - laA) * ppy, srcH = (laA - laB) * ppy;
+      if (srcY < 0){ srcH += srcY; srcY = 0; }
+      if (srcY + srcH > IH) srcH = IH - srcY;
+      if (srcH <= 0) continue;
+      ctx.drawImage(img, srcX, srcY, srcW, srcH, dstX, yA, dstW, yB - yA + 0.75);
+    }
+  }
+  ctx.restore();
+}
+function drawSatCredit(){
+  ctx.save();
+  ctx.font = "10.5px " + FONT();
+  const t = "Uydu görüntüsü: NASA Blue Marble NG";
+  const w = ctx.measureText(t).width + 12;
+  ctx.fillStyle = "rgba(10,20,30,.6)"; ctx.fillRect(W - 16 - w, H - 64, w, 17);
+  ctx.fillStyle = "#e8f0f3"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText(t, W - 22, H - 55);
+  ctx.restore();
+}
+
+const LAND_BB = WORLD.land.map(bbOf), LAKE_BB = WORLD.lakes.map(bbOf), BORDER_BB = WORLD.borders.map(bbOf);
+
+function tracePaths(list, bbs, closed){
+  const b = viewBounds();
+  for (let n = 0; n < list.length; n++){
+    const bb = bbs[n], flat = list[n];
+    if (bb[2] < b.lonMin || bb[0] > b.lonMax || bb[3] < b.latMin || bb[1] > b.latMax) continue;
+    for (let i = 0; i < flat.length; i += 2){
+      const X = sx(flat[i]), Y = sy(flat[i+1]);
+      if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+    }
+    if (closed) ctx.closePath();
+  }
+}
+
+function drawBase(){
+  if (SAT){
+    ctx.fillStyle = "#0b1a2a"; ctx.fillRect(0,0,W,H);
+    drawSatellite();
+    ctx.beginPath(); tracePaths(WORLD.land, LAND_BB, true);
+    ctx.strokeStyle = "rgba(255,255,255,.3)"; ctx.lineWidth = .8; ctx.stroke();
+    if (opt("opt-borders")){
+      ctx.save();
+      ctx.beginPath(); tracePaths(WORLD.borders, BORDER_BB, false);
+      ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2.6; ctx.stroke();
+      ctx.setLineDash([5,3]); ctx.strokeStyle = "rgba(255,236,190,.9)"; ctx.lineWidth = 1.1; ctx.stroke();
+      ctx.restore();
+    }
+    return;
+  }
+  ctx.fillStyle = "#e6eff2"; ctx.fillRect(0,0,W,H);
+  ctx.beginPath(); tracePaths(WORLD.land, LAND_BB, true);
+  ctx.fillStyle = "#f4ecda"; ctx.fill("evenodd");
+  ctx.strokeStyle = "#a49c88"; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); tracePaths(WORLD.lakes, LAKE_BB, true);
+  ctx.fillStyle = "#dcebf1"; ctx.fill("evenodd");
+  ctx.strokeStyle = "#a8bcc4"; ctx.lineWidth = .8; ctx.stroke();
+  if (opt("opt-borders")){
+    ctx.save();
+    ctx.beginPath(); tracePaths(WORLD.borders, BORDER_BB, false);
+    ctx.setLineDash([5,3]); ctx.strokeStyle = "rgba(120,110,92,.85)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* ---- FIR ---- */
+/* FIR adlarını haritaya uygun hale getir: frekans kalıntısı ve "X - X" tekrarları temizlenir */
+const FIR_WORD = /\b(FIR|UIR|ACC|Oceanic|Radio|Control|Center|Centre|Radar)\b/i;
+FIR.forEach(f => {
+  let n = (f[1] || "").replace(/\s*\d{3}\.\d+\s*/g, " ").replace(/\s+/g, " ").trim();
+  const parts = n.split(/\s+-\s+/);
+  if (parts.length > 1 && parts[0].split(" ")[0] === parts[1].split(" ")[0]) n = parts[0];
+  if (!n || n === f[0]) f[5] = [f[0] + " FIR", ""];
+  else f[5] = [FIR_WORD.test(n) ? n : n + " FIR", f[0]];
+});
+const FIR_BB = FIR.map(f => {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  f[4].forEach(r => { const b = bbOf(r); x0 = Math.min(x0,b[0]); y0 = Math.min(y0,b[1]); x1 = Math.max(x1,b[2]); y1 = Math.max(y1,b[3]); });
+  return [x0,y0,x1,y1];
+});
+function firContains(f, lon, lat){
+  let inside = false;
+  for (const r of f[4]){
+    const n = r.length;
+    for (let i = 0, j = n - 2; i < n; j = i, i += 2){
+      const xi = r[i], yi = r[i+1], xj = r[j], yj = r[j+1];
+      if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+    }
+  }
+  return inside;
+}
+function drawFIR(){
+  const b = viewBounds();
+  ctx.save();
+  ctx.beginPath();
+  const visible = [];
+  FIR.forEach((f, i) => {
+    const bb = FIR_BB[i];
+    if (bb[2] < b.lonMin || bb[0] > b.lonMax || bb[3] < b.latMin || bb[1] > b.latMax) return;
+    visible.push(i);
+    f[4].forEach(r => {
+      for (let j = 0; j < r.length; j += 2){
+        const X = sx(r[j]), Y = sy(r[j+1]);
+        if (j === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+      }
+      ctx.closePath();
+    });
+  });
+  ctx.strokeStyle = SAT ? "rgba(0,0,0,.4)" : "rgba(105,140,200,.22)"; ctx.lineWidth = SAT ? 3.2 : 5; ctx.stroke();
+  ctx.setLineDash([9,3,2,3]);
+  ctx.strokeStyle = SAT ? "rgba(150,210,255,.95)" : "rgba(58,86,140,.62)"; ctx.lineWidth = 1.3; ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.font = "600 11.5px " + FONT();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  let shown = 0;
+  for (const i of visible){
+    const bb = FIR_BB[i], f = FIR[i];
+    const vx0 = Math.max(Math.min(sx(bb[0]), sx(bb[2])), 8), vx1 = Math.min(Math.max(sx(bb[0]), sx(bb[2])), W - 8);
+    const vy0 = Math.max(Math.min(sy(bb[1]), sy(bb[3])), 8), vy1 = Math.min(Math.max(sy(bb[1]), sy(bb[3])), H - 8);
+    if (vx1 - vx0 < 70 || vy1 - vy0 < 46) continue;
+    if (shown > 40) break;
+    const [label, code] = f[5];
+    const lw = ctx.measureText(label).width;
+    const cand = [];
+    if (f[2] || f[3]) cand.push([sx(f[2]), sy(f[3])]);
+    const cxm = (vx0 + vx1)/2, cym = (vy0 + vy1)/2;
+    for (let a = 1; a <= 5; a++)
+      for (let c = 1; c <= 4; c++)
+        cand.push([vx0 + (vx1 - vx0) * a/6, vy0 + (vy1 - vy0) * c/5]);
+    cand.sort((p1, p2) => Math.hypot(p1[0]-cxm, p1[1]-cym) - Math.hypot(p2[0]-cxm, p2[1]-cym));
+    let px = null, py = null;
+    for (const [X, Y] of cand){
+      if (X - lw/2 < 14 || X + lw/2 > W - 14 || Y < 24 || Y > H - 24) continue;
+      if (!firContains(f, lonAt(X), latAt(Y))) continue;
+      if (!claim(X - lw/2 - 3, Y - 10, lw + 6, 32)) continue;
+      px = X; py = Y; break;
+    }
+    if (px === null) continue;
+    shown++;
+    ctx.strokeStyle = SAT ? "rgba(8,18,28,.8)" : "rgba(255,255,255,.85)"; ctx.lineWidth = 3.5;
+    ctx.strokeText(label, px, py);
+    ctx.fillStyle = SAT ? "#cfe8ff" : "#3a568c"; ctx.fillText(label, px, py);
+    if (code){
+      ctx.font = "10.5px " + FONT();
+      ctx.strokeText(code, px, py + 13); ctx.fillText(code, px, py + 13);
+    }
+    ctx.font = "600 11.5px " + FONT();
+  }
+  ctx.restore();
+}
+
+/* ---- kılavuz, çerçeve, ölçek ---- */
+const GRID_STEPS = [30,20,10,5,2,1,0.5,1/3,1/6,1/12,1/30,1/60,1/120,1/360,1/1800];
+function gridStep(){
+  let chosen = GRID_STEPS[0];
+  for (const s of GRID_STEPS){ if (s * view.k >= 78) chosen = s; else break; }
+  return chosen;
+}
+function gridLabel(v, isLat){
+  const a = Math.abs(v), d = Math.floor(a + 1e-9), mm = (a - d) * 60;
+  const m = Math.floor(mm + 1e-6), s = Math.round((mm - m) * 60);
+  const suf = isLat ? (v < 0 ? "G" : "K") : (v < 0 ? "B" : "D");
+  if (s) return d + "°" + String(m).padStart(2,"0") + "'" + String(s).padStart(2,"0") + '"' + suf;
+  if (m) return d + "°" + String(m).padStart(2,"0") + "'" + suf;
+  return d + "°" + suf;
+}
+function gridLines(){
+  const st = gridStep(), b = viewBounds(), lons = [], lats = [];
+  for (let v = Math.ceil(b.lonMin / st) * st; v <= b.lonMax + 1e-9; v += st) lons.push(Math.round(v/st)*st);
+  for (let v = Math.ceil(b.latMin / st) * st; v <= b.latMax + 1e-9; v += st) lats.push(Math.round(v/st)*st);
+  return {st, lons, lats};
+}
+function drawGrid(g){
+  ctx.save();
+  ctx.strokeStyle = SAT ? "rgba(255,255,255,.28)" : "rgba(22,34,42,.16)"; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  ctx.beginPath();
+  g.lons.forEach(v => { const X = Math.round(sx(v)) + .5; ctx.moveTo(X, 0); ctx.lineTo(X, H); });
+  g.lats.forEach(v => { const Y = Math.round(sy(v)) + .5; ctx.moveTo(0, Y); ctx.lineTo(W, Y); });
+  ctx.stroke();
+  ctx.restore();
+}
+function drawNeatline(g){
+  const t = 11;
+  ctx.save();
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0,0,W,t); ctx.fillRect(0,H-t,W,t); ctx.fillRect(0,0,t,H); ctx.fillRect(W-t,0,t,H);
+  ctx.fillStyle = "#16222a";
+  const band = (vals, horiz) => {
+    for (let i = 0; i < vals.length - 1; i += 2){
+      const a = horiz ? sx(vals[i]) : sy(vals[i]), b2 = horiz ? sx(vals[i+1]) : sy(vals[i+1]);
+      const p = Math.min(a,b2), q = Math.max(a,b2);
+      if (horiz){ ctx.fillRect(p, 0, q-p, t); ctx.fillRect(p, H-t, q-p, t); }
+      else { ctx.fillRect(0, p, t, q-p); ctx.fillRect(W-t, p, t, q-p); }
+    }
+  };
+  band(g.lons, true); band(g.lats, false);
+  ctx.strokeStyle = "#16222a"; ctx.lineWidth = 1;
+  ctx.strokeRect(.5,.5,W-1,H-1);
+  ctx.strokeRect(t+.5,t+.5,W-2*t-1,H-2*t-1);
+
+  ctx.font = "600 11px " + FONT();
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  g.lons.forEach(v => {
+    const X = sx(v);
+    if (X < 46 || X > W - 46) return;
+    const label = gridLabel(v, false), w = ctx.measureText(label).width + 8;
+    ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.fillRect(X - w/2, t + 2, w, 15); ctx.fillRect(X - w/2, H - t - 17, w, 15);
+    ctx.fillStyle = "#16222a"; ctx.fillText(label, X, t + 4); ctx.fillText(label, X, H - t - 15);
+  });
+  ctx.textBaseline = "middle";
+  g.lats.forEach(v => {
+    const Y = sy(v);
+    if (Y < 34 || Y > H - 34) return;
+    const label = gridLabel(v, true), w = ctx.measureText(label).width + 8;
+    ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.fillRect(t + 3, Y - 8, w, 16); ctx.fillRect(W - t - 3 - w, Y - 8, w, 16);
+    ctx.fillStyle = "#16222a";
+    ctx.textAlign = "left"; ctx.fillText(label, t + 7, Y);
+    ctx.textAlign = "right"; ctx.fillText(label, W - t - 7, Y);
+  });
+  ctx.restore();
+}
+function metersPerPixel(){
+  if (view.mode === "mercator") return 111319.49 * Math.cos(rad(latAt(H/2))) / view.k;
+  return 111319.49 * Math.cos(rad(view.phi0)) / view.k;
+}
+function niceLen(maxPx, mpp, unitM){
+  const raw = maxPx * mpp / unitM, pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  let v = pow;
+  [1, 2, 2.5, 5, 10].forEach(f => { if (pow * f <= raw) v = pow * f; });
+  return {v, px: v * unitM / mpp};
+}
+const scaleRatio = () => Math.round(metersPerPixel() / 0.00026458);
+function fmtRatio(r){
+  const p = Math.pow(10, Math.max(0, Math.floor(Math.log10(r)) - 2));   // üç anlamlı basamak
+  return "1 : " + (Math.round(r / p) * p).toLocaleString("tr-TR");
+}
+function drawScaleBar(){
+  const mpp = metersPerPixel(), maxPx = Math.min(230, W * 0.26);
+  const km = niceLen(maxPx, mpp, 1000), nm = niceLen(maxPx, mpp, 1852);
+  const withRatio = !opt("opt-title");
+  const x0 = 34, boxW = Math.max(km.px, nm.px) + 78, boxH = withRatio ? 76 : 60;
+  const by = H - 34 - boxH, y1 = by + (withRatio ? 30 : 16), y2 = y1 + 12;
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.fillRect(x0 - 12, by, boxW, boxH);
+  ctx.strokeStyle = "#16222a"; ctx.lineWidth = 1; ctx.strokeRect(x0 - 11.5, by + .5, boxW - 1, boxH - 1);
+  ctx.font = "11px " + FONT(); ctx.fillStyle = "#16222a"; ctx.textBaseline = "alphabetic";
+  if (withRatio){ ctx.font = "600 12px " + FONT(); ctx.textAlign = "left"; ctx.fillText(fmtRatio(scaleRatio()), x0, by + 18); ctx.font = "11px " + FONT(); }
+  const bar = (len, y, up) => {
+    const seg = len.px / 4;
+    for (let i = 0; i < 4; i++){
+      ctx.fillStyle = i % 2 ? "#fff" : "#16222a";
+      ctx.fillRect(x0 + seg * i, y, seg, 5);
+    }
+    ctx.strokeStyle = "#16222a"; ctx.strokeRect(x0 + .5, y + .5, len.px, 5);
+    ctx.fillStyle = "#16222a"; ctx.textAlign = "center";
+    const ty = up ? y - 3 : y + 15;
+    ctx.fillText("0", x0, ty);
+    ctx.fillText((len.v / 2).toLocaleString("tr-TR"), x0 + len.px / 2, ty);
+    ctx.textAlign = "left";
+    ctx.fillText(len.v.toLocaleString("tr-TR") + (len === km ? " km" : " NM"), x0 + len.px + 6, y + 6);
+  };
+  bar(km, y1, true);
+  bar(nm, y2, false);
+  ctx.restore();
+}
+function drawScaleBarOld(){
+  const mpp = metersPerPixel();
+  const target = Math.min(220, W * 0.28);
+  const rawKm = mpp * target / 1000;
+  const pow = Math.pow(10, Math.floor(Math.log10(rawKm)));
+  let nice = pow;
+  [1,2,2.5,5,10].forEach(f => { if (pow * f <= rawKm) nice = pow * f; });
+  const px = nice * 1000 / mpp, x0 = 26, y0 = H - 34;
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.strokeStyle = "#7d8f97"; ctx.lineWidth = 1;
+  ctx.fillRect(x0 - 12, y0 - 26, px + 96, 50); ctx.strokeRect(x0 - 12.5, y0 - 26.5, px + 96, 50);
+  ctx.fillStyle = "#16222a"; ctx.font = "600 11px " + FONT();
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("≈ 1 : " + Math.round(mpp / 0.00026458).toLocaleString("tr-TR"), x0, y0 - 12);
+  const half = px / 2;
+  ctx.fillRect(x0, y0, half, 6);
+  ctx.fillStyle = "#fff"; ctx.fillRect(x0 + half, y0, half, 6);
+  ctx.strokeStyle = "#16222a"; ctx.strokeRect(x0 + .5, y0 + .5, px, 6);
+  ctx.fillStyle = "#16222a"; ctx.font = "11px " + FONT();
+  ctx.fillText("0", x0 - 2, y0 + 20);
+  ctx.fillText(nice >= 1 ? nice.toLocaleString("tr-TR") + " km" : (nice*1000) + " m", x0 + px - 8, y0 + 20);
+  const nm = nice / 1.852;
+  ctx.fillStyle = "#5b6f79";
+  ctx.fillText("(" + nm.toFixed(nm < 10 ? 1 : 0) + " NM)", x0 + px + 8, y0 + 5);
+  ctx.restore();
+}
+function drawCities(){
+  const b = viewBounds(), span = b.lonMax - b.lonMin;
+  const maxRank = span > 120 ? 1 : span > 40 ? 2 : span > 12 ? 4 : span > 4 ? 7 : 10;
+  ctx.save();
+  ctx.font = "11.5px " + FONT();
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  let drawn = 0;
+  // kullanıcının işaretlediği bir nokta aynı yerdeyse şehir adı tekrar yazılmaz
+  const user = opt("opt-layer-points") ? POINTS.map(p => [sx(p.lon), sy(p.lat)]) : [];
+  for (const c of WORLD.cities){
+    if (c[3] > maxRank) continue;
+    if (c[1] < b.latMin || c[1] > b.latMax || c[0] < b.lonMin || c[0] > b.lonMax) continue;
+    if (drawn++ > 160) break;
+    const X = sx(c[0]), Y = sy(c[1]);
+    if (user.some(u => Math.abs(u[0] - X) < 14 && Math.abs(u[1] - Y) < 14)) continue;
+    const cw = ctx.measureText(c[2]).width;
+    if (!claim(X + 4, Y - 8, cw + 6, 16)) continue;
+    ctx.fillStyle = SAT ? "#fff" : "#4a5d66";
+    ctx.beginPath(); ctx.arc(X, Y, 2.4, 0, 6.284); ctx.fill();
+    ctx.strokeStyle = SAT ? "rgba(0,0,0,.7)" : "rgba(255,255,255,.85)"; ctx.lineWidth = 3;
+    ctx.strokeText(c[2], X + 5, Y);
+    ctx.fillStyle = SAT ? "#fff" : "#31444d"; ctx.fillText(c[2], X + 5, Y);
+  }
+  ctx.restore();
+}
+
+/* ============ katman verisi ============ */
+let ZONES = [];     // sekme 1
+let CIRCLES = [];   // sekme 2: {name, lat, lon, d, label, color, n, ring}
+let RINGS = [];     // sekme 3: {d, label, color, lines:[Float64Array lon/lat]}  (d'ye göre artan)
+let RING_SRC = null, RING_REF = null, RING_LABEL = "TR kara sınırı";
+let POINTS = [];    // sekme 4: {name, lat, lon, color}
+
+let FILL_A = .16;
+let SAT = false;          // bu karede uydu zemini çiziliyor mu
+
+/* çoklu halkayı ekrana izle (lon/lat düz dizi) */
+function traceFlat(flat, close){
+  for (let i = 0; i < flat.length; i += 2){
+    const X = sx(flat[i]), Y = sy(flat[i+1]);
+    if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+  }
+  if (close) ctx.closePath();
+}
+
+/* ============ 1 · alanlar ============ */
+function drawZones(){
+  const showNums = opt("opt-nums"), fill = opt("opt-fill");
+  ctx.save();
+  for (const z of ZONES){
+    if (!z.visible || !z.points.length) continue;
+    const pts = z.points.map(p => [sx(p.lon), sy(p.lat)]);
+    let px0 = 1e9, px1 = -1e9, py0 = 1e9, py1 = -1e9;
+    pts.forEach(([x,y]) => { px0 = Math.min(px0,x); px1 = Math.max(px1,x); py0 = Math.min(py0,y); py1 = Math.max(py1,y); });
+    const roomy = Math.max(px1-px0, py1-py0) > 110;
+    ctx.beginPath();
+    pts.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
+    if (pts.length > 2) ctx.closePath();
+    if (fill && pts.length > 2){ ctx.fillStyle = hexA(z.color, FILL_A); ctx.fill(); }
+    ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 4.5; ctx.stroke();
+    ctx.strokeStyle = z.color; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.font = "600 11px " + FONT();
+    ctx.textBaseline = "middle";
+    pts.forEach(([x,y], i) => {
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, 6.284);
+      ctx.fillStyle = "#fff"; ctx.fill();
+      ctx.strokeStyle = z.color; ctx.lineWidth = 2; ctx.stroke();
+      if (showNums && roomy){
+        const t = z.points[i].no, w = ctx.measureText(t).width + 7;
+        ctx.fillStyle = "rgba(255,255,255,.88)"; ctx.fillRect(x + 6, y - 15, w, 14);
+        ctx.fillStyle = z.color; ctx.textAlign = "left"; ctx.fillText(t, x + 9, y - 8);
+      }
+    });
+    let mx = 0, my = 0;
+    pts.forEach(([x,y]) => { mx += x; my += y; });
+    mx /= pts.length; my /= pts.length;
+    ctx.font = "600 14px " + FONT();
+    ctx.textAlign = "center";
+    ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.lineWidth = 4;
+    ctx.strokeText(z.name, mx, my);
+    ctx.fillStyle = z.color; ctx.fillText(z.name, mx, my);
+  }
+  ctx.restore();
+}
+
+/* ============ 2 · daireler ============ */
+function geodesicRing(lat, lon, dist, steps){
+  const out = [], dR = dist / R_EARTH, la1 = rad(lat), lo1 = rad(lon);
+  const sLa = Math.sin(la1), cLa = Math.cos(la1), sD = Math.sin(dR), cD = Math.cos(dR);
+  for (let i = 0; i <= steps; i++){
+    const th = 2 * Math.PI * i / steps;
+    const la2 = Math.asin(sLa * cD + cLa * sD * Math.cos(th));
+    const lo2 = lo1 + Math.atan2(Math.sin(th) * sD * cLa, cD - sLa * Math.sin(la2));
+    out.push(lo2 * 180/Math.PI, la2 * 180/Math.PI);
+  }
+  return out;
+}
+
+function drawCirclesLayer(){
+  if (!CIRCLES.length) return;
+  ctx.save();
+  ctx.lineJoin = "round";
+
+  // dolgu: her merkez için iç içe halkalar arası bant (en içteki tam disk)
+  if (opt("opt-fill")){
+    const byCenter = new Map();
+    CIRCLES.forEach(c => {
+      const k = c.lat + "|" + c.lon;
+      if (!byCenter.has(k)) byCenter.set(k, []);
+      byCenter.get(k).push(c);
+    });
+    byCenter.forEach(list => {
+      list.sort((a,b) => a.d - b.d);
+      list.forEach((c, i) => {
+        ctx.beginPath();
+        traceFlat(c.ring, true);
+        if (i > 0) traceFlat(list[i-1].ring, true);
+        ctx.fillStyle = hexA(c.color, FILL_A);
+        ctx.fill("evenodd");
+      });
+    });
+  }
+
+  const centers = new Map();
+  for (const c of CIRCLES){
+    ctx.beginPath(); traceFlat(c.ring, true);
+    ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = c.color; ctx.lineWidth = 2; ctx.stroke();
+    centers.set(c.lat + "|" + c.lon, c);
+    const X = sx(c.ring[0]), Y = sy(c.ring[1]);
+    if (X > 30 && X < W - 30 && Y > 24 && Y < H - 24){
+      ctx.font = "600 11.5px " + FONT();
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const w = ctx.measureText(c.label).width + 10;
+      if (claim(X - w/2, Y - 9, w, 18)){
+        ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.fillRect(X - w/2, Y - 9, w, 18);
+        ctx.fillStyle = c.color; ctx.fillText(c.label, X, Y);
+      }
+    }
+  }
+  ctx.font = "600 12px " + FONT();
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  for (const c of centers.values()){
+    const X = sx(c.lon), Y = sy(c.lat);
+    ctx.strokeStyle = "#16222a"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(X - 7, Y); ctx.lineTo(X + 7, Y); ctx.moveTo(X, Y - 7); ctx.lineTo(X, Y + 7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(X, Y, 3.2, 0, 6.284); ctx.fillStyle = "#fff"; ctx.fill(); ctx.stroke();
+    if (c.name){
+      ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.lineWidth = 4;
+      ctx.strokeText(c.name, X + 10, Y - 10);
+      ctx.fillStyle = "#16222a"; ctx.fillText(c.name, X + 10, Y - 10);
+    }
+  }
+  ctx.restore();
+}
+
+/* ============ 3 · sınırdan mesafe: hesap motoru ============ */
+function aeqd(lat0, lon0){
+  const p0 = rad(lat0), l0 = rad(lon0), s0 = Math.sin(p0), c0 = Math.cos(p0);
+  return {
+    fwd(lon, lat){
+      const p = rad(lat), dl = rad(lon) - l0;
+      const cosc = s0 * Math.sin(p) + c0 * Math.cos(p) * Math.cos(dl);
+      const c = Math.acos(clamp(cosc, -1, 1));
+      const k = Math.abs(c) < 1e-12 ? 1 : c / Math.sin(c);
+      return [R_EARTH * k * Math.cos(p) * Math.sin(dl), R_EARTH * k * (c0 * Math.sin(p) - s0 * Math.cos(p) * Math.cos(dl))];
+    },
+    inv(x, y){
+      const rho = Math.hypot(x, y);
+      if (rho < 1e-9) return [lon0, lat0];
+      const c = rho / R_EARTH, sc = Math.sin(c), cc = Math.cos(c);
+      const lat = Math.asin(cc * s0 + y * sc * c0 / rho);
+      const lon = l0 + Math.atan2(x * sc, rho * c0 * cc - y * s0 * sc);
+      return [lon * 180/Math.PI, lat * 180/Math.PI];
+    }
+  };
+}
+
+function edt1d(f, n, out){
+  const v = new Int32Array(n), z = new Float64Array(n + 1);
+  let k = 0; v[0] = 0; z[0] = -1e20; z[1] = 1e20;
+  for (let q = 1; q < n; q++){
+    let s = ((f[q] + q*q) - (f[v[k]] + v[k]*v[k])) / (2*q - 2*v[k]);
+    while (s <= z[k]){ k--; s = ((f[q] + q*q) - (f[v[k]] + v[k]*v[k])) / (2*q - 2*v[k]); }
+    k++; v[k] = q; z[k] = s; z[k+1] = 1e20;
+  }
+  k = 0;
+  for (let q = 0; q < n; q++){
+    while (z[k+1] < q) k++;
+    out[q] = (q - v[k]) * (q - v[k]) + f[v[k]];
+  }
+}
+function edt2d(grid, cols, rows){
+  const col = new Float64Array(rows), colOut = new Float64Array(rows);
+  for (let i = 0; i < cols; i++){
+    for (let j = 0; j < rows; j++) col[j] = grid[j*cols + i];
+    edt1d(col, rows, colOut);
+    for (let j = 0; j < rows; j++) grid[j*cols + i] = colOut[j];
+  }
+  const row = new Float64Array(cols), rowOut = new Float64Array(cols);
+  for (let j = 0; j < rows; j++){
+    for (let i = 0; i < cols; i++) row[i] = grid[j*cols + i];
+    edt1d(row, cols, rowOut);
+    for (let i = 0; i < cols; i++) grid[j*cols + i] = rowOut[i];
+  }
+}
+
+/* birleşim maskesi: her halka ayrı taranır ve VEYA'lanır */
+function insideMask(rings, xs, ys){
+  const cols = xs.length, rows = ys.length, mask = new Uint8Array(cols * rows);
+  for (const r of rings){
+    const n = r.length;
+    for (let j = 0; j < rows; j++){
+      const y = ys[j], cr = [];
+      for (let i = 0; i < n; i += 2){
+        const i2 = (i + 2) % n;
+        const x1 = r[i], y1 = r[i+1], x2 = r[i2], y2 = r[i2+1];
+        if ((y1 > y) !== (y2 > y)) cr.push(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+      }
+      if (!cr.length) continue;
+      cr.sort((a,b) => a-b);
+      for (let k = 0; k + 1 < cr.length; k += 2){
+        let i0 = 0;
+        while (i0 < cols && xs[i0] < cr[k]) i0++;
+        let i1 = i0;
+        while (i1 < cols && xs[i1] <= cr[k+1]) i1++;
+        for (let i = i0; i < i1; i++) mask[j*cols + i] = 1;
+      }
+    }
+  }
+  return mask;
+}
+
+function contourSegs(field, cols, rows, xs, ys, level){
+  const segs = [];
+  const at = (i,j) => field[j*cols + i];
+  const P = (i,j,i2,j2,va,vb) => {
+    const t = (level - va) / (vb - va);
+    return [xs[i] + (xs[i2] - xs[i]) * t, ys[j] + (ys[j2] - ys[j]) * t];
+  };
+  for (let j = 0; j < rows - 1; j++){
+    for (let i = 0; i < cols - 1; i++){
+      const f0 = at(i,j), f1 = at(i+1,j), f2 = at(i+1,j+1), f3 = at(i,j+1);
+      let c = 0;
+      if (f0 > level) c |= 1;
+      if (f1 > level) c |= 2;
+      if (f2 > level) c |= 4;
+      if (f3 > level) c |= 8;
+      if (c === 0 || c === 15) continue;
+      const e0 = () => P(i,j,i+1,j,f0,f1), e1 = () => P(i+1,j,i+1,j+1,f1,f2);
+      const e2 = () => P(i,j+1,i+1,j+1,f3,f2), e3 = () => P(i,j,i,j+1,f0,f3);
+      const push = (a,b) => segs.push(a[0],a[1],b[0],b[1]);
+      switch (c){
+        case 1: case 14: push(e3(), e0()); break;
+        case 2: case 13: push(e0(), e1()); break;
+        case 3: case 12: push(e3(), e1()); break;
+        case 4: case 11: push(e1(), e2()); break;
+        case 6: case 9:  push(e0(), e2()); break;
+        case 7: case 8:  push(e2(), e3()); break;
+        case 5:  push(e3(), e0()); push(e1(), e2()); break;
+        case 10: push(e0(), e1()); push(e2(), e3()); break;
+      }
+    }
+  }
+  return segs;
+}
+
+/* komşu hücreler ortak kenar noktasını birebir aynı hesapladığı için uçlar tam eşleşir */
+function chainSegs(segs){
+  const n = segs.length / 4, key = (x,y) => x + "," + y, ends = new Map();
+  for (let s = 0; s < n; s++)
+    for (let e = 0; e < 2; e++){
+      const k = key(segs[4*s + 2*e], segs[4*s + 2*e + 1]);
+      let a = ends.get(k); if (!a) ends.set(k, a = []);
+      a.push(2*s + e);
+    }
+  const used = new Uint8Array(n), lines = [];
+  const walk = (x, y, out) => {
+    for (;;){
+      const a = ends.get(key(x, y)); if (!a) return;
+      let nx = -1;
+      for (const id of a) if (!used[id >> 1]){ nx = id; break; }
+      if (nx < 0) return;
+      const s = nx >> 1, e = nx & 1; used[s] = 1;
+      x = segs[4*s + 2*(1-e)]; y = segs[4*s + 2*(1-e) + 1];
+      out.push(x, y);
+    }
+  };
+  for (let s0 = 0; s0 < n; s0++){
+    if (used[s0]) continue;
+    used[s0] = 1;
+    const fwd = [], bwd = [];
+    walk(segs[4*s0+2], segs[4*s0+3], fwd);
+    walk(segs[4*s0], segs[4*s0+1], bwd);
+    const line = [];
+    for (let i = bwd.length - 2; i >= 0; i -= 2) line.push(bwd[i], bwd[i+1]);
+    line.push(segs[4*s0], segs[4*s0+1], segs[4*s0+2], segs[4*s0+3], ...fwd);
+    if (line.length >= 6) lines.push(line);
+  }
+  return lines;
+}
+
+function samplePlanar(rings, spacing){
+  const pts = [];
+  for (const r of rings){
+    const n = r.length;
+    for (let i = 0; i < n; i += 2){
+      const i2 = (i + 2) % n;
+      const x1 = r[i], y1 = r[i+1], x2 = r[i2], y2 = r[i2+1];
+      const k = Math.max(1, Math.ceil(Math.hypot(x2-x1, y2-y1) / spacing));
+      for (let t = 0; t < k; t++) pts.push(x1 + (x2-x1)*t/k, y1 + (y2-y1)*t/k);
+    }
+  }
+  return pts;
+}
+
+function distanceRings(srcRings, dists){
+  const maxD = Math.max(...dists);
+  let lo0 = 1e9, lo1 = -1e9, la0 = 1e9, la1 = -1e9;
+  for (const r of srcRings){ const b = bbOf(r); lo0 = Math.min(lo0,b[0]); la0 = Math.min(la0,b[1]); lo1 = Math.max(lo1,b[2]); la1 = Math.max(la1,b[3]); }
+  const pr = aeqd((la0 + la1)/2, (lo0 + lo1)/2);
+  const rings = srcRings.map(r => {
+    const o = new Float64Array(r.length);
+    for (let i = 0; i < r.length; i += 2){ const q = pr.fwd(r[i], r[i+1]); o[i] = q[0]; o[i+1] = q[1]; }
+    return o;
+  });
+  let x0 = 1e15, x1 = -1e15, y0 = 1e15, y1 = -1e15;
+  for (const r of rings){ const b = bbOf(r); x0 = Math.min(x0,b[0]); y0 = Math.min(y0,b[1]); x1 = Math.max(x1,b[2]); y1 = Math.max(y1,b[3]); }
+  const pad = maxD * 1.25;
+  x0 -= pad; x1 += pad; y0 -= pad; y1 += pad;
+
+  let cell = Math.min(Math.max(maxD / 220, 500), 30000);
+  let cols = Math.round((x1 - x0) / cell) + 1, rows = Math.round((y1 - y0) / cell) + 1;
+  while (cols * rows > 2600000){ cell *= 1.3; cols = Math.round(cols/1.3); rows = Math.round(rows/1.3); }
+  cols = Math.max(cols, 16); rows = Math.max(rows, 16);
+  const dx = (x1 - x0) / (cols - 1), dy = (y1 - y0) / (rows - 1);
+  const xs = new Float64Array(cols), ys = new Float64Array(rows);
+  for (let i = 0; i < cols; i++) xs[i] = x0 + dx * i;
+  for (let j = 0; j < rows; j++) ys[j] = y0 + dy * j;
+
+  const mask = insideMask(rings, xs, ys);
+  const seed = new Float64Array(cols * rows).fill(1e12);
+  const sp = samplePlanar(rings, Math.min(dx, dy) / 2);
+  for (let s = 0; s < sp.length; s += 2){
+    const fx = (sp[s] - x0) / dx, fy = (sp[s+1] - y0) / dy;
+    const i = Math.round(fx), j = Math.round(fy);
+    if (i < 0 || i >= cols || j < 0 || j >= rows) continue;
+    const n0 = j*cols + i;
+    if (mask[n0] && i > 0 && i < cols-1 && j > 0 && j < rows-1 &&
+        mask[n0-1] && mask[n0+1] && mask[n0-cols] && mask[n0+cols]) continue;   // birleşimin iç kenarı
+    const ex = fx - i, ey = fy - j, v = ex*ex + ey*ey;
+    if (v < seed[n0]) seed[n0] = v;
+  }
+  edt2d(seed, cols, rows);
+  const scale = (dx + dy) / 2, field = new Float32Array(cols * rows);
+  for (let n = 0; n < field.length; n++){
+    const d = Math.sqrt(seed[n]) * scale;
+    field[n] = mask[n] ? -d : d;
+  }
+  return {
+    cell: scale,
+    levels: dists.map(d => chainSegs(contourSegs(field, cols, rows, xs, ys, d)).map(line => {
+      const out = new Float64Array(line.length);
+      for (let i = 0; i < line.length; i += 2){ const q = pr.inv(line[i], line[i+1]); out[i] = q[0]; out[i+1] = q[1]; }
+      return out;
+    }))
+  };
+}
+
+/* ============ 3 · sınırdan mesafe: çizim ============ */
+function drawRingsLayer(){
+  if (!RINGS.length && !RING_SRC) return;
+  ctx.save();
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+  // dolgu: ardışık eğriler arası bant; en içteki bant kaynak sınırın dışından başlar
+  if (opt("opt-fill") && RINGS.length){
+    RINGS.forEach((lv, k) => {
+      ctx.beginPath();
+      lv.lines.forEach(l => traceFlat(l, true));
+      if (k > 0) RINGS[k-1].lines.forEach(l => traceFlat(l, true));
+      else if (RING_SRC) RING_SRC.forEach(r => traceFlat(r, true));
+      ctx.fillStyle = hexA(lv.color, FILL_A);
+      ctx.fill("evenodd");
+    });
+  }
+
+  if (RING_REF){
+    ctx.save(); ctx.beginPath(); RING_REF.forEach(r => traceFlat(r, true));
+    ctx.setLineDash([7,4]); ctx.strokeStyle = "rgba(20,90,150,.75)"; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.restore();
+  }
+  if (RING_SRC){
+    ctx.beginPath(); RING_SRC.forEach(r => traceFlat(r, true));
+    ctx.strokeStyle = SAT ? "rgba(255,255,255,.85)" : "rgba(22,34,42,.75)"; ctx.lineWidth = 1.4; ctx.stroke();
+  }
+
+  for (const lv of RINGS){
+    ctx.beginPath(); lv.lines.forEach(l => traceFlat(l, false));
+    ctx.strokeStyle = "rgba(255,255,255,.65)"; ctx.lineWidth = 4.5; ctx.stroke();
+    ctx.strokeStyle = lv.color; ctx.lineWidth = 2; ctx.stroke();
+
+    // eğrinin üstüne mesafe yazısı, eğri yönünde
+    ctx.font = "600 11.5px " + FONT();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const tw = ctx.measureText(lv.label).width, put = [];
+    outer:
+    for (const l of lv.lines){
+      const stride = Math.max(2, 2 * Math.floor(l.length / 2 / 60));
+      for (let i = 0; i + 3 < l.length; i += stride){
+        const x1 = sx(l[i]), y1 = sy(l[i+1]), x2 = sx(l[i+2]), y2 = sy(l[i+3]);
+        const X = (x1 + x2)/2, Y = (y1 + y2)/2;
+        if (X < 40 || X > W - 40 || Y < 28 || Y > H - 28) continue;
+        let far = true;
+        for (const q of put) if (Math.hypot(q[0]-X, q[1]-Y) < 300){ far = false; break; }
+        if (!far || !claim(X - tw/2 - 6, Y - 11, tw + 12, 22)) continue;
+        put.push([X, Y]);
+        let a = Math.atan2(y2 - y1, x2 - x1);
+        if (a > Math.PI/2) a -= Math.PI;
+        if (a < -Math.PI/2) a += Math.PI;
+        ctx.save(); ctx.translate(X, Y); ctx.rotate(a);
+        ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.lineWidth = 4; ctx.strokeText(lv.label, 0, 0);
+        ctx.fillStyle = lv.color; ctx.fillText(lv.label, 0, 0);
+        ctx.restore();
+        if (put.length >= 8) break outer;
+      }
+    }
+  }
+  ctx.restore();
+}
+
+/* ============ 4 · noktalar ============ */
+function markerPath(shape, X, Y, s){
+  ctx.beginPath();
+  switch (shape){
+    case "triangle": ctx.moveTo(X, Y - s*1.25); ctx.lineTo(X + s*1.1, Y + s*.8); ctx.lineTo(X - s*1.1, Y + s*.8); ctx.closePath(); break;
+    case "square":   ctx.rect(X - s*.9, Y - s*.9, s*1.8, s*1.8); break;
+    case "diamond":  ctx.moveTo(X, Y - s*1.2); ctx.lineTo(X + s*1.2, Y); ctx.lineTo(X, Y + s*1.2); ctx.lineTo(X - s*1.2, Y); ctx.closePath(); break;
+    case "cross":
+      ctx.moveTo(X - s*.35, Y - s*1.2); ctx.lineTo(X + s*.35, Y - s*1.2); ctx.lineTo(X + s*.35, Y - s*.35);
+      ctx.lineTo(X + s*1.2, Y - s*.35); ctx.lineTo(X + s*1.2, Y + s*.35); ctx.lineTo(X + s*.35, Y + s*.35);
+      ctx.lineTo(X + s*.35, Y + s*1.2); ctx.lineTo(X - s*.35, Y + s*1.2); ctx.lineTo(X - s*.35, Y + s*.35);
+      ctx.lineTo(X - s*1.2, Y + s*.35); ctx.lineTo(X - s*1.2, Y - s*.35); ctx.lineTo(X - s*.35, Y - s*.35); ctx.closePath(); break;
+    default: ctx.arc(X, Y, s, 0, 6.284);
+  }
+}
+
+function drawPointsLayer(){
+  if (!POINTS.length) return;
+  const shape = $("p-shape").value, s = parseFloat($("p-size").value), withCoords = opt("p-coords");
+  const b = viewBounds();
+  ctx.save();
+  // önce işaretler, sonra etiketler (etiket işaretin altında kalmasın)
+  const vis = POINTS.filter(p => p.lon >= b.lonMin - 1 && p.lon <= b.lonMax + 1 && p.lat >= b.latMin - 1 && p.lat <= b.latMax + 1);
+  for (const p of vis){
+    const X = sx(p.lon), Y = sy(p.lat);
+    markerPath(shape, X, Y, s);
+    ctx.fillStyle = p.color; ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.8; ctx.stroke();
+    markerPath(shape, X, Y, s + 1.4);
+    ctx.strokeStyle = "rgba(22,34,42,.55)"; ctx.lineWidth = .8; ctx.stroke();
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (const p of vis){
+    const X = sx(p.lon), Y = sy(p.lat);
+    const sub = withCoords ? dms(p.lat, true) + "  " + dms(p.lon, false) : "";
+    ctx.font = "600 12.5px " + FONT();
+    const w1 = ctx.measureText(p.name).width;
+    ctx.font = "10.5px " + FONT();
+    const w2 = sub ? ctx.measureText(sub).width : 0;
+    const w = Math.max(w1, w2) + 8, h = sub ? 30 : 17;
+    // tercih sırası: üst, alt, sağ; hiçbiri boş değilse yine üste yaz — isim her zaman görünür
+    const slots = [[X, Y - s - 5 - h], [X, Y + s + 5], [X + s + 6 + w/2, Y - h/2]];
+    let slot = slots[0];
+    for (const c of slots) if (claim(c[0] - w/2, c[1], w, h)){ slot = c; break; }
+    const top = slot[1];
+    ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 4; ctx.lineJoin = "round";
+    ctx.font = "600 12.5px " + FONT();
+    ctx.strokeText(p.name, slot[0], top + 13);
+    ctx.fillStyle = "#16222a"; ctx.fillText(p.name, slot[0], top + 13);
+    if (sub){
+      ctx.font = "10.5px " + FONT();
+      ctx.strokeText(sub, slot[0], top + 26);
+      ctx.fillStyle = "#3b4d56"; ctx.fillText(sub, slot[0], top + 26);
+    }
+  }
+  ctx.restore();
+}
+
+/* WGS84 elipsoidi üzerinde ters jeodezik problem (Vincenty 1975): mesafe (m) + ilk kerteriz (°) */
+function vincenty(lat1, lon1, lat2, lon2){
+  const a = 6378137, f = 1/298.257223563, b = a * (1 - f), r = Math.PI / 180;
+  const L = (lon2 - lon1) * r;
+  const U1 = Math.atan((1 - f) * Math.tan(lat1 * r)), U2 = Math.atan((1 - f) * Math.tan(lat2 * r));
+  const sU1 = Math.sin(U1), cU1 = Math.cos(U1), sU2 = Math.sin(U2), cU2 = Math.cos(U2);
+  let lam = L, lamP, it = 0, sS, cS, sig, sA, c2A, c2M;
+  do {
+    const sl = Math.sin(lam), cl = Math.cos(lam);
+    sS = Math.sqrt((cU2*sl)**2 + (cU1*sU2 - sU1*cU2*cl)**2);
+    if (sS === 0) return {d: 0, az: 0};
+    cS = sU1*sU2 + cU1*cU2*cl;
+    sig = Math.atan2(sS, cS);
+    sA = cU1*cU2*sl / sS;
+    c2A = 1 - sA*sA;
+    c2M = c2A !== 0 ? cS - 2*sU1*sU2/c2A : 0;
+    const C = f/16 * c2A * (4 + f*(4 - 3*c2A));
+    lamP = lam;
+    lam = L + (1 - C) * f * sA * (sig + C*sS*(c2M + C*cS*(-1 + 2*c2M*c2M)));
+  } while (Math.abs(lam - lamP) > 1e-12 && ++it < 200);
+  if (it >= 200){                       // neredeyse zıt kutuplu noktalar: küresel yaklaşık
+    const p1 = lat1*r, p2 = lat2*r, dl = (lon2-lon1)*r;
+    const h = Math.sin((p2-p1)/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    const az = Math.atan2(Math.sin(dl)*Math.cos(p2), Math.cos(p1)*Math.sin(p2) - Math.sin(p1)*Math.cos(p2)*Math.cos(dl));
+    return {d: 2*6371008.8*Math.asin(Math.min(1, Math.sqrt(h))), az: (az/r + 360) % 360, approx: true};
+  }
+  const uSq = c2A * (a*a - b*b) / (b*b);
+  const A = 1 + uSq/16384*(4096 + uSq*(-768 + uSq*(320 - 175*uSq)));
+  const B = uSq/1024*(256 + uSq*(-128 + uSq*(74 - 47*uSq)));
+  const dS = B*sS*(c2M + B/4*(cS*(-1 + 2*c2M*c2M) - B/6*c2M*(-3 + 4*sS*sS)*(-3 + 4*c2M*c2M)));
+  const az = Math.atan2(cU2*Math.sin(lam), cU1*sU2 - sU1*cU2*Math.cos(lam));
+  return {d: b*A*(sig - dS), az: (az/r + 360) % 360};
+}
+
+/* ============ 5 · mesafe ölçümü ============ */
+const M_COLORS = ["#d1495b","#00798c","#e08e0b","#30638e","#6a3d9a","#3c6e2a"];
+let MEASURE = [{color: M_COLORS[0], pts: []}];   // hatlar; her nokta {lat, lon, name}
+let MEASURE_ACTIVE = false;                        // 5. sekme açıkken tıklama nokta ekler
+let HOVER = null;                                  // imleç (ölçüm önizlemesi için)
+
+/* büyük daire yayı üzerinde ara noktalar (çizim için) */
+function gcPoints(a, b){
+  const p1 = rad(a.lat), l1 = rad(a.lon), p2 = rad(b.lat), l2 = rad(b.lon);
+  const v1 = [Math.cos(p1)*Math.cos(l1), Math.cos(p1)*Math.sin(l1), Math.sin(p1)];
+  const v2 = [Math.cos(p2)*Math.cos(l2), Math.cos(p2)*Math.sin(l2), Math.sin(p2)];
+  const d = Math.acos(clamp(v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2], -1, 1));
+  if (d < 1e-9) return [a.lon, a.lat, b.lon, b.lat];
+  const n = Math.max(2, Math.min(256, Math.ceil(d * R_EARTH / 15000)));
+  const out = [];
+  let prev = null;
+  for (let i = 0; i <= n; i++){
+    const t = i / n, A = Math.sin((1-t)*d) / Math.sin(d), B = Math.sin(t*d) / Math.sin(d);
+    const x = A*v1[0] + B*v2[0], y = A*v1[1] + B*v2[1], z = A*v1[2] + B*v2[2];
+    let lon = Math.atan2(y, x) * 180/Math.PI;
+    const lat = Math.atan2(z, Math.hypot(x, y)) * 180/Math.PI;
+    if (prev !== null){ while (lon - prev > 180) lon -= 360; while (lon - prev < -180) lon += 360; }
+    prev = lon;
+    out.push(lon, lat);
+  }
+  return out;
+}
+function gcMid(a, b){ const g = gcPoints(a, b), k = (g.length / 2) | 0; const i = k - (k % 2); return [g[i], g[i+1]]; }
+
+function fmtDist(m){
+  const u = $("m-unit").value;
+  const f = (v, big) => v.toLocaleString("tr-TR", {minimumFractionDigits: big ? 1 : 2, maximumFractionDigits: big ? 1 : 2});
+  const km = m < 1000 ? Math.round(m) + " m" : f(m/1000, m >= 100000) + " km";
+  const nm = f(m/1852, m/1852 >= 100) + " NM";
+  return u === "km" ? km : u === "nm" ? nm : km + " / " + nm;
+}
+const fmtAz = az => String(Math.round(az) % 360).padStart(3, "0") + "°";
+const chainTotal = ch => { let t = 0; for (let i = 1; i < ch.pts.length; i++) t += vincenty(ch.pts[i-1].lat, ch.pts[i-1].lon, ch.pts[i].lat, ch.pts[i].lon).d; return t; };
+
+/* etiket kutusu: tercih edilen konum dolu ise hattın iki yanına kaydır; son çare yine yaz */
+function tagBox(lines, X, Y, color, nx, ny, own){
+  ctx.font = "600 12px " + FONT();
+  const w1 = ctx.measureText(lines[0]).width;
+  ctx.font = "11px " + FONT();
+  const w2 = lines[1] ? ctx.measureText(lines[1]).width : 0;
+  const w = Math.max(w1, w2) + 14, h = lines[1] ? 34 : 20;
+  const cand = own ? own(w, h) :
+               [[X, Y], [X + nx*(h/2 + 8), Y + ny*(h/2 + 8)], [X - nx*(h/2 + 8), Y - ny*(h/2 + 8)],
+                [X + nx*(h + 16), Y + ny*(h + 16)], [X - nx*(h + 16), Y - ny*(h + 16)]];
+  let c = cand[0];
+  for (const q of cand) if (claim(q[0] - w/2, q[1] - h/2, w, h)){ c = q; break; }
+  const bx = c[0] - w/2, by = c[1] - h/2;
+  ctx.fillStyle = "rgba(255,255,255,.96)"; ctx.fillRect(bx, by, w, h);
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.strokeRect(bx + .5, by + .5, w - 1, h - 1);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "600 12px " + FONT(); ctx.fillStyle = "#16222a";
+  ctx.fillText(lines[0], c[0], lines[1] ? by + 11 : c[1]);
+  if (lines[1]){ ctx.font = "11px " + FONT(); ctx.fillStyle = color; ctx.fillText(lines[1], c[0], by + 25); }
+}
+
+function drawMeasureLayer(){
+  const showAz = opt("m-bearing"), showTot = opt("m-total");
+  ctx.save();
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  MEASURE.forEach((ch, ci) => {
+    const P = ch.pts;
+    if (!P.length) return;
+    ctx.beginPath();
+    for (let i = 1; i < P.length; i++) traceFlat(gcPoints(P[i-1], P[i]), false);
+    ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 5.5; ctx.stroke();
+    ctx.strokeStyle = ch.color; ctx.lineWidth = 2.4; ctx.stroke();
+
+    // köşe noktaları: renkli daire içinde sıra numarası
+    ctx.font = "700 10.5px " + FONT();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    P.forEach((p, i) => {
+      const X = sx(p.lon), Y = sy(p.lat);
+      ctx.beginPath(); ctx.arc(X, Y, 8.5, 0, 6.284);
+      ctx.fillStyle = ch.color; ctx.fill();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = "#fff"; ctx.fillText(String(i + 1), X, Y + .5);
+      LABELS.push([X - 10, Y - 10, X + 10, Y + 10]);
+    });
+
+    // her parçanın ortasına mesafe (+ kerteriz)
+    for (let i = 1; i < P.length; i++){
+      const r = vincenty(P[i-1].lat, P[i-1].lon, P[i].lat, P[i].lon);
+      const m = gcMid(P[i-1], P[i]);
+      const X = sx(m[0]), Y = sy(m[1]);
+      const dx = sx(P[i].lon) - sx(P[i-1].lon), dy = sy(P[i].lat) - sy(P[i-1].lat), L = Math.hypot(dx, dy) || 1;
+      tagBox([fmtDist(r.d), showAz ? "kerteriz " + fmtAz(r.az) : null].filter(Boolean), X, Y, ch.color, -dy/L, dx/L);
+    }
+    // hat sonunda toplam
+    if (showTot && P.length >= 3){
+      const last = P[P.length-1], X = sx(last.lon), Y = sy(last.lat);
+      tagBox(["Σ " + fmtDist(chainTotal(ch)), "Hat " + (ci + 1)], X, Y, ch.color, 0, 0, (w, h) => [
+        [X + 14 + w/2, Y], [X - 14 - w/2, Y], [X, Y + 16 + h/2], [X, Y - 16 - h/2],
+        [X + 14 + w/2, Y + h + 4], [X - 14 - w/2, Y - h - 4]]);
+    }
+  });
+
+  // önizleme: son noktadan imlece kesikli hat
+  if (MEASURE_ACTIVE && HOVER){
+    const ch = MEASURE[MEASURE.length - 1];
+    if (ch.pts.length){
+      const a = ch.pts[ch.pts.length - 1], b = {lat: HOVER.lat, lon: HOVER.lon};
+      ctx.beginPath(); traceFlat(gcPoints(a, b), false);
+      ctx.setLineDash([6,5]); ctx.strokeStyle = ch.color; ctx.lineWidth = 1.8; ctx.stroke(); ctx.setLineDash([]);
+      const r = vincenty(a.lat, a.lon, b.lat, b.lon);
+      const t = fmtDist(r.d) + (showAz ? ",  " + fmtAz(r.az) : "");
+      ctx.font = "600 12px " + FONT();
+      const w = ctx.measureText(t).width + 12;
+      let bx = HOVER.x + 14, by = HOVER.y + 12;
+      if (bx + w > W - 16) bx = HOVER.x - 14 - w;      // sağ kenarda imlecin soluna geç
+      if (by + 20 > H - 16) by = HOVER.y - 32;          // alt kenarda üstüne geç
+      ctx.fillStyle = "rgba(22,34,42,.88)"; ctx.fillRect(bx, by, w, 20);
+      ctx.fillStyle = "#fff"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.fillText(t, bx + 6, by + 10.5);
+    }
+    if (HOVER.name){
+      ctx.beginPath(); ctx.arc(HOVER.x, HOVER.y, 11, 0, 6.284);
+      ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ============ lejant ============ */
+function legendRows(){
+  const rows = [];
+  if (opt("opt-layer-areas"))
+    ZONES.filter(z => z.visible).forEach(z => rows.push({kind: "area", color: z.color, t: z.name,
+      v: z.points.length > 2 ? fmtArea(sphericalArea(z.points)) : z.points.length + " nokta"}));
+  if (opt("opt-layer-circles")){
+    const seen = new Set();
+    CIRCLES.forEach(c => { if (!seen.has(c.label)){ seen.add(c.label); rows.push({kind: "circle", color: c.color, t: "Yarıçap", v: c.label}); } });
+  }
+  if (opt("opt-layer-rings"))
+    RINGS.forEach(lv => rows.push({kind: "band", color: lv.color, t: RING_LABEL === "Mavi Vatan sınırı" ? "Mavi Vatan'dan" : "TR sınırından", v: lv.label}));
+  if (opt("opt-layer-points") && POINTS.length){
+    const seen = new Map();
+    POINTS.forEach(p => seen.set(p.color, (seen.get(p.color) || 0) + 1));
+    seen.forEach((n, c) => rows.push({kind: "marker", color: c, t: seen.size === 1 ? "Noktalar" : "Nokta grubu", v: n + " adet"}));
+  }
+  if (opt("opt-layer-measure"))
+    MEASURE.forEach((ch, i) => { if (ch.pts.length >= 2) rows.push({kind: "line", color: ch.color, t: "Ölçüm hattı " + (i+1), v: "Σ " + fmtDist(chainTotal(ch))}); });
+  return rows;
+}
+function legendRect(rows){
+  ctx.save();
+  ctx.font = "12.5px " + FONT();
+  let wt = ctx.measureText("Lejant").width, wv = 0;
+  rows.forEach(r => wt = Math.max(wt, ctx.measureText(r.t).width));
+  ctx.font = "600 12px " + FONT();
+  rows.forEach(r => wv = Math.max(wv, ctx.measureText(r.v).width));
+  ctx.restore();
+  const w = 14 + 22 + wt + 22 + wv + 14, h = 34 + rows.length * 19 + 10;
+  return [24, 24, w, h, wt];
+}
+function drawLegend(){
+  const rows = legendRows();
+  if (!rows.length) return;
+  const [x, y, w, h, wt] = legendRect(rows);
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.95)"; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = "#16222a"; ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, w - 1, h - 1);
+  ctx.font = "600 13px " + FONT(); ctx.fillStyle = "#16222a";
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText("Lejant", x + 14, y + 16);
+  ctx.strokeStyle = "rgba(22,34,42,.25)"; ctx.beginPath(); ctx.moveTo(x + 14, y + 29.5); ctx.lineTo(x + w - 14, y + 29.5); ctx.stroke();
+  rows.forEach((r, i) => {
+    const cy = y + 43 + i * 19, gx = x + 14;
+    ctx.lineWidth = 2;
+    if (r.kind === "marker"){
+      markerPath($("p-shape").value, gx + 8, cy, 5);
+      ctx.fillStyle = r.color; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.2; ctx.stroke();
+    } else if (r.kind === "line"){
+      ctx.strokeStyle = r.color; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.moveTo(gx, cy); ctx.lineTo(gx + 16, cy); ctx.stroke();
+      ctx.beginPath(); ctx.arc(gx + 16, cy, 3, 0, 6.284); ctx.fillStyle = r.color; ctx.fill();
+    } else if (r.kind === "circle"){
+      ctx.beginPath(); ctx.arc(gx + 8, cy, 6, 0, 6.284);
+      ctx.fillStyle = hexA(r.color, .2); ctx.fill(); ctx.strokeStyle = r.color; ctx.stroke();
+    } else {
+      ctx.fillStyle = hexA(r.color, .22); ctx.fillRect(gx, cy - 6, 16, 12);
+      ctx.strokeStyle = r.color; ctx.strokeRect(gx + 1, cy - 5, 14, 10);
+    }
+    ctx.font = "12.5px " + FONT(); ctx.fillStyle = "#16222a"; ctx.textAlign = "left";
+    ctx.fillText(r.t, gx + 22, cy);
+    ctx.font = "600 12px " + FONT(); ctx.textAlign = "right";
+    ctx.fillText(r.v, x + w - 14, cy);
+  });
+  ctx.restore();
+}
+
+/* ============ pafta künyesi ============ */
+function titleRows(){
+  const rows = [["Ölçek", fmtRatio(scaleRatio())],
+                ["Projeksiyon", view.mode === "mercator" ? "Mercator" : "Eş uzaklıklı silindirik"],
+                ["Datum", "WGS84"],
+                ["Tarih", new Date().toLocaleDateString("tr-TR")]];
+  if (SAT) rows.push(["Zemin", "NASA Blue Marble NG"]);
+  return rows;
+}
+function titleRect(){
+  const title = $("t-title").value.trim() || "Pafta", sub = $("t-sub").value.trim(), rows = titleRows();
+  ctx.save();
+  ctx.font = "600 17px " + FONT(); let w = ctx.measureText(title).width;
+  ctx.font = "11.5px " + FONT(); if (sub) w = Math.max(w, ctx.measureText(sub).width);
+  ctx.font = "10.5px " + FONT(); let wl = 0; rows.forEach(r => wl = Math.max(wl, ctx.measureText(r[0]).width));
+  ctx.font = "12px " + FONT(); let wv = 0; rows.forEach(r => wv = Math.max(wv, ctx.measureText(r[1]).width));
+  ctx.restore();
+  const bw = Math.max(w + 28, wl + wv + 14 + 28 + 56), head = sub ? 52 : 38, bh = head + 12 + rows.length * 17 + 10;
+  return {x: W - 26 - bw, y: H - 34 - bh, w: bw, h: bh, head, wl, title, sub, rows};
+}
+function drawTitleBlock(){
+  const r = titleRect(), {x, y, w, h} = r;
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.96)"; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = "#16222a";
+  ctx.lineWidth = 1.6; ctx.strokeRect(x + .8, y + .8, w - 1.6, h - 1.6);         // kartuş: kalın dış
+  ctx.lineWidth = .7;  ctx.strokeRect(x + 4.5, y + 4.5, w - 9, h - 9);           // ince iç çizgi
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.font = "600 17px " + FONT(); ctx.fillStyle = "#16222a";
+  ctx.fillText(r.title, x + 14, y + 27);
+  if (r.sub){ ctx.font = "11.5px " + FONT(); ctx.fillStyle = "#4d626b"; ctx.fillText(r.sub, x + 14, y + 43); }
+  ctx.beginPath(); ctx.moveTo(x + 4.5, y + r.head + .5); ctx.lineTo(x + w - 4.5, y + r.head + .5); ctx.stroke();
+  r.rows.forEach((row, i) => {
+    const ry = y + r.head + 22 + i * 17;
+    ctx.font = "10.5px " + FONT(); ctx.fillStyle = "#5b6f79"; ctx.fillText(row[0], x + 14, ry);
+    ctx.font = (i === 0 ? "600 " : "") + "12px " + FONT(); ctx.fillStyle = "#16222a"; ctx.fillText(row[1], x + 14 + r.wl + 12, ry);
+  });
+  // kuzey oku: yarısı dolu ok ve K harfi
+  const ax = x + w - 30, top = y + r.head + 22, bot = y + h - 16, mid = (top + bot) / 2 + 6;
+  ctx.fillStyle = "#16222a"; ctx.strokeStyle = "#16222a"; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.moveTo(ax, top + 6); ctx.lineTo(ax - 8, bot); ctx.lineTo(ax, bot - 7); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(ax, top + 6); ctx.lineTo(ax + 8, bot); ctx.lineTo(ax, bot - 7); ctx.closePath();
+  ctx.fillStyle = "#fff"; ctx.fill(); ctx.stroke();
+  ctx.font = "600 12px " + FONT(); ctx.fillStyle = "#16222a"; ctx.textAlign = "center";
+  ctx.fillText("K", ax, top + 1);
+  ctx.restore();
+}
+
+/* ============ bulduru haritası ============ */
+/* Görüntülenen alanı daha geniş bir çevre içinde gösteren küçük harita; künyenin hemen üstünde durur. */
+function locatorRect(){
+  const t = opt("opt-title") ? titleRect() : null;
+  const w = t ? t.w : 210, h = Math.round(w * 0.6);
+  return {x: t ? t.x : W - 26 - w, y: (t ? t.y : H - 34) - 10 - h, w, h};
+}
+function locatorExtent(r){
+  const b = viewBounds();
+  const cLon = (b.lonMin + b.lonMax) / 2, cLat = (b.latMin + b.latMax) / 2;
+  const sLon = Math.max(b.lonMax - b.lonMin, (b.latMax - b.latMin) * 1.4);
+  let lonSpan = clamp(sLon * 6.5, 12, 360);
+  const kx = Math.cos(rad(clamp(cLat, -70, 70)));
+  let latSpan = lonSpan * kx * (r.h / r.w);
+  if (lonSpan >= 300){ return {lon0: -180, lon1: 180, lat0: -62, lat1: 82, kx: 1}; }
+  let lat0 = cLat - latSpan / 2, lat1 = cLat + latSpan / 2;
+  if (lat1 > 84){ lat0 -= lat1 - 84; lat1 = 84; }
+  if (lat0 < -80){ lat1 += -80 - lat0; lat0 = -80; }
+  return {lon0: cLon - lonSpan / 2, lon1: cLon + lonSpan / 2, lat0, lat1, kx};
+}
+function drawLocator(){
+  const b = viewBounds();
+  if (b.lonMax - b.lonMin > 140) return;                       // dünya ölçeğinde gereksiz
+  const r = locatorRect(), e = locatorExtent(r);
+  const X = lon => r.x + (lon - e.lon0) / (e.lon1 - e.lon0) * r.w;
+  const Y = lat => r.y + (e.lat1 - lat) / (e.lat1 - e.lat0) * r.h;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(r.x, r.y, r.w, r.h); ctx.clip();
+  ctx.fillStyle = "#dde8ec"; ctx.fillRect(r.x, r.y, r.w, r.h);
+  ctx.beginPath();
+  for (let n = 0; n < WORLD.land.length; n++){
+    const bb = LAND_BB[n], f = WORLD.land[n];
+    if (bb[2] < e.lon0 || bb[0] > e.lon1 || bb[3] < e.lat0 || bb[1] > e.lat1) continue;
+    for (let i = 0; i < f.length; i += 2){ const x = X(f[i]), y = Y(f[i+1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+    ctx.closePath();
+  }
+  ctx.fillStyle = "#f1e8d4"; ctx.fill("evenodd");
+  ctx.strokeStyle = "#b3aa96"; ctx.lineWidth = .6; ctx.stroke();
+  // görüntülenen alan
+  const x0 = X(Math.max(b.lonMin, e.lon0)), x1 = X(Math.min(b.lonMax, e.lon1));
+  const y0 = Y(Math.min(b.latMax, e.lat1)), y1 = Y(Math.max(b.latMin, e.lat0));
+  if (x1 - x0 < 7 && y1 - y0 < 7){
+    const cx = (x0 + x1)/2, cy = (y0 + y1)/2;
+    ctx.strokeStyle = "#c4146a"; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 6.284); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 9, cy); ctx.lineTo(cx - 3, cy); ctx.moveTo(cx + 3, cy); ctx.lineTo(cx + 9, cy);
+    ctx.moveTo(cx, cy - 9); ctx.lineTo(cx, cy - 3); ctx.moveTo(cx, cy + 3); ctx.lineTo(cx, cy + 9); ctx.stroke();
+  } else {
+    ctx.fillStyle = "rgba(196,20,106,.16)"; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    ctx.strokeStyle = "#c4146a"; ctx.lineWidth = 1.6; ctx.strokeRect(x0 + .5, y0 + .5, x1 - x0 - 1, y1 - y0 - 1);
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.strokeStyle = "#16222a"; ctx.lineWidth = 1.6; ctx.strokeRect(r.x + .8, r.y + .8, r.w - 1.6, r.h - 1.6);
+  ctx.restore();
+}
+
+/* ============ çizim sırası ============ */
+function draw(){
+  if (!W || !H) return;
+  ctx.clearRect(0,0,W,H);
+  LABELS = [];
+  SAT = satOn();
+  FILL_A = SAT ? .24 : .16;
+  cv.parentElement.classList.toggle("sat", SAT);
+  $("btn-sat").setAttribute("aria-pressed", opt("opt-sat") ? "true" : "false");
+  drawBase();
+  if (opt("opt-fir")) drawFIR();
+  const g = gridLines();
+  if (opt("opt-grid")) drawGrid(g);
+  if (opt("opt-legend")){ const lr = legendRows(); if (lr.length){ const q = legendRect(lr); LABELS.push([q[0] - 6, q[1] - 6, q[0] + q[2] + 6, q[1] + q[3] + 6]); } }
+  if (opt("opt-title")){ const t = titleRect(); LABELS.push([t.x - 6, t.y - 6, t.x + t.w + 6, t.y + t.h + 6]); }
+  const showLoc = opt("opt-locator") && (viewBounds().lonMax - viewBounds().lonMin) <= 140;
+  if (showLoc){ const q = locatorRect(); LABELS.push([q.x - 6, q.y - 6, q.x + q.w + 6, q.y + q.h + 6]); }
+  LABELS.push([22, H - 120, 330, H - 30]);                              // ölçek çubuğu
+  if (opt("opt-layer-rings")) drawRingsLayer();
+  if (opt("opt-layer-circles")) drawCirclesLayer();
+  if (opt("opt-layer-areas")) drawZones();
+  if (opt("opt-layer-points")) drawPointsLayer();
+  if (opt("opt-layer-measure")) drawMeasureLayer();
+  if (opt("opt-cities")) drawCities();
+  if (opt("opt-grid")) drawNeatline(g);
+  if (opt("opt-legend")) drawLegend();
+  drawScaleBar();
+  if (opt("opt-title")) drawTitleBlock();
+  else if (SAT) drawSatCredit();
+  if (showLoc) drawLocator();
+}
+
+/* ============ sığdırma ============ */
+let SUPPRESS_FIT = false;
+function fitAll(instant){
+  if (SUPPRESS_FIT) return;
+  let latMin = 90, latMax = -90, lonMin = 180, lonMax = -180, any = false;
+  const add = (lat, lon) => {
+    any = true;
+    latMin = Math.min(latMin, lat); latMax = Math.max(latMax, lat);
+    lonMin = Math.min(lonMin, lon); lonMax = Math.max(lonMax, lon);
+  };
+  if (opt("opt-layer-areas")) ZONES.filter(z => z.visible).forEach(z => z.points.forEach(p => add(p.lat, p.lon)));
+  if (opt("opt-layer-circles")) CIRCLES.forEach(c => { for (let i = 0; i < c.ring.length; i += 2) add(c.ring[i+1], c.ring[i]); });
+  if (opt("opt-layer-rings")) RINGS.forEach(lv => lv.lines.forEach(l => { for (let i = 0; i < l.length; i += 2) add(l[i+1], l[i]); }));
+  if (opt("opt-layer-points")) POINTS.forEach(p => add(p.lat, p.lon));
+  if (opt("opt-layer-measure")) MEASURE.forEach(ch => ch.pts.forEach(p => add(p.lat, p.lon)));
+  if (!any) return fitWorld(instant);
+  const minSpan = 0.3;
+  if (latMax - latMin < minSpan){ const c = (latMax + latMin)/2; latMin = c - minSpan/2; latMax = c + minSpan/2; }
+  if (lonMax - lonMin < minSpan){ const c = (lonMax + lonMin)/2; lonMin = c - minSpan/2; lonMax = c + minSpan/2; }
+  fitBounds(latMin, lonMin, latMax, lonMax, 0.24, instant);
+}
+function focusOn(lat0, lon0, lat1, lon1){
+  const m = 0.15;
+  fitBounds(Math.min(lat0,lat1) - m, Math.min(lon0,lon1) - m, Math.max(lat0,lat1) + m, Math.max(lon0,lon1) + m, 0.3);
+}
+const hideEmpty = () => { $("stage-empty").style.display = "none"; };
+
+/* ============ fare / tekerlek ============ */
+let dragging = false, lastX = 0, lastY = 0, downX = 0, downY = 0, moved = false;
+let raf = 0;
+const scheduleDraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
+
+/* 10 px içindeki nokta / alan köşesi / daire merkezine yapış */
+function snapAt(x, y){
+  let best = null, bd = 10;
+  const tryP = (lat, lon, name) => {
+    const d = Math.hypot(sx(lon) - x, sy(lat) - y);
+    if (d < bd){ bd = d; best = {lat, lon, name}; }
+  };
+  if (opt("opt-layer-points")) POINTS.forEach(p => tryP(p.lat, p.lon, p.name));
+  if (opt("opt-layer-areas")) ZONES.filter(z => z.visible).forEach(z => z.points.forEach(p => tryP(p.lat, p.lon, z.name + " / " + p.no)));
+  if (opt("opt-layer-circles")) CIRCLES.forEach(c => tryP(c.lat, c.lon, c.name ? c.name + " (merkez)" : "daire merkezi"));
+  MEASURE.forEach((ch, ci) => ch.pts.forEach((p, i) => tryP(p.lat, p.lon, p.name || ("Hat " + (ci+1) + " / " + (i+1)))));
+  return best;
+}
+
+cv.addEventListener("mousedown", e => {
+  stopAnim();
+  dragging = true; moved = false;
+  lastX = downX = e.offsetX; lastY = downY = e.offsetY;
+});
+window.addEventListener("mouseup", () => { dragging = false; cv.classList.remove("drag"); });
+cv.addEventListener("mousemove", e => {
+  if (dragging){
+    if (!moved && Math.hypot(e.offsetX - downX, e.offsetY - downY) > 4){ moved = true; cv.classList.add("drag"); }
+    if (moved){
+      view.cx -= (e.offsetX - lastX) / view.k;
+      view.cy += (e.offsetY - lastY) / view.k;
+      lastX = e.offsetX; lastY = e.offsetY;
+      scheduleDraw();
+    }
+  }
+  const la = latAt(e.offsetY), lo = lonAt(e.offsetX);
+  if (Math.abs(la) <= 90) $("readout").innerHTML = "<b>Enlem</b><span>" + dms(la, true) + "</span><b>Boylam</b><span>" + dms(lo, false) + "</span>";
+  if (MEASURE_ACTIVE){
+    const sn = snapAt(e.offsetX, e.offsetY);
+    HOVER = sn ? {x: sx(sn.lon), y: sy(sn.lat), lat: sn.lat, lon: sn.lon, name: sn.name}
+               : {x: e.offsetX, y: e.offsetY, lat: la, lon: lo, name: null};
+    scheduleDraw();
+  }
+});
+cv.addEventListener("mouseleave", () => { if (HOVER){ HOVER = null; scheduleDraw(); } });
+cv.addEventListener("click", e => {
+  if (!MEASURE_ACTIVE || moved) return;
+  const sn = snapAt(e.offsetX, e.offsetY);
+  const lat = sn ? sn.lat : latAt(e.offsetY), lon = sn ? sn.lon : lonAt(e.offsetX);
+  if (Math.abs(lat) > 85) return;
+  addMeasurePoint(lat, lon, sn ? sn.name : null);
+});
+cv.addEventListener("wheel", e => {
+  e.preventDefault();
+  stopAnim();
+  const f = Math.exp(-e.deltaY * 0.0016);
+  const wxc = (e.offsetX - W/2)/view.k + view.cx, wyc = (H/2 - e.offsetY)/view.k + view.cy;
+  view.k = clamp(view.k * f, 0.35, 900000);
+  view.cx = wxc - (e.offsetX - W/2)/view.k;
+  view.cy = wyc + (e.offsetY - H/2)/view.k;
+  draw();
+}, {passive:false});
+const zoomBy = f => { stopAnim(); animateView({cx: view.cx, cy: view.cy, phi0: view.phi0, k: clamp(view.k * f, 0.35, 900000)}); };
+$("btn-in").onclick = () => zoomBy(1.5);
+$("btn-out").onclick = () => zoomBy(1/1.5);
+$("btn-fit").onclick = () => fitAll();
+$("btn-world").onclick = () => fitWorld();
+function toggleSat(){ $("opt-sat").checked = !$("opt-sat").checked; $("opt-sat").dispatchEvent(new Event("change")); degisti(); }
+$("btn-sat").onclick = toggleSat;
+$("opt-sat").addEventListener("change", e => { $("sat-box").hidden = !e.target.checked; draw(); });
+$("opt-sat-alpha").addEventListener("input", draw);
+["opt-grid","opt-nums","opt-fill","opt-cities","opt-borders","opt-fir","opt-legend",
+ "opt-layer-areas","opt-layer-circles","opt-layer-rings","opt-layer-points",
+ "opt-layer-measure","opt-title","opt-locator","p-shape","p-size","p-coords"].forEach(id => $(id).addEventListener("change", draw));
+["t-title","t-sub"].forEach(id => $(id).addEventListener("input", draw));
+$("opt-proj").addEventListener("change", e => { view.mode = e.target.value; fitAll(true); });
+
+/* ============ sekmeler ============ */
+document.querySelectorAll(".tab[data-pane]").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll(".pane").forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  $(t.dataset.pane).classList.add("active");
+  MEASURE_ACTIVE = t.dataset.pane === "pane-measure";
+  cv.classList.toggle("measure", MEASURE_ACTIVE);
+  if (!MEASURE_ACTIVE) HOVER = null;
+  draw();
+});
+
+function swatch(color, onInput){
+  const sw = document.createElement("input");
+  sw.type = "color"; sw.className = "sw"; sw.value = color;
+  sw.title = "Rengi değiştir";
+  sw.oninput = () => { onInput(sw.value); draw(); };
+  return sw;
+}
+function smallBtn(text, fn){
+  const b = document.createElement("button");
+  b.className = "icon-btn"; b.textContent = text; b.onclick = fn;
+  return b;
+}
+function rowOf(sw, title, meta, off){
+  const row = document.createElement("div");
+  row.className = "zone" + (off ? " off" : "");
+  const txt = document.createElement("span");
+  txt.className = "zone-name";
+  txt.innerHTML = esc(title) + '<span class="zone-meta">' + esc(meta) + "</span>";
+  row.append(sw, txt);
+  return row;
+}
+
+/* ============ 1 · alanlar ============ */
+function renderZoneList(){
+  const host = $("zones");
+  host.innerHTML = "";
+  ZONES.forEach(z => {
+    const area = z.points.length > 2 ? fmtArea(sphericalArea(z.points)) : "—";
+    const row = rowOf(swatch(z.color, v => z.color = v), z.name,
+      z.points.length + " nokta, " + area + ", çevre " + fmtLen(perimeter(z.points)), !z.visible);
+    row.append(
+      smallBtn(z.visible ? "gizle" : "göster", () => { z.visible = !z.visible; renderZoneList(); draw(); }),
+      smallBtn("odak", () => {
+        let a = 90, b = -90, c = 180, d = -180;
+        z.points.forEach(p => { a = Math.min(a,p.lat); b = Math.max(b,p.lat); c = Math.min(c,p.lon); d = Math.max(d,p.lon); });
+        focusOn(a, c, b, d);
+      }));
+    host.appendChild(row);
+  });
+}
+function build(){
+  const res = parseText($("input").value);
+  ZONES = res.zones;
+  const n = ZONES.reduce((s,z) => s + z.points.length, 0);
+  $("msg").innerHTML = ZONES.length
+    ? '<span class="ok">' + ZONES.length + ' bölge, ' + n + ' nokta çizildi.</span>'
+    : '<span class="warn">Okunabilir koordinat bulunamadı.</span>';
+  if (res.errors.length) $("msg").innerHTML += '<br><span class="warn">' + res.errors.slice(0,6).map(esc).join("<br>") + '</span>';
+  renderZoneList();
+  if (ZONES.length){ hideEmpty(); fitAll(); } else draw();
+}
+$("btn-draw").onclick = build;
+$("btn-clear").onclick = () => { $("input").value = ""; ZONES = []; renderZoneList(); $("msg").textContent = ""; draw(); };
+$("btn-file").onclick = () => $("file").click();
+$("file").onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { $("input").value = rd.result; build(); };
+  rd.readAsText(f, "utf-8");
+};
+const SAMPLE =
+`Örnek alan A\t1\t42°30'00"K\t30°30'00"D
+\t2\t42°41'30"K\t32°12'00"D
+\t3\t42°16'00"K\t33°24'30"D
+\t4\t41°54'00"K\t31°38'00"D
+
+Örnek alan B\t1\t35°52'00"K\t30°08'00"D
+\t2\t35°56'30"K\t31°42'00"D
+\t3\t35°19'00"K\t31°57'30"D
+\t4\t35°04'00"K\t30°41'00"D
+\t5\t35°26'00"K\t29°54'00"D
+
+Örnek alan C\t1\t38.9500\t33.0500
+\t2\t39.1200\t33.6800
+\t3\t38.7400\t33.9100
+\t4\t38.5600\t33.3000`;
+$("btn-sample").onclick = () => { $("input").value = SAMPLE; build(); };
+
+/* ============ 2 · daireler ============ */
+function circleList(){
+  const host = $("c-list");
+  host.innerHTML = "";
+  const seen = new Map();
+  CIRCLES.forEach(c => { if (!seen.has(c.label)) seen.set(c.label, c); });
+  seen.forEach((c, label) => host.appendChild(rowOf(
+    swatch(c.color, v => CIRCLES.forEach(x => { if (x.label === label) x.color = v; })),
+    label, c.n + " merkez, çevre " + fmtLen(2 * Math.PI * R_EARTH * Math.sin(c.d / R_EARTH)))));
+}
+function buildCircles(){
+  const parsed = parseText($("c-center").value);
+  const centers = [];
+  parsed.zones.forEach(z => z.points.forEach(p => centers.push({name: z.points.length > 1 ? z.name + " " + p.no : z.name, lat: p.lat, lon: p.lon})));
+  const unit = $("c-unit").value, radii = numList($("c-radii").value).sort((a,b) => a-b);
+  if (!centers.length || !radii.length){
+    $("c-msg").innerHTML = '<span class="warn">Merkez koordinatı ve en az bir yarıçap gerekli.</span>';
+    return;
+  }
+  CIRCLES = [];
+  radii.forEach((rv, i) => {
+    const d = rv * UNIT[unit];
+    centers.forEach(c => CIRCLES.push({
+      name: c.name, lat: c.lat, lon: c.lon, d,
+      label: rv.toLocaleString("tr-TR") + (unit === "km" ? " km" : " NM"),
+      color: PALETTE[i % PALETTE.length], n: centers.length,
+      ring: geodesicRing(c.lat, c.lon, d, 240)
+    }));
+  });
+  $("c-msg").innerHTML = '<span class="ok">' + centers.length + ' merkez, ' + radii.length + ' yarıçap çizildi.</span>';
+  circleList(); hideEmpty(); fitAll();
+}
+$("btn-circles").onclick = buildCircles;
+$("btn-circles-clear").onclick = () => { CIRCLES = []; circleList(); $("c-msg").textContent = ""; draw(); };
+$("btn-circles-sample").onclick = () => {
+  $("c-center").value = "Ankara\t39°57'0\"K\t32°52'0\"D";
+  $("c-radii").value = "100, 250, 500";
+  buildCircles();
+};
+
+/* ============ 3 · sınır mesafesi ============ */
+const MV_KEY = "pafta-mavivatan";
+const MV_HINT_BUILTIN = "Gömülü sınır, doktrinin kendi kuralıyla yeniden kurulmuştur: deniz yetki alanları ana kara kıyıları arasında eşit uzaklığa (medyan hat) göre bölünür, ana kara sayılmayan adalar (Girit, Rodos, Kıbrıs, Ege adaları) karasuyu dışında alan üretmez; eşik 20.000 km². Resmî koordinat değildir. Denizlere göre alanlar: Karadeniz 169.800, Marmara 11.500, Ege 115.500, Akdeniz 153.100 km² — toplam ≈ 468.000 km² (yayımlanan ≈ 462.000).";
+const MV_HINT_OWN = "Mavi Vatan dış sınırının köşe koordinatlarını aşağıya yapıştırın (Alanlar sekmesiyle aynı biçim). Girdiğiniz sınır bu bilgisayarda saklanır.";
+$("r-mv-hint").textContent = MV_HINT_BUILTIN;
+try { const v = localStorage.getItem(MV_KEY); if (v) $("r-mv-text").value = v; } catch(e){}
+$("r-mv").onchange = e => { $("r-mv-box").hidden = !e.target.checked; };
+$("r-mv-src").onchange = e => {
+  const own = e.target.value === "own";
+  $("r-mv-text").hidden = !own;
+  $("r-mv-hint").textContent = own ? MV_HINT_OWN : MV_HINT_BUILTIN;
+};
+function ringList(){
+  const host = $("r-list");
+  host.innerHTML = "";
+  const from = RING_LABEL === "Mavi Vatan sınırı" ? "Mavi Vatan sınırından" : "TR kara sınırından";
+  RINGS.forEach(lv => host.appendChild(rowOf(swatch(lv.color, v => lv.color = v), lv.label, from)));
+}
+function buildRings(sync){
+  const msg = $("r-msg"), unit = $("r-unit").value;
+  const dists = numList($("r-dist").value).sort((a,b) => a-b);
+  if (!dists.length){ msg.innerHTML = '<span class="warn">En az bir mesafe girin.</span>'; return; }
+  const useMV = $("r-mv").checked;
+  let mvRings = null;
+  if (useMV){
+    if ($("r-mv-src").value === "builtin") mvRings = MAVI_VATAN;
+    else {
+      const txt = $("r-mv-text").value;
+      try { localStorage.setItem(MV_KEY, txt); } catch(e){}
+      mvRings = parseText(txt).zones.filter(z => z.points.length > 2).map(z => z.points.flatMap(p => [p.lon, p.lat]));
+      if (!mvRings.length){ msg.innerHTML = '<span class="warn">Mavi Vatan sınırı okunamadı: en az 3 köşe koordinatı yapıştırın.</span>'; return; }
+    }
+  }
+  const from = useMV ? $("r-from").value : "tr";
+  const src = from === "mv" ? mvRings.concat(TR) : TR;
+  RING_SRC = from === "mv" ? mvRings : TR;
+  RING_REF = useMV ? (from === "mv" ? TR : mvRings) : null;
+  RING_LABEL = from === "mv" ? "Mavi Vatan sınırı" : "TR kara sınırı";
+
+  msg.innerHTML = "Hesaplanıyor…";
+  $("pane-rings").classList.add("busy");
+  const run = () => {
+    const t0 = performance.now();
+    const res = distanceRings(src, dists.map(d => d * UNIT[unit]));
+    RINGS = dists.map((d, i) => ({
+      d: d * UNIT[unit],
+      label: d.toLocaleString("tr-TR") + (unit === "km" ? " km" : " NM"),
+      color: PALETTE[(i + 3) % PALETTE.length],
+      lines: res.levels[i]
+    }));
+    msg.innerHTML = '<span class="ok">' + dists.length + ' mesafe eğrisi çizildi. Çözünürlük ≈ ' +
+      (res.cell/1000).toFixed(1).replace(".", ",") + ' km, ' + Math.round(performance.now()-t0) + ' ms.</span>';
+    $("pane-rings").classList.remove("busy");
+    ringList(); hideEmpty(); fitAll();
+  };
+  if (sync) run(); else setTimeout(run, 30);
+}
+$("btn-rings").onclick = () => buildRings();
+$("btn-rings-clear").onclick = () => { RINGS = []; RING_SRC = null; RING_REF = null; ringList(); $("r-msg").textContent = ""; draw(); };
+
+/* ============ 4 · noktalar ============ */
+function pointList(){
+  const host = $("p-list");
+  host.innerHTML = "";
+  POINTS.forEach((p, i) => {
+    const row = rowOf(swatch(p.color, v => p.color = v), p.name, dms(p.lat, true) + "  " + dms(p.lon, false));
+    row.append(
+      smallBtn("odak", () => focusOn(p.lat, p.lon, p.lat, p.lon)),
+      smallBtn("sil", () => { POINTS.splice(i, 1); pointList(); draw(); }));
+    host.appendChild(row);
+  });
+}
+function buildPoints(){
+  const res = parsePoints($("p-input").value), def = $("p-color").value;
+  POINTS = res.pts.map(p => ({name: p.name, lat: p.lat, lon: p.lon, color: p.color || def}));
+  $("p-msg").innerHTML = POINTS.length
+    ? '<span class="ok">' + POINTS.length + ' nokta işaretlendi.</span>'
+    : '<span class="warn">Okunabilir nokta bulunamadı.</span>';
+  if (res.errors.length) $("p-msg").innerHTML += '<br><span class="warn">' + res.errors.slice(0,6).map(esc).join("<br>") + '</span>';
+  pointList();
+  if (POINTS.length){ hideEmpty(); fitAll(); } else draw();
+}
+$("btn-points").onclick = buildPoints;
+$("btn-points-clear").onclick = () => { POINTS = []; pointList(); $("p-msg").textContent = ""; draw(); };
+$("btn-points-sample").onclick = () => {
+  $("p-input").value =
+`Ankara\t39°55'0"K\t32°51'0"D
+İstanbul\t41°0'49"K\t28°58'34"D
+Sinop\t42.0231\t35.1531
+Samsun\t41°17'0"K\t36°20'0"D\t#2f4b9a
+Trabzon\t41°0'0"K\t39°43'0"D\t#2f4b9a
+İzmir\t38°25'0"K\t27°8'0"D
+Antalya\t36°53'0"K\t30°42'0"D`;
+  buildPoints();
+};
+$("p-color").addEventListener("input", e => {
+  // yalnız kendine özel renk verilmemiş noktalar varsayılanı izler
+  const txt = $("p-input").value;
+  const own = new Set(parsePoints(txt).pts.filter(p => p.color).map(p => p.name));
+  POINTS.forEach(p => { if (!own.has(p.name)) p.color = e.target.value; });
+  pointList(); draw();
+});
+
+
+/* ============ 5 · mesafe ölçümü ============ */
+function addMeasurePoint(lat, lon, name){
+  MEASURE[MEASURE.length - 1].pts.push({lat, lon, name: name || null});
+  hideEmpty(); measureList(); draw(); degisti();
+}
+function newChain(){
+  const last = MEASURE[MEASURE.length - 1];
+  if (!last.pts.length) return;
+  const color = M_COLORS[MEASURE.length % M_COLORS.length];
+  MEASURE.push({color, pts: []});
+  $("m-color").value = color;
+  measureList(); draw(); degisti();
+}
+function undoMeasure(){
+  if (!MEASURE[MEASURE.length - 1].pts.length && MEASURE.length > 1){
+    MEASURE.pop();
+    $("m-color").value = MEASURE[MEASURE.length - 1].color;
+  }
+  MEASURE[MEASURE.length - 1].pts.pop();
+  measureList(); draw(); degisti();
+}
+function measureList(){
+  const host = $("m-list");
+  host.innerHTML = "";
+  const nPts = MEASURE.reduce((s, ch) => s + ch.pts.length, 0);
+  $("m-msg").innerHTML = nPts ? "" : '<span class="warn">Henüz nokta yok — haritaya tıklayın.</span>';
+  MEASURE.forEach((ch, ci) => {
+    if (!ch.pts.length && ci < MEASURE.length - 1) return;
+    const head = document.createElement("div");
+    head.className = "chain-head";
+    const sw = swatch(ch.color, v => { ch.color = v; if (ci === MEASURE.length - 1) $("m-color").value = v; });
+    const title = document.createElement("b");
+    title.textContent = "Hat " + (ci + 1) + (ci === MEASURE.length - 1 ? " (etkin)" : "");
+    const tot = document.createElement("span");
+    tot.textContent = ch.pts.length >= 2 ? "Σ " + fmtDist(chainTotal(ch)) : ch.pts.length + " nokta";
+    head.append(sw, title, tot);
+    host.appendChild(head);
+
+    ch.pts.forEach((p, i) => {
+      const row = document.createElement("div");
+      row.className = "mpt";
+      const no = document.createElement("span");
+      no.className = "no"; no.style.background = ch.color; no.textContent = i + 1;
+      const c = document.createElement("span");
+      c.className = "c";
+      c.innerHTML = esc(dms(p.lat, true) + "  " + dms(p.lon, false)) +
+        "<small>" + p.lat.toFixed(6) + ", " + p.lon.toFixed(6) + (p.name ? "  " + esc(p.name) : "") + "</small>";
+      const del = smallBtn("sil", () => { ch.pts.splice(i, 1); measureList(); draw(); });
+      row.append(no, c, del);
+      if (i > 0){
+        const r = vincenty(ch.pts[i-1].lat, ch.pts[i-1].lon, p.lat, p.lon);
+        const seg = document.createElement("span");
+        seg.className = "seg";
+        seg.textContent = i + "→" + (i+1) + "  " + fmtDist(r.d) + ", kerteriz " + fmtAz(r.az);
+        row.appendChild(seg);
+      }
+      host.appendChild(row);
+    });
+  });
+}
+$("btn-m-new").onclick = newChain;
+$("btn-m-undo").onclick = undoMeasure;
+$("btn-m-clear").onclick = () => {
+  MEASURE = [{color: M_COLORS[0], pts: []}];
+  $("m-color").value = M_COLORS[0];
+  measureList(); draw();
+};
+$("m-color").addEventListener("input", e => { MEASURE[MEASURE.length - 1].color = e.target.value; measureList(); draw(); });
+["m-unit","m-bearing","m-total"].forEach(id => $(id).addEventListener("change", () => { measureList(); draw(); }));
+$("btn-m-add").onclick = () => {
+  const hits = scanCoords($("m-coord").value.trim());
+  const pair = hits.length >= 2 ? coordPair(hits) : null;
+  if (!pair){ $("m-msg").innerHTML = '<span class="warn">Koordinat okunamadı.</span>'; return; }
+  const name = $("m-coord").value.slice(0, pair.start).replace(/[\t;,|]+/g, " ").trim() || null;
+  addMeasurePoint(pair.lat, pair.lon, name);
+  $("m-coord").value = "";
+  fitAll();
+};
+$("m-coord").addEventListener("keydown", e => { if (e.key === "Enter") $("btn-m-add").click(); });
+document.addEventListener("keydown", e => {
+  if (!MEASURE_ACTIVE || !$("modal").hidden || !$("ask").hidden || e.ctrlKey || e.metaKey) return;
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return;
+  if (e.key === "Escape"){ newChain(); e.preventDefault(); }
+  else if (e.key === "Backspace" || e.key === "Delete"){ undoMeasure(); e.preventDefault(); }
+});
+measureList();
+
+/* ============ dışa aktarma ============ */
+function download(name, data, type){
+  const blob = data instanceof Blob ? data : new Blob([data], {type: type || "text/plain;charset=utf-8"});
+  if (!window.masaustu) setTimeout(() => toast("İndirildi: " + name), 150);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+const pairs = a => { const o = []; for (let i = 0; i < a.length; i += 2) o.push([+a[i].toFixed(6), +a[i+1].toFixed(6)]); return o; };
+const kmlColor = (h, a) => (a || "ff") + h.slice(5,7) + h.slice(3,5) + h.slice(1,3);
+const kmlCoords = a => { let s = ""; for (let i = 0; i < a.length; i += 2) s += a[i].toFixed(6) + "," + a[i+1].toFixed(6) + ",0 "; return s; };
+
+$("btn-png").onclick = () => {
+  const k = parseFloat($("png-scale").value) || 1;
+  cv.width = Math.round(W * k); cv.height = Math.round(H * k);     // aynı pafta, daha çok piksel
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  draw();
+  cv.toBlob(blob => { resize(); if (blob) download(dosyaKoku() + ".png", blob); }, "image/png");
+};
+function dosyaKoku(){
+  const t = ($("t-title").value.trim() || "pafta").toLocaleLowerCase("tr-TR")
+    .replace(/ç/g,"c").replace(/ğ/g,"g").replace(/ı/g,"i").replace(/ö/g,"o").replace(/ş/g,"s").replace(/ü/g,"u")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return t || "pafta";
+}
+$("btn-geojson").onclick = () => {
+  const feats = ZONES.map(z => ({type:"Feature",
+    properties:{tur:"alan", ad:z.name, renk:z.color, nokta_sayisi:z.points.length},
+    geometry:{type:"Polygon", coordinates:[[...z.points.map(p => [p.lon, p.lat]), [z.points[0].lon, z.points[0].lat]]]}}));
+  CIRCLES.forEach(c => feats.push({type:"Feature",
+    properties:{tur:"daire", merkez:c.name, yaricap:c.label, renk:c.color},
+    geometry:{type:"Polygon", coordinates:[pairs(c.ring)]}}));
+  RINGS.forEach(lv => feats.push({type:"Feature",
+    properties:{tur:"mesafe_egrisi", mesafe:lv.label, referans:RING_LABEL, renk:lv.color},
+    geometry:{type:"MultiLineString", coordinates:lv.lines.map(pairs)}}));
+  POINTS.forEach(p => feats.push({type:"Feature",
+    properties:{tur:"nokta", ad:p.name, renk:p.color},
+    geometry:{type:"Point", coordinates:[p.lon, p.lat]}}));
+  MEASURE.forEach((ch, ci) => {
+    if (ch.pts.length < 2) return;
+    const segs = [];
+    for (let i = 1; i < ch.pts.length; i++){
+      const r = vincenty(ch.pts[i-1].lat, ch.pts[i-1].lon, ch.pts[i].lat, ch.pts[i].lon);
+      segs.push({parca: i + "-" + (i+1), mesafe_m: Math.round(r.d * 10) / 10, kerteriz_derece: Math.round(r.az * 10) / 10});
+    }
+    feats.push({type:"Feature",
+      properties:{tur:"olcum_hatti", hat:ci + 1, renk:ch.color, toplam_m:Math.round(chainTotal(ch) * 10) / 10, parcalar:segs},
+      geometry:{type:"LineString", coordinates:ch.pts.map(p => [p.lon, p.lat])}});
+  });
+  download(dosyaKoku() + ".geojson", JSON.stringify({type:"FeatureCollection", features:feats}), "application/geo+json");
+};
+$("btn-kml").onclick = () => {
+  const out = [];
+  ZONES.forEach(z => out.push('<Placemark><name>' + esc(z.name) + '</name><Style><LineStyle><color>' + kmlColor(z.color) +
+    '</color><width>2</width></LineStyle><PolyStyle><color>' + kmlColor(z.color, "44") + '</color></PolyStyle></Style>' +
+    '<Polygon><outerBoundaryIs><LinearRing><coordinates>' +
+    kmlCoords([...z.points, z.points[0]].flatMap(p => [p.lon, p.lat])) +
+    '</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>'));
+  CIRCLES.forEach(c => out.push('<Placemark><name>' + esc(c.name + " — " + c.label) + '</name><Style><LineStyle><color>' +
+    kmlColor(c.color) + '</color><width>2</width></LineStyle></Style><LineString><coordinates>' +
+    kmlCoords(c.ring) + '</coordinates></LineString></Placemark>'));
+  RINGS.forEach(lv => out.push('<Placemark><name>' + esc(lv.label + " — " + RING_LABEL) + '</name><Style><LineStyle><color>' +
+    kmlColor(lv.color) + '</color><width>2</width></LineStyle></Style><MultiGeometry>' +
+    lv.lines.map(l => '<LineString><coordinates>' + kmlCoords(l) + '</coordinates></LineString>').join("") +
+    '</MultiGeometry></Placemark>'));
+  POINTS.forEach(p => out.push('<Placemark><name>' + esc(p.name) + '</name><Style><IconStyle><color>' + kmlColor(p.color) +
+    '</color></IconStyle></Style><Point><coordinates>' + p.lon.toFixed(6) + "," + p.lat.toFixed(6) + ',0</coordinates></Point></Placemark>'));
+  MEASURE.forEach((ch, ci) => {
+    if (ch.pts.length < 2) return;
+    let g = "";
+    for (let i = 1; i < ch.pts.length; i++) g += kmlCoords(gcPoints(ch.pts[i-1], ch.pts[i]));
+    out.push('<Placemark><name>' + esc("Ölçüm hattı " + (ci+1) + " — " + fmtDist(chainTotal(ch))) + '</name><Style><LineStyle><color>' +
+      kmlColor(ch.color) + '</color><width>3</width></LineStyle></Style><LineString><tessellate>1</tessellate><coordinates>' + g +
+      '</coordinates></LineString></Placemark>');
+    ch.pts.forEach((p, i) => out.push('<Placemark><name>' + esc("H" + (ci+1) + "-" + (i+1) + (p.name ? " " + p.name : "")) +
+      '</name><Point><coordinates>' + p.lon.toFixed(6) + "," + p.lat.toFixed(6) + ',0</coordinates></Point></Placemark>'));
+  });
+  download(dosyaKoku() + ".kml", '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document>\n' +
+    out.join("\n") + '\n</Document></kml>', "application/vnd.google-earth.kml+xml");
+};
+$("btn-csv").onclick = () => {
+  const f = v => v.toFixed(6).replace(".", ",");
+  const rows = ["Katman;Ad;Nokta;Enlem_ondalik;Boylam_ondalik;Enlem_DMS;Boylam_DMS;Not"];
+  ZONES.forEach(z => z.points.forEach(p => rows.push(["alan", z.name, p.no, f(p.lat), f(p.lon), dms(p.lat,true), dms(p.lon,false), ""].join(";"))));
+  CIRCLES.forEach(c => rows.push(["daire", c.name, "merkez", f(c.lat), f(c.lon), dms(c.lat,true), dms(c.lon,false), "yaricap " + c.label].join(";")));
+  POINTS.forEach(p => rows.push(["nokta", p.name, "", f(p.lat), f(p.lon), dms(p.lat,true), dms(p.lon,false), p.color].join(";")));
+  MEASURE.forEach((ch, ci) => ch.pts.forEach((p, i) => {
+    let note = "";
+    if (i > 0){
+      const r = vincenty(ch.pts[i-1].lat, ch.pts[i-1].lon, p.lat, p.lon);
+      note = "onceki noktaya " + (r.d/1000).toFixed(3).replace(".", ",") + " km / " + (r.d/1852).toFixed(3).replace(".", ",") +
+             " NM, kerteriz " + r.az.toFixed(1).replace(".", ",");
+    }
+    rows.push(["olcum", "Hat " + (ci+1) + (p.name ? " " + p.name : ""), i + 1, f(p.lat), f(p.lon), dms(p.lat,true), dms(p.lon,false), note].join(";"));
+  }));
+  download(dosyaKoku() + "-koordinatlar.csv", "\uFEFF" + rows.join("\r\n"), "text/csv;charset=utf-8");
+};
+
+window.addEventListener("resize", resize);
+resize();
+fitWorld(true);
+/*__APP__*/
+</script>
+</body>
+</html>

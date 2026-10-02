@@ -1,0 +1,145 @@
+{
+ "uygulama": "PAFTA",
+ "surum": 1,
+ "kayit": "2026-10-02T18:40:14.585Z",
+ "form": {
+  "input": "Örnek alan A\t1\t42°30'00\"K\t30°30'00\"D\n\t2\t42°41'30\"K\t32°12'00\"D\n\t3\t42°16'00\"K\t33°24'30\"D\n\t4\t41°54'00\"K\t31°38'00\"D\n\nÖrnek alan B\t1\t35°52'00\"K\t30°08'00\"D\n\t2\t35°56'30\"K\t31°42'00\"D\n\t3\t35°19'00\"K\t31°57'30\"D\n\t4\t35°04'00\"K\t30°41'00\"D\n\t5\t35°26'00\"K\t29°54'00\"D\n\nÖrnek alan C\t1\t38.9500\t33.0500\n\t2\t39.1200\t33.6800\n\t3\t38.7400\t33.9100\n\t4\t38.5600\t33.3000",
+  "c-center": "Ankara\t39°55'0\"K\t32°51'0\"D",
+  "c-radii": "150, 300",
+  "c-unit": "km",
+  "r-dist": "200, 500",
+  "r-unit": "km",
+  "r-mv": true,
+  "r-from": "mv",
+  "r-mv-src": "builtin",
+  "r-mv-text": "",
+  "p-input": "Ankara\t39°55'0\"K\t32°51'0\"D\nİstanbul\t41°0'49\"K\t28°58'34\"D\nSinop\t42.0231\t35.1531\nSamsun\t41°17'0\"K\t36°20'0\"D\t#2f4b9a\nTrabzon\t41°0'0\"K\t39°43'0\"D\t#2f4b9a\nİzmir\t38°25'0\"K\t27°8'0\"D\nAntalya\t36°53'0\"K\t30°42'0\"D",
+  "p-shape": "circle",
+  "p-size": "6",
+  "p-color": "#b3541e",
+  "p-coords": false,
+  "m-coord": "",
+  "m-unit": "both",
+  "m-color": "#d1495b",
+  "m-bearing": true,
+  "m-total": true,
+  "opt-sat": false,
+  "opt-sat-alpha": "100",
+  "opt-proj": "mercator",
+  "opt-title": true,
+  "opt-locator": true,
+  "opt-legend": true,
+  "opt-grid": true,
+  "opt-fir": true,
+  "opt-borders": true,
+  "opt-cities": true,
+  "opt-nums": true,
+  "opt-fill": true,
+  "opt-layer-areas": true,
+  "opt-layer-circles": true,
+  "opt-layer-rings": true,
+  "opt-layer-points": true,
+  "opt-layer-measure": true,
+  "t-title": "Örnek pafta",
+  "t-sub": "PAFTA ile hazırlandı",
+  "png-scale": "2"
+ },
+ "alanlar": [
+  {
+   "ad": "Örnek alan A",
+   "renk": "#c8156f",
+   "gorunur": true
+  },
+  {
+   "ad": "Örnek alan B",
+   "renk": "#2f4b9a",
+   "gorunur": true
+  },
+  {
+   "ad": "Örnek alan C",
+   "renk": "#0d7a68",
+   "gorunur": true
+  }
+ ],
+ "daireler": {
+  "150 km": "#c8156f",
+  "300 km": "#2f4b9a"
+ },
+ "mesafe": [
+  "#b3541e",
+  "#6a3d9a"
+ ],
+ "noktalar": [
+  {
+   "ad": "Ankara",
+   "enlem": 39.916667,
+   "boylam": 32.85,
+   "renk": "#b3541e"
+  },
+  {
+   "ad": "İstanbul",
+   "enlem": 41.013611,
+   "boylam": 28.976111,
+   "renk": "#b3541e"
+  },
+  {
+   "ad": "Sinop",
+   "enlem": 42.0231,
+   "boylam": 35.1531,
+   "renk": "#b3541e"
+  },
+  {
+   "ad": "Samsun",
+   "enlem": 41.283333,
+   "boylam": 36.333333,
+   "renk": "#2f4b9a"
+  },
+  {
+   "ad": "Trabzon",
+   "enlem": 41,
+   "boylam": 39.716667,
+   "renk": "#2f4b9a"
+  },
+  {
+   "ad": "İzmir",
+   "enlem": 38.416667,
+   "boylam": 27.133333,
+   "renk": "#b3541e"
+  },
+  {
+   "ad": "Antalya",
+   "enlem": 36.883333,
+   "boylam": 30.7,
+   "renk": "#b3541e"
+  }
+ ],
+ "olcum": [
+  {
+   "renk": "#d1495b",
+   "noktalar": [
+    {
+     "enlem": 41.013611,
+     "boylam": 28.976111,
+     "ad": "İstanbul"
+    },
+    {
+     "enlem": 42.0231,
+     "boylam": 35.1531,
+     "ad": "Sinop"
+    },
+    {
+     "enlem": 41,
+     "boylam": 39.716667,
+     "ad": "Trabzon"
+    }
+   ]
+  }
+ ],
+ "gorunum": {
+  "projeksiyon": "mercator",
+  "latMin": 31.421214,
+  "lonMin": 22.265306,
+  "latMax": 47.200543,
+  "lonMax": 45.734694
+ }
+}
