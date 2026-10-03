@@ -388,29 +388,29 @@ var PICK = null;                          // {hedef, btn}; var: draw() uygulama 
 const PICK_HEDEF = {
   "input": {
     ad: "alan köşesi",
-    satir(ta, enlem, boylam){
+    satir(ta, k){
       const metin = ta.value;
-      if (!metin.trim()) return "Yeni alan\t1\t" + enlem + "\t" + boylam;
-      if (/\n\s*\n\s*$/.test(metin)) return "\t1\t" + enlem + "\t" + boylam;           // boş satır: yeni alan
+      if (!metin.trim()) return "Yeni alan\t1\t" + k;
+      if (/\n\s*\n\s*$/.test(metin)) return "\t1\t" + k;           // boş satır: yeni alan
       const z = parseText(metin).zones, son = z[z.length - 1];
-      return "\t" + ((son ? son.points.length : 0) + 1) + "\t" + enlem + "\t" + boylam;
+      return "\t" + ((son ? son.points.length : 0) + 1) + "\t" + k;
     },
     ciz: () => build(),
     ipucu: "Boş satır yeni alan başlatır."
   },
   "c-center": {
     ad: "daire merkezi",
-    satir(ta, enlem, boylam){ return "Merkez " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    satir(ta, k){ return "Merkez " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + k; },
     ciz: () => buildCircles()
   },
   "p-input": {
     ad: "nokta",
-    satir(ta, enlem, boylam){ return "Nokta " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    satir(ta, k){ return "Nokta " + (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + k; },
     ciz: () => buildPoints()
   },
   "r-mv-text": {
     ad: "Mavi Vatan köşesi",
-    satir(ta, enlem, boylam){ return (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + enlem + "\t" + boylam; },
+    satir(ta, k){ return (ta.value.split("\n").filter(l => l.trim()).length + 1) + "\t" + k; },
     ciz: null                                                                          // eğriler "Eğrileri çiz" ile
   }
 };
@@ -441,13 +441,13 @@ function pickTikla(e){
   const lat = sn ? sn.lat : latAt(e.offsetY), lon = sn ? sn.lon : lonAt(e.offsetX);
   if (Math.abs(lat) > 85) return;
   const h = PICK_HEDEF[PICK.hedef], ta = $(PICK.hedef);
-  const satir = h.satir(ta, dms(lat, true), dms(lon, false));
+  const satir = h.satir(ta, fk(lat, lon, "\t"));
   ta.value = ta.value.replace(/[ \t]+$/, "") + (ta.value && !ta.value.endsWith("\n") ? "\n" : "") + satir;
   ta.scrollTop = ta.scrollHeight;
   ta.dispatchEvent(new Event("input", {bubbles: true}));               // proje kirlenir
   if (h.ciz){ SUPPRESS_FIT = true; try { h.ciz(); } finally { SUPPRESS_FIT = false; } }
   draw();
-  toast(dms(lat, true) + "  " + dms(lon, false) + (sn && sn.name ? "  (" + sn.name + ")" : "") + " eklendi");
+  toast(fk(lat, lon) + (sn && sn.name ? "  (" + sn.name + ")" : "") + " eklendi");
 }
 function drawPick(){
   if (!PICK || !HOVER) return;
@@ -460,7 +460,7 @@ function drawPick(){
     ctx.moveTo(X, Y - 15); ctx.lineTo(X, Y - 5); ctx.moveTo(X, Y + 5); ctx.lineTo(X, Y + 15); ctx.stroke(); };
   artı();
   ctx.strokeStyle = "#f2a93b"; ctx.lineWidth = 1.7; artı();
-  const t = dms(HOVER.lat, true) + "  " + dms(HOVER.lon, false) + (HOVER.name ? "  ·  " + HOVER.name : "");
+  const t = fk(HOVER.lat, HOVER.lon) + (HOVER.name ? "  ·  " + HOVER.name : "");
   ctx.font = "600 12px " + FONT();
   const w = ctx.measureText(t).width + 14;
   let bx = X + 18, by = Y + 14;

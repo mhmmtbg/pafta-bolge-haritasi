@@ -16,8 +16,10 @@ def oku(p):
 def main():
     surum = oku(KOK / "VERSION").strip()
     html = oku(SRC / "pafta.src.html")
-    app = oku(SRC / "app.js").replace("/*__VER__*/", surum)
-    for ad in ("world.json", "fir.json", "turkey.json", "mavivatan.json", "tr_idari.json", "kara_detay.json"):
+    # uygulama kodu: app.js ve src/moduller/*.js (ad sırasıyla), aynı <script> içinde
+    parcalar = [oku(SRC / "app.js")] + [oku(p) for p in sorted((SRC / "moduller").glob("*.js"))]
+    app = "\n".join(parcalar).replace("/*__VER__*/", surum)
+    for ad in ("world.json", "fir.json", "turkey.json", "mavivatan.json", "tr_idari.json", "kara_detay.json", "uydu_doseme.json"):
         json.loads(oku(DATA / ad))                      # bozuk veri derlemeye girmesin
     yer = {
         "/*__WORLD__*/null": oku(DATA / "world.json"),
@@ -26,6 +28,7 @@ def main():
         "/*__MV__*/null": oku(DATA / "mavivatan.json"),
         "/*__ADM__*/null": oku(DATA / "tr_idari.json"),
         "/*__KD__*/null": oku(DATA / "kara_detay.json"),
+        "/*__UYDU__*/null": oku(DATA / "uydu_doseme.json"),
         "/*__SAT__*/": base64.b64encode((DATA / "bluemarble.jpg").read_bytes()).decode("ascii"),
         "/*__APP__*/": app,
     }
