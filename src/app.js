@@ -126,6 +126,8 @@ function projeYukle(o){
     }
     POINTS = (o.noktalar || []).filter(p => isFinite(p.enlem) && isFinite(p.boylam))
       .map(p => ({name: p.ad || "Nokta", lat: +p.enlem, lon: +p.boylam, color: p.renk || $("p-color").value}));
+    const pp = parsePoints($("p-input").value).pts;                      // sürükleyerek düzenleme için satır konumları
+    if (pp.length === POINTS.length) POINTS.forEach((p, i) => { p.li = pp[i].li; p.cs = pp[i].cs; p.ce = pp[i].ce; });
     pointList();
     const hat = (o.olcum || []).map(ch => ({color: ch.renk || M_COLORS[0],
       pts: (ch.noktalar || []).filter(p => isFinite(p.enlem) && isFinite(p.boylam)).map(p => ({lat: +p.enlem, lon: +p.boylam, name: p.ad || null}))}))

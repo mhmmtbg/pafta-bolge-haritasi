@@ -147,6 +147,9 @@
   canvas{display:block;width:100%;height:100%;cursor:grab}
   canvas.drag{cursor:grabbing}
   canvas.measure{cursor:crosshair}
+  canvas.tasinabilir{cursor:move}
+  canvas.tasiniyor{cursor:grabbing}
+  .toolbar button:disabled{opacity:.38;cursor:default;background:transparent}
   .hud{position:absolute;z-index:2}
   .toolbar{top:18px;right:18px;display:flex;border-radius:8px;overflow:hidden;
            box-shadow:0 1px 2px rgba(10,20,26,.25),0 4px 14px rgba(10,20,26,.14)}
@@ -615,6 +618,8 @@
         <label class="check">Sınır mesafeleri <input type="checkbox" class="toggle" id="opt-layer-rings" checked></label>
         <label class="check">Noktalar <input type="checkbox" class="toggle" id="opt-layer-points" checked></label>
         <label class="check">Ölçüm hatları <input type="checkbox" class="toggle" id="opt-layer-measure" checked></label>
+        <label class="check" style="margin-top:8px">Haritada sürükleyerek düzenle <input type="checkbox" class="toggle" id="opt-duzenle" checked></label>
+        <p class="hint">Köşe, nokta, daire merkezi ve ölçüm noktalarını haritada tutup sürükleyin; yeni koordinat listeye yazılır. Geri al <kbd>Ctrl</kbd> <kbd>Z</kbd>, yinele <kbd>Ctrl</kbd> <kbd>Y</kbd>.</p>
       </div>
     </div>
 
@@ -699,6 +704,10 @@
       </div>
     </div>
     <div class="hud toolbar">
+      <button id="btn-geri" title="Geri al (Ctrl+Z)" aria-label="Geri al" disabled>
+        <svg viewBox="0 0 16 16"><path d="M5.5 3 2.5 6l3 3"/><path d="M2.8 6H10a3.5 3.5 0 0 1 0 7H6.5"/></svg></button>
+      <button id="btn-ileri" title="Yinele (Ctrl+Y)" aria-label="Yinele" disabled>
+        <svg viewBox="0 0 16 16"><path d="m10.5 3 3 3-3 3"/><path d="M13.2 6H6a3.5 3.5 0 0 0 0 7h3.5"/></svg></button>
       <button id="btn-fit" title="Tüm çizimleri ekrana sığdır">
         <svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>Çizime sığdır</button>
       <button id="btn-world" title="Tüm dünyayı göster">
@@ -835,6 +844,7 @@
         <dt class="desk-only"><kbd>Ctrl</kbd> <kbd>N</kbd></dt><dd class="desk-only">Yeni pafta</dd>
         <dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>Haritayı PNG olarak kaydet</dd>
         <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>7</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Görünüm, Çıktı</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>Geri al, yinele</dd>
         <dt><kbd>Ctrl</kbd> <kbd>0</kbd></dt><dd>Çizime sığdır</dd>
         <dt><kbd>Ctrl</kbd> <kbd>U</kbd></dt><dd>Uydu görüntüsünü aç/kapat</dd>
         <dt><kbd>Ctrl</kbd> <kbd>+</kbd> <kbd>−</kbd></dt><dd>Yakınlaş, uzaklaş</dd>
@@ -2444,6 +2454,7 @@ function draw(){
   if (opt("opt-title")) drawTitleBlock();
   else if (SAT) drawSatCredit();
   if (showLoc) drawLocator();
+  drawDuzenle();
   drawPick();
 }
 
@@ -2779,7 +2790,7 @@ function pointList(){
 }
 function buildPoints(){
   const res = parsePoints($("p-input").value), def = $("p-color").value;
-  POINTS = res.pts.map(p => ({name: p.name, lat: p.lat, lon: p.lon, color: p.color || def}));
+  POINTS = res.pts.map(p => ({name: p.name, lat: p.lat, lon: p.lon, color: p.color || def, li: p.li, cs: p.cs, ce: p.ce}));
   $("p-msg").innerHTML = POINTS.length
     ? '<span class="ok">' + POINTS.length + ' nokta işaretlendi.</span>'
     : '<span class="warn">Okunabilir nokta bulunamadı.</span>';
