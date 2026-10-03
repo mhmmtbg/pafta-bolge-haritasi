@@ -56,7 +56,7 @@ PANEL.addEventListener("input", e => { if (e.target.id !== "proj-file") degisti(
 PANEL.addEventListener("change", e => { if (e.target.id !== "proj-file") degisti(); });
 PANEL.addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (!b || !b.isConnected || b.closest("#pane-export") || b.id === "btn-file" || b.classList.contains("pick") || b.classList.contains("mini")) return;
+  if (!b || !b.isConnected || b.closest("#pane-export") || b.dataset.dosya || b.classList.contains("pick") || b.classList.contains("mini")) return;
   degisti();
 });
 
@@ -320,6 +320,11 @@ document.addEventListener("drop", async e => {
   dropDepth = 0; STAGE.classList.remove("drop");
   const f = e.dataTransfer.files[0];
   if (!f) return;
+  const aktif0 = (document.querySelector(".pane.active") || {}).id;
+  if (/\.xlsx?$|\.xlsm$/i.test(f.name)){
+    dosyaYukle(f, {"pane-points": "nokta", "pane-circles": "daire"}[aktif0] || "alan");
+    return;
+  }
   const txt = await f.text();
   if (/\.pafta$/i.test(f.name) || /^\s*\{/.test(txt)){
     if (await kaydedilmemisSor() && projeMetniYukle(txt, f.name, null)) toast("Açıldı: " + f.name);

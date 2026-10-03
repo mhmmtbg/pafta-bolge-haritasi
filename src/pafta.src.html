@@ -266,6 +266,23 @@
   .rapor th,.rapor td{padding:5px 10px;border-bottom:1px solid #dde5e8;text-align:left;vertical-align:top;white-space:nowrap}
   .rapor th{font-weight:600;color:#33474f}
   .rapor-not{font-family:var(--prose);font-size:12px;color:#5b6f79;margin:12px 0 0;line-height:1.5}
+  .row[hidden]{display:none}
+  .tool-card .msg .ok{color:#1f6b45}
+  .tool-card .msg .warn{color:#9a5200}
+  .xl-ayar{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px 14px}
+  .xl-ayar label[hidden]{display:none}
+  .xl-secim{display:flex;gap:28px;margin-top:10px}
+  .xl-secim .check{flex:0 0 auto;gap:12px}
+  .xl-tablo{margin-top:12px;overflow:auto;max-height:300px;border:1px solid #dde5e8;border-radius:8px}
+  .xl-tablo table{border-collapse:collapse;font-size:12.5px;width:100%}
+  .xl-tablo th,.xl-tablo td{padding:5px 9px;border-bottom:1px solid #e8eef0;text-align:left;white-space:nowrap}
+  .xl-tablo th{position:sticky;top:0;background:#f3f6f7;font-weight:600;color:#33474f}
+  .xl-tablo th small{display:block;font-weight:600;color:#a4123f;font-size:11px}
+  .xl-tablo .rol{background:#fff4e0}
+  .xl-tablo th.rol{background:#ffe9c2}
+  .xl-tablo td.no{color:#8a9ba2;font-size:11px}
+  .xl-tablo td.ok{font-family:var(--mono);font-size:11.5px;color:#1f6b45}
+  .xl-tablo td.hata{color:#a4123f}
   .km-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
   .km-grid textarea{height:120px}
   .km-row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline;padding:5px 8px;border-radius:6px;background:#f3f6f7;font-size:13px}
@@ -366,11 +383,11 @@
         <textarea id="input" spellcheck="false" placeholder="Bölge&#9;Nokta&#9;Enlem&#9;Boylam&#10;A bölgesi&#9;1&#9;41°30'00&quot;K&#9;30°15'00&quot;D&#10;&#9;2&#9;41°45'30&quot;K&#9;31°20'00&quot;D"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-draw">Bölgeleri çiz</button>
-          <button class="btn" id="btn-file">Dosyadan al</button>
+          <button class="btn" id="btn-file" data-dosya="alan" title="Metin, CSV ya da Excel (.xlsx) dosyası">Dosyadan al</button>
           <button class="btn" id="btn-notam" title="NOTAM, NAVTEX ya da düz metinden alan ve daire çıkar">Metinden al</button>
           <button class="btn quiet" id="btn-sample">Örnek</button>
           <button class="btn quiet" id="btn-clear">Temizle</button>
-          <input type="file" id="file" accept=".txt,.csv,.tsv" hidden>
+          <input type="file" id="file" accept=".txt,.csv,.tsv,.xlsx" hidden>
         </div>
         <p class="hint">Tabloyu Excel veya Word'den olduğu gibi yapıştırın. Derece‑dakika‑saniye (41°30'15"K) ve ondalık derece (41.5042) okunur. Bölge adı boş satırlar üstteki bölgeye eklenir, boş satır yeni bölge başlatır.</p>
         <div class="msg" id="msg"></div>
@@ -401,6 +418,7 @@
         </div>
         <div class="row">
           <button class="btn primary" id="btn-circles">Daireleri çiz</button>
+          <button class="btn" id="btn-c-file" data-dosya="daire" title="Metin, CSV ya da Excel (.xlsx) dosyası">Dosyadan al</button>
           <button class="btn quiet" id="btn-circles-sample">Örnek</button>
           <button class="btn quiet" id="btn-circles-clear">Temizle</button>
         </div>
@@ -470,6 +488,7 @@
         <textarea id="p-input" spellcheck="false" placeholder="İsim&#9;Enlem&#9;Boylam&#10;Ankara&#9;39°55'0&quot;K&#9;32°51'0&quot;D&#10;Sinop&#9;42.0231&#9;35.1531"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-points">Noktaları işaretle</button>
+          <button class="btn" id="btn-p-file" data-dosya="nokta" title="Metin, CSV ya da Excel (.xlsx) dosyası">Dosyadan al</button>
           <button class="btn quiet" id="btn-points-sample">Örnek</button>
           <button class="btn quiet" id="btn-points-clear">Temizle</button>
         </div>
@@ -762,6 +781,38 @@
     <div class="ask-btns">
       <button id="rapor-kapat">Kapat</button>
       <button id="rapor-excel" class="primary">Excel'e aktar</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="xl" hidden>
+  <div class="tool-card genis" role="dialog" aria-modal="true" aria-labelledby="xl-title">
+    <button class="modal-x" id="xl-x" aria-label="Kapat">×</button>
+    <h2 id="xl-title">Excel'den al</h2>
+    <p><b id="xl-dosya"></b> — Sütunları eşleştirin; koordinat ayrı enlem ve boylam sütunlarında ya da tek sütunda (MGRS, UTM, "41°30'K 29°15'D") olabilir.</p>
+    <div class="xl-ayar">
+      <label class="fld" style="margin-top:0">Sayfa <select id="xl-sayfa"></select></label>
+      <label class="fld" style="margin-top:0">Ekleneceği yer
+        <select id="xl-hedef"><option value="alan">Alanlar</option><option value="nokta">Noktalar</option><option value="daire">Daireler</option></select>
+      </label>
+      <label class="fld" style="margin-top:0">Ad sütunu <select id="xl-ad"></select></label>
+      <label class="fld" style="margin-top:0">Nokta no sütunu <select id="xl-no"></select></label>
+      <label class="fld" style="margin-top:0">Enlem sütunu <select id="xl-enlem"></select></label>
+      <label class="fld" style="margin-top:0">Boylam sütunu <select id="xl-boylam"></select></label>
+      <label class="fld" style="margin-top:0">Yarıçap sütunu <select id="xl-r"></select></label>
+      <label class="fld" style="margin-top:0">Yarıçap birimi
+        <select id="xl-birim"><option value="km">kilometre</option><option value="nm">deniz mili</option><option value="m">metre</option></select>
+      </label>
+      <label class="fld" style="margin-top:0">Renk sütunu <select id="xl-renk"></select></label>
+    </div>
+    <div class="xl-secim">
+      <label class="check">İlk satır başlık <input type="checkbox" class="toggle" id="xl-baslik"></label>
+      <label class="check">Mevcut listeyi değiştir <input type="checkbox" class="toggle" id="xl-degistir"></label>
+    </div>
+    <div class="xl-tablo" id="xl-tablo"></div>
+    <div class="msg" id="xl-msg"></div>
+    <div class="ask-btns">
+      <button id="xl-iptal">Vazgeç</button>
+      <button id="xl-ekle" class="primary" disabled>Ekle</button>
     </div>
   </div>
 </div>
