@@ -56,7 +56,7 @@ PANEL.addEventListener("input", e => { if (e.target.id !== "proj-file") degisti(
 PANEL.addEventListener("change", e => { if (e.target.id !== "proj-file") degisti(); });
 PANEL.addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (!b || !b.isConnected || b.closest("#pane-export") || b.id === "btn-file" || b.classList.contains("pick")) return;
+  if (!b || !b.isConnected || b.closest("#pane-export") || b.id === "btn-file" || b.classList.contains("pick") || b.classList.contains("mini")) return;
   degisti();
 });
 

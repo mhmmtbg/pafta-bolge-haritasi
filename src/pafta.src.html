@@ -58,10 +58,13 @@
   .group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
   .group-head h3{margin:0}
   .group-head[hidden]{display:none}
-  button.pick{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 9px 4px 7px;border-radius:6px;cursor:pointer;
+  .head-btns{display:flex;gap:6px;flex:none}
+  button.mini{padding:4px 6px}
+  .group-head h3{white-space:nowrap}
+  button.pick,button.mini{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 9px 4px 7px;border-radius:6px;cursor:pointer;
               border:1px solid var(--line);background:transparent;color:var(--dim)}
-  button.pick svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
-  button.pick:hover{color:#fff;border-color:#35505c}
+  button.pick svg,button.mini svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+  button.pick:hover,button.mini:hover{color:#fff;border-color:#35505c}
   button.pick[aria-pressed="true"]{color:var(--ink);background:var(--amber);border-color:var(--amber);font-weight:600}
   .pick-banner{position:absolute;top:66px;left:50%;transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:12px;
                background:rgba(14,26,33,.92);color:#e8f0f3;border-radius:10px;padding:8px 8px 8px 14px;font-size:13px;
@@ -247,6 +250,13 @@
   .notam-list label b{font-weight:600}
   .notam-list label span.tur{font-size:11.5px;color:#5b6f79}
   .notam-list label small{grid-column:3;font-family:var(--mono);font-size:11px;color:#5b6f79}
+  .km-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+  .km-grid textarea{height:120px}
+  .km-row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline;padding:5px 8px;border-radius:6px;background:#f3f6f7;font-size:13px}
+  .km-row:first-child{background:#fff4e0}
+  .km-row b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .km-row small{font-family:var(--mono);font-size:11.5px;color:#4d626b;white-space:pre}
+  .tool-card .check{color:#33474f}
   .notam-list .bos{font-family:var(--prose);font-size:13px;color:#8a5a00;padding:6px 2px}
 
   /* soru penceresi */
@@ -336,7 +346,7 @@
         <p>Köşe koordinatlarından kapalı bölgeler çizer; her bölgenin alanını ve çevresini hesaplar.</p>
       </header>
       <div class="group">
-        <div class="group-head"><h3>Koordinat listesi</h3><button class="pick" data-hedef="input" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></div>
+        <div class="group-head"><h3>Koordinat listesi</h3><span class="head-btns"><button class="mini kerteriz" data-hedef="alan" title="Kerteriz ve mesafeyle konum üret" aria-label="Kerteriz ve mesafeyle konum üret"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 8l3.2-4.6M8 1.6v1.6M14.4 8h-1.6M8 14.4v-1.6M1.6 8h1.6"/></svg></button><button class="pick" data-hedef="input" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
         <textarea id="input" spellcheck="false" placeholder="Bölge&#9;Nokta&#9;Enlem&#9;Boylam&#10;A bölgesi&#9;1&#9;41°30'00&quot;K&#9;30°15'00&quot;D&#10;&#9;2&#9;41°45'30&quot;K&#9;31°20'00&quot;D"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-draw">Bölgeleri çiz</button>
@@ -359,7 +369,7 @@
         <p>Bir veya birkaç merkezden, verilen yarıçaplarda gerçek sabit‑uzaklık halkaları çizer.</p>
       </header>
       <div class="group">
-        <div class="group-head"><h3>Merkezler</h3><button class="pick" data-hedef="c-center" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></div>
+        <div class="group-head"><h3>Merkezler</h3><span class="head-btns"><button class="mini kerteriz" data-hedef="daire" title="Kerteriz ve mesafeyle konum üret" aria-label="Kerteriz ve mesafeyle konum üret"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 8l3.2-4.6M8 1.6v1.6M14.4 8h-1.6M8 14.4v-1.6M1.6 8h1.6"/></svg></button><button class="pick" data-hedef="c-center" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
         <textarea id="c-center" class="short" spellcheck="false" placeholder="Merkez adı&#9;39°57'0&quot;K&#9;32°52'0&quot;D&#10;İkinci merkez&#9;41°1'0&quot;K&#9;28°58'0&quot;D"></textarea>
         <div class="grid2">
           <label class="fld">Yarıçaplar
@@ -439,7 +449,7 @@
         <p>İsimli konumları işaretler; isimler noktanın üstünde yazar.</p>
       </header>
       <div class="group">
-        <div class="group-head"><h3>Nokta listesi</h3><button class="pick" data-hedef="p-input" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></div>
+        <div class="group-head"><h3>Nokta listesi</h3><span class="head-btns"><button class="mini kerteriz" data-hedef="nokta" title="Kerteriz ve mesafeyle konum üret" aria-label="Kerteriz ve mesafeyle konum üret"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 8l3.2-4.6M8 1.6v1.6M14.4 8h-1.6M8 14.4v-1.6M1.6 8h1.6"/></svg></button><button class="pick" data-hedef="p-input" title="Haritaya tıklayarak koordinat ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
         <textarea id="p-input" spellcheck="false" placeholder="İsim&#9;Enlem&#9;Boylam&#10;Ankara&#9;39°55'0&quot;K&#9;32°51'0&quot;D&#10;Sinop&#9;42.0231&#9;35.1531"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-points">Noktaları işaretle</button>
@@ -684,6 +694,48 @@
     </div>
   </div>
 </div>
+<div class="modal" id="km" hidden>
+  <div class="tool-card" role="dialog" aria-modal="true" aria-labelledby="km-title">
+    <button class="modal-x" id="km-x" aria-label="Kapat">×</button>
+    <h2 id="km-title">Kerteriz ve mesafeyle konum</h2>
+    <p>Bir başlangıçtan gerçek kerteriz ve mesafeyle yeni konumlar üretir (WGS84, Vincenty). Başlangıç bir koordinat ya da haritadaki bir nokta, alan köşesi veya daire merkezinin adı olabilir.</p>
+    <div class="km-grid">
+      <label class="fld" style="margin-top:0">Başlangıç
+        <input id="km-bas" class="mono" list="km-yerler" placeholder="Ankara  ya da  39°55'0&quot;K 32°51'0&quot;D" spellcheck="false" autocomplete="off">
+        <datalist id="km-yerler"></datalist>
+      </label>
+      <label class="fld" style="margin-top:0">Ad öneki
+        <input id="km-ad" placeholder="Hedef" spellcheck="false">
+      </label>
+      <label class="fld" style="grid-row:span 2">Kerteriz ve mesafe (satır başına bir konum)
+        <textarea id="km-satir" spellcheck="false" placeholder="045 120&#10;090/80 NM  Doğu noktası&#10;135° 60 km"></textarea>
+      </label>
+      <div>
+        <label class="fld">Varsayılan birim
+          <select id="km-birim"><option value="nm">deniz mili</option><option value="km">kilometre</option><option value="m">metre</option></select>
+        </label>
+        <label class="fld">Ekleneceği yer
+          <select id="km-hedef">
+            <option value="nokta">Noktalar</option>
+            <option value="alan">Yeni alan (köşeler sırayla)</option>
+            <option value="daire">Daire merkezleri</option>
+            <option value="olcum">Ölçüm hattı</option>
+          </select>
+        </label>
+      </div>
+      <div>
+        <label class="check" style="margin-top:6px">Her satır bir öncekinin varışından başlasın <input type="checkbox" class="toggle" id="km-zincir"></label>
+        <label class="check">Başlangıcı da ekle <input type="checkbox" class="toggle" id="km-basdahil"></label>
+      </div>
+    </div>
+    <div class="msg" id="km-msg"></div>
+    <div id="km-onizleme" class="notam-list"></div>
+    <div class="ask-btns">
+      <button id="km-iptal">Vazgeç</button>
+      <button id="km-ekle" class="primary" disabled>Ekle</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="ask" hidden>
   <div class="ask-card" role="alertdialog" aria-modal="true" aria-labelledby="ask-title" aria-describedby="ask-text">
     <h2 id="ask-title"></h2>
@@ -741,7 +793,7 @@ const TR = /*__TR__*/null;
 const MAVI_VATAN = /*__MV__*/null;
 const TR_ADM = /*__ADM__*/null;
 const KARA10 = /*__KD__*/null;
-const UYDU_D = /*__UYDU__*/null;    // yaklaştıkça netleşen uydu döşemeleri (NASA Blue Marble, ~500 m)      // Türkiye ve çevresi için 1:10m kara ve göller (yaklaşınca)     // il ve ilçe sınırları, etiket noktaları (OpenStreetMap / geoBoundaries)
+const UYDU_D = /*__UYDU__*/null;    // yaklaştıkça netleşen uydu döşemeleri (NASA Blue Marble, ~500 m)
 const SAT_SRC = "/*__SAT__*/";      // NASA Blue Marble NG, eşdikdörtgen, 5400×2700
 
 /* ============ yardımcılar ============ */
@@ -754,16 +806,15 @@ const CHART_FONT = getComputedStyle(document.documentElement).getPropertyValue("
 const FONT = () => CHART_FONT;
 const $ = id => document.getElementById(id);
 
-function dms(value, isLat){
-  const neg = value < 0;
-  let v = Math.abs(value);
-  let d = Math.floor(v);
-  let m = Math.floor((v - d) * 60);
-  let s = Math.round(((v - d) * 60 - m) * 60);
-  if (s === 60){ s = 0; m++; }
-  if (m === 60){ m = 0; d++; }
+function dms(value, isLat, ondalik){
+  /* ondalik: saniyenin ondalık basamağı (araçların listeye yazdığı hassas değerler için) */
+  const neg = value < 0, q = 10 ** (ondalik || 0);
+  let t = Math.round(Math.abs(value) * 3600 * q);                 // toplam saniye × q
+  const d = Math.floor(t / (3600 * q)); t -= d * 3600 * q;
+  const m = Math.floor(t / (60 * q)); t -= m * 60 * q;
+  const sn = ondalik ? (t / q).toFixed(ondalik).padStart(3 + ondalik, "0").replace(".", ",") : String(t).padStart(2, "0");
   const suf = isLat ? (neg ? "G" : "K") : (neg ? "B" : "D");
-  return d + "°" + String(m).padStart(2,"0") + "'" + String(s).padStart(2,"0") + '"' + suf;
+  return d + "°" + String(m).padStart(2,"0") + "'" + sn + '"' + suf;
 }
 function hexA(hex, a){
   const n = parseInt(hex.slice(1), 16);

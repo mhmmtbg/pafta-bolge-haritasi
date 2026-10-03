@@ -76,23 +76,25 @@ function mgrsOku(zone, bant, sutun, satir, e, n){
 const KB_ADLARI = {dms: "Derece-dakika-saniye", dm: "Derece, ondalık dakika", dd: "Ondalık derece", utm: "UTM", mgrs: "MGRS"};
 function kBicim(){ const e = document.getElementById("opt-kbicim"); return e ? e.value : "dms"; }
 
-function dm(v, isLat){
+function dm(v, isLat, b){
+  b = b || 2;
   const neg = v < 0; let a = Math.abs(v), d = Math.floor(a), m = (a - d) * 60;
-  if (+m.toFixed(2) >= 60){ d++; m = 0; }
-  return d + "°" + m.toFixed(2).padStart(5, "0").replace(".", ",") + "'" + (isLat ? (neg ? "G" : "K") : (neg ? "B" : "D"));
+  if (+m.toFixed(b) >= 60){ d++; m = 0; }
+  return d + "°" + m.toFixed(b).padStart(3 + b, "0").replace(".", ",") + "'" + (isLat ? (neg ? "G" : "K") : (neg ? "B" : "D"));
 }
-function dd(v, isLat){
-  return Math.abs(v).toFixed(5) + "°" + (isLat ? (v < 0 ? "G" : "K") : (v < 0 ? "B" : "D"));
+function dd(v, isLat, b){
+  return Math.abs(v).toFixed(b || 5) + "°" + (isLat ? (v < 0 ? "G" : "K") : (v < 0 ? "B" : "D"));
 }
-/* seçili biçimde tek metin; sep: enlem ile boylam arası (listelerde sekme) */
-function fk(lat, lon, sep, bicim){
+/* seçili biçimde tek metin; sep: enlem ile boylam arası (listelerde sekme);
+   hassas: hesaplanan konumları listeye yazarken (saniyenin onda biri, ~3 m) */
+function fk(lat, lon, sep, bicim, hassas){
   sep = sep == null ? "  " : sep;
   switch (bicim || kBicim()){
-    case "dm":   return dm(lat, true) + sep + dm(lon, false);
-    case "dd":   return dd(lat, true) + sep + dd(lon, false);
+    case "dm":   return dm(lat, true, hassas ? 4 : 2) + sep + dm(lon, false, hassas ? 4 : 2);
+    case "dd":   return dd(lat, true, hassas ? 6 : 5) + sep + dd(lon, false, hassas ? 6 : 5);
     case "utm":  { const u = utmIleri(lat, lon); return u.zone + u.bant + " " + Math.round(u.E) + " " + Math.round(u.N); }
     case "mgrs": return mgrsYaz(lat, lon, 5);
-    default:     return dms(lat, true) + sep + dms(lon, false);
+    default:     return dms(lat, true, hassas ? 1 : 0) + sep + dms(lon, false, hassas ? 1 : 0);
   }
 }
 
