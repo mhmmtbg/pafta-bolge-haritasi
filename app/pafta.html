@@ -269,6 +269,15 @@
   .rapor th,.rapor td{padding:5px 10px;border-bottom:1px solid #dde5e8;text-align:left;vertical-align:top;white-space:nowrap}
   .rapor th{font-weight:600;color:#33474f}
   .rapor-not{font-family:var(--prose);font-size:12px;color:#5b6f79;margin:12px 0 0;line-height:1.5}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .seg label{cursor:pointer}
+  .seg input{position:absolute;opacity:0;pointer-events:none}
+  .seg span{display:block;padding:6px 16px;font-size:13px;color:var(--dim)}
+  .seg input:checked + span{background:var(--amber);color:var(--ink);font-weight:600}
+  .seg input:focus-visible + span{outline:2px solid var(--amber);outline-offset:-2px}
+  .not-satir{align-items:flex-start}
+  .not-satir .zone-name{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+  .not-metin{width:100%;background:transparent;border:1px solid var(--line);border-radius:5px;color:var(--text);font:inherit;font-size:13px;padding:4px 7px;resize:vertical;min-height:0;height:auto}
   .row[hidden]{display:none}
   .tool-card .msg .ok{color:#1f6b45}
   .tool-card .msg .warn{color:#9a5200}
@@ -356,6 +365,10 @@
     <button class="tab" data-pane="pane-measure" title="Haritadan tıklayarak mesafe ölç">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M11 6.2 5.5 20.5M13 6.2l5.5 14.3"/><path d="M7.4 15.5a7.5 7.5 0 0 0 9.2 0"/></svg>
       Ölçüm
+    </button>
+    <button class="tab" data-pane="pane-notes" title="Haritaya not ve ok ekle">
+      <svg viewBox="0 0 24 24"><path d="M4 5h12v8H9l-3.5 3v-3H4Z"/><path d="M13 19.5 20 12.5M20 12.5h-4.2M20 12.5v4.2"/></svg>
+      Notlar
     </button>
     <div class="spacer"></div>
     <div class="sep"></div>
@@ -567,6 +580,37 @@
       </div>
     </div>
 
+    <!-- NOTLAR -->
+    <div class="pane" id="pane-notes">
+      <header class="pane-head">
+        <h2>Notlar</h2>
+        <p>Haritaya açıklama notları ve oklar ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
+      </header>
+      <div class="group">
+        <div class="mode-on">Not modu açık</div>
+        <div class="seg" role="radiogroup" aria-label="Eklenecek öğe">
+          <label><input type="radio" name="n-kip" value="not" checked><span>Not</span></label>
+          <label><input type="radio" name="n-kip" value="ok"><span>Ok</span></label>
+        </div>
+        <div class="grid2" style="margin-top:12px">
+          <label class="fld" style="margin-top:0">Renk
+            <input type="color" id="n-renk" value="#a4123f">
+          </label>
+          <label class="fld" style="margin-top:0">Yazı boyutu
+            <select id="n-boyut">
+              <option value="11">küçük</option>
+              <option value="13" selected>orta</option>
+              <option value="16">büyük</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Notlar ve ok uçları sürüklenerek taşınır.</p>
+        <div class="row"><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
+        <div class="msg" id="n-msg"></div>
+        <div id="n-list"></div>
+      </div>
+    </div>
+
     <!-- GÖRÜNÜM -->
     <div class="pane" id="pane-view">
       <header class="pane-head">
@@ -618,6 +662,7 @@
         <label class="check">Sınır mesafeleri <input type="checkbox" class="toggle" id="opt-layer-rings" checked></label>
         <label class="check">Noktalar <input type="checkbox" class="toggle" id="opt-layer-points" checked></label>
         <label class="check">Ölçüm hatları <input type="checkbox" class="toggle" id="opt-layer-measure" checked></label>
+        <label class="check">Notlar ve oklar <input type="checkbox" class="toggle" id="opt-layer-notes" checked></label>
         <label class="check" style="margin-top:8px">Haritada sürükleyerek düzenle <input type="checkbox" class="toggle" id="opt-duzenle" checked></label>
         <p class="hint">Köşe, nokta, daire merkezi ve ölçüm noktalarını haritada tutup sürükleyin; yeni koordinat listeye yazılır. Geri al <kbd>Ctrl</kbd> <kbd>Z</kbd>, yinele <kbd>Ctrl</kbd> <kbd>Y</kbd>.</p>
       </div>
@@ -699,6 +744,7 @@
           <li><span>Sınır mesafesi</span><em>Türkiye ve Mavi Vatan'dan eğriler</em></li>
           <li><span>Noktalar</span><em>isimli konumlar</em></li>
           <li><span>Ölçüm</span><em>tıklayarak mesafe ve kerteriz</em></li>
+          <li><span>Notlar</span><em>açıklama notları ve oklar</em></li>
         </ul>
         <p style="margin:14px 0 0">Bir .pafta projesini ya da koordinat listesini buraya sürükleyip bırakabilirsiniz. Kısayollar: <kbd>F1</kbd></p>
       </div>
@@ -843,7 +889,7 @@
         <dt><kbd>Ctrl</kbd> <kbd>O</kbd></dt><dd>Proje aç</dd>
         <dt class="desk-only"><kbd>Ctrl</kbd> <kbd>N</kbd></dt><dd class="desk-only">Yeni pafta</dd>
         <dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>Haritayı PNG olarak kaydet</dd>
-        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>7</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Görünüm, Çıktı</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>8</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Notlar, Görünüm, Çıktı</dd>
         <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>Geri al, yinele</dd>
         <dt><kbd>Ctrl</kbd> <kbd>0</kbd></dt><dd>Çizime sığdır</dd>
         <dt><kbd>Ctrl</kbd> <kbd>U</kbd></dt><dd>Uydu görüntüsünü aç/kapat</dd>
@@ -2445,6 +2491,7 @@ function draw(){
   if (opt("opt-layer-areas")) drawZones();
   if (opt("opt-layer-points")) drawPointsLayer();
   if (opt("opt-layer-measure")) drawMeasureLayer();
+  if (opt("opt-layer-notes")) drawNotlar();
   if (sev) drawAdmLabels(sev);
   if (opt("opt-fir")) drawFIR("labels");
   if (opt("opt-cities")) drawCities();
@@ -3043,7 +3090,7 @@ $("modal-x").onclick = helpClose;
 $("modal").addEventListener("mousedown", e => { if (e.target === $("modal")) helpClose(); });
 
 /* ---- sekme geçişi ---- */
-const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-view","pane-export"];
+const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-notes","pane-view","pane-export"];
 function sekmeAc(id){ const t = document.querySelector('.tab[data-pane="' + id + '"]'); if (t) t.click(); }
 
 /* ---- proje durumu ---- */
@@ -3316,7 +3363,7 @@ document.addEventListener("keydown", e => {
     "+": () => zoomBy(1.5), "=": () => zoomBy(1.5), "-": () => zoomBy(1/1.5)
   };
   if (MASAUSTU) map.n = () => yeni();
-  if (/^[1-7]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
+  if (/^[1-8]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
   if (map[k]){ e.preventDefault(); e.stopPropagation(); map[k](); }
 }, true);
 
@@ -4667,6 +4714,158 @@ $("rapor-excel").onclick = raporExcel;
 [$("rapor-x"), $("rapor-kapat")].forEach(b => b.onclick = () => { $("rapor").hidden = true; });
 $("rapor").addEventListener("mousedown", e => { if (e.target === $("rapor")) $("rapor").hidden = true; });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("rapor").hidden){ e.stopPropagation(); $("rapor").hidden = true; } }, true);
+
+/* ============ notlar ve oklar ============ */
+/* Notlar sekmesi açıkken haritaya tıklamak not koyar; Ok kipinde iki tıklama bir ok çizer.
+   Notlar ve oklar projeye kaydedilir, sürüklenerek taşınır. */
+var NOTLAR = [];             // {tur:"not", lat, lon, metin, renk, boyut} | {tur:"ok", a:{lat,lon}, b:{lat,lon}, metin, renk}
+var NOT_AKTIF = false, NOT_OK_BAS = null, NOT_IMLEC = null;
+const NOT_RENKLER = ["#16222a", "#a4123f", "#00798c", "#e08e0b", "#3c6e2a", "#6a3d9a"];
+function notKip(){ return document.querySelector('input[name="n-kip"]:checked').value; }
+
+function notEkle(n){ NOTLAR.push(n); hideEmpty(); notListe(); draw(); degisti(); }
+
+/* ---- çizim ---- */
+function okUcu(x1, y1, x2, y2, boy){
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  ctx.moveTo(x2, y2); ctx.lineTo(x2 - boy * Math.cos(a - .42), y2 - boy * Math.sin(a - .42));
+  ctx.moveTo(x2, y2); ctx.lineTo(x2 - boy * Math.cos(a + .42), y2 - boy * Math.sin(a + .42));
+}
+function notKutusu(metin, X, Y, renk, boyut, ortala){
+  const fs = boyut || 13, satirlar = String(metin || "").split("\n").slice(0, 8);
+  ctx.font = "600 " + fs + "px " + FONT();
+  const w = Math.max(...satirlar.map(s => ctx.measureText(s).width)) + 14, h = satirlar.length * (fs + 4) + 8;
+  const bx = ortala ? X - w / 2 : X + 8, by = ortala ? Y - h / 2 : Y - h - 8;
+  ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.strokeStyle = renk; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.rect(bx, by, w, h); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = renk; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  satirlar.forEach((s, i) => ctx.fillText(s, bx + 7, by + 5 + i * (fs + 4)));
+  LABELS.push([bx, by, bx + w, by + h]);
+}
+function drawNotlar(){
+  if (!NOTLAR || (!NOTLAR.length && !NOT_OK_BAS)) return;     // var: modül kodundan önce de çağrılabilir
+  ctx.save();
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  NOTLAR.forEach(n => {
+    if (n.tur === "ok"){
+      const x1 = sx(n.a.lon), y1 = sy(n.a.lat), x2 = sx(n.b.lon), y2 = sy(n.b.lat);
+      ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); okUcu(x1, y1, x2, y2, 14); ctx.stroke();
+      ctx.strokeStyle = n.renk; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); okUcu(x1, y1, x2, y2, 14); ctx.stroke();
+      if (n.metin) notKutusu(n.metin, x1, y1, n.renk, n.boyut, false);
+    } else {
+      const X = sx(n.lon), Y = sy(n.lat);
+      ctx.fillStyle = n.renk; ctx.beginPath(); ctx.arc(X, Y, 3.2, 0, 6.284); ctx.fill();
+      ctx.strokeStyle = n.renk; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X + 8, Y - 8); ctx.stroke();
+      notKutusu(n.metin || "Not", X, Y, n.renk, n.boyut, false);
+    }
+  });
+  if (NOT_OK_BAS && NOT_IMLEC){                                   // ok önizlemesi
+    const x1 = sx(NOT_OK_BAS.lon), y1 = sy(NOT_OK_BAS.lat), x2 = NOT_IMLEC.x, y2 = NOT_IMLEC.y;
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = $("n-renk").value; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); okUcu(x1, y1, x2, y2, 14); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ---- sürükleyerek düzenleme (40_duzenle.js tutamaçlarına katılır) ---- */
+function notTutamaclari(dene){
+  if (!opt("opt-layer-notes")) return;
+  NOTLAR.forEach(n => {
+    if (n.tur === "ok"){
+      dene(n.a.lat, n.a.lon, {tur: "not", ad: "Ok başı", tasi: (la, lo) => { n.a = {lat: la, lon: lo}; }, bitir: notListe});
+      dene(n.b.lat, n.b.lon, {tur: "not", ad: "Ok ucu", tasi: (la, lo) => { n.b = {lat: la, lon: lo}; }, bitir: notListe});
+    } else dene(n.lat, n.lon, {tur: "not", ad: n.metin || "Not", tasi: (la, lo) => { n.lat = la; n.lon = lo; }, bitir: notListe});
+  });
+}
+
+/* ---- liste ---- */
+function notListe(){
+  const host = $("n-list");
+  host.innerHTML = "";
+  $("n-msg").innerHTML = NOTLAR.length ? "" : '<span class="warn">Henüz not yok — haritaya tıklayın.</span>';
+  NOTLAR.forEach((n, i) => {
+    const row = document.createElement("div");
+    row.className = "zone not-satir";
+    const inp = document.createElement(n.tur === "ok" ? "input" : "textarea");
+    inp.className = "not-metin"; inp.value = n.metin || ""; inp.spellcheck = false;
+    inp.placeholder = n.tur === "ok" ? "Ok etiketi (isteğe bağlı)" : "Not metni";
+    if (n.tur !== "ok") inp.rows = Math.min(4, Math.max(1, (n.metin || "").split("\n").length));
+    inp.oninput = () => { n.metin = inp.value; scheduleDraw(); };
+    const meta = document.createElement("span");
+    meta.className = "zone-meta";
+    meta.textContent = n.tur === "ok"
+      ? "Ok · " + fmtDist(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).d) + " · " + String(Math.round(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).az)).padStart(3, "0") + "°"
+      : "Not · " + fk(n.lat, n.lon);
+    const kutu = document.createElement("span");
+    kutu.className = "zone-name"; kutu.append(inp, meta);
+    row.append(swatch(n.renk, v => n.renk = v), kutu,
+      smallBtn("odak", () => n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
+      smallBtn("sil", () => { NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
+    host.appendChild(row);
+  });
+}
+
+/* ---- haritaya tıklama ---- */
+cv.addEventListener("click", e => {
+  if (!NOT_AKTIF || moved || PICK) return;
+  const sn = snapAt(e.offsetX, e.offsetY);
+  const lat = sn ? sn.lat : latAt(e.offsetY), lon = sn ? sn.lon : lonAt(e.offsetX);
+  if (Math.abs(lat) > 85) return;
+  const renk = $("n-renk").value, boyut = +$("n-boyut").value;
+  if (notKip() === "ok"){
+    if (!NOT_OK_BAS){ NOT_OK_BAS = {lat, lon}; draw(); return; }
+    notEkle({tur: "ok", a: NOT_OK_BAS, b: {lat, lon}, metin: "", renk, boyut});
+    NOT_OK_BAS = null;
+    return;
+  }
+  notEkle({tur: "not", lat, lon, metin: "", renk, boyut});
+  const t = $("n-list").lastElementChild.querySelector(".not-metin");
+  if (t) t.focus();
+});
+cv.addEventListener("mousemove", e => {
+  if (NOT_AKTIF && NOT_OK_BAS){ NOT_IMLEC = {x: e.offsetX, y: e.offsetY}; scheduleDraw(); }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && NOT_OK_BAS && !document.querySelector(".modal:not([hidden])")){ NOT_OK_BAS = null; draw(); }
+});
+document.querySelectorAll(".tab[data-pane]").forEach(t => t.addEventListener("click", () => {
+  NOT_AKTIF = t.dataset.pane === "pane-notes";
+  NOT_OK_BAS = null;
+  if (NOT_AKTIF) cv.classList.add("measure");
+  draw();
+}));
+document.querySelectorAll('input[name="n-kip"]').forEach(r => r.addEventListener("change", () => { NOT_OK_BAS = null; draw(); }));
+$("btn-n-clear").onclick = () => { NOTLAR = []; NOT_OK_BAS = null; notListe(); draw(); };
+$("opt-layer-notes").addEventListener("change", draw);
+$("n-renk").value = NOT_RENKLER[1];
+
+/* ---- proje dosyası ---- */
+const projeToplaNotsuz = projeTopla;
+projeTopla = function(){
+  const o = projeToplaNotsuz();
+  const r6 = v => Math.round(v * 1e6) / 1e6, k = p => ({enlem: r6(p.lat), boylam: r6(p.lon)});
+  o.notlar = NOTLAR.map(n => n.tur === "ok"
+    ? {tur: "ok", bas: k(n.a), uc: k(n.b), metin: n.metin || "", renk: n.renk, boyut: n.boyut}
+    : Object.assign({tur: "not", metin: n.metin || "", renk: n.renk, boyut: n.boyut}, k(n)));
+  return o;
+};
+const katmanlariTemizleNotsuz = katmanlariTemizle;
+katmanlariTemizle = function(){ katmanlariTemizleNotsuz(); NOTLAR = []; NOT_OK_BAS = null; notListe(); };
+const projeYukleNotsuz = projeYukle;
+projeYukle = function(o){
+  projeYukleNotsuz(o);
+  const n = p => p && isFinite(p.enlem) && isFinite(p.boylam);
+  NOTLAR = (o.notlar || []).filter(x => x.tur === "ok" ? n(x.bas) && n(x.uc) : n(x)).map(x => x.tur === "ok"
+    ? {tur: "ok", a: {lat: +x.bas.enlem, lon: +x.bas.boylam}, b: {lat: +x.uc.enlem, lon: +x.uc.boylam}, metin: x.metin || "", renk: x.renk || NOT_RENKLER[1], boyut: +x.boyut || 13}
+    : {tur: "not", lat: +x.enlem, lon: +x.boylam, metin: x.metin || "", renk: x.renk || NOT_RENKLER[1], boyut: +x.boyut || 13});
+  notListe();
+  if (NOTLAR.length) hideEmpty();
+  draw();
+};
+notListe();
 
 /* ============ haritada sürükleyerek düzenleme, geri al / yinele ============ */
 

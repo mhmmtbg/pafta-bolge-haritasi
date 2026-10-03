@@ -269,6 +269,15 @@
   .rapor th,.rapor td{padding:5px 10px;border-bottom:1px solid #dde5e8;text-align:left;vertical-align:top;white-space:nowrap}
   .rapor th{font-weight:600;color:#33474f}
   .rapor-not{font-family:var(--prose);font-size:12px;color:#5b6f79;margin:12px 0 0;line-height:1.5}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .seg label{cursor:pointer}
+  .seg input{position:absolute;opacity:0;pointer-events:none}
+  .seg span{display:block;padding:6px 16px;font-size:13px;color:var(--dim)}
+  .seg input:checked + span{background:var(--amber);color:var(--ink);font-weight:600}
+  .seg input:focus-visible + span{outline:2px solid var(--amber);outline-offset:-2px}
+  .not-satir{align-items:flex-start}
+  .not-satir .zone-name{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+  .not-metin{width:100%;background:transparent;border:1px solid var(--line);border-radius:5px;color:var(--text);font:inherit;font-size:13px;padding:4px 7px;resize:vertical;min-height:0;height:auto}
   .row[hidden]{display:none}
   .tool-card .msg .ok{color:#1f6b45}
   .tool-card .msg .warn{color:#9a5200}
@@ -356,6 +365,10 @@
     <button class="tab" data-pane="pane-measure" title="Haritadan tıklayarak mesafe ölç">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M11 6.2 5.5 20.5M13 6.2l5.5 14.3"/><path d="M7.4 15.5a7.5 7.5 0 0 0 9.2 0"/></svg>
       Ölçüm
+    </button>
+    <button class="tab" data-pane="pane-notes" title="Haritaya not ve ok ekle">
+      <svg viewBox="0 0 24 24"><path d="M4 5h12v8H9l-3.5 3v-3H4Z"/><path d="M13 19.5 20 12.5M20 12.5h-4.2M20 12.5v4.2"/></svg>
+      Notlar
     </button>
     <div class="spacer"></div>
     <div class="sep"></div>
@@ -567,6 +580,37 @@
       </div>
     </div>
 
+    <!-- NOTLAR -->
+    <div class="pane" id="pane-notes">
+      <header class="pane-head">
+        <h2>Notlar</h2>
+        <p>Haritaya açıklama notları ve oklar ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
+      </header>
+      <div class="group">
+        <div class="mode-on">Not modu açık</div>
+        <div class="seg" role="radiogroup" aria-label="Eklenecek öğe">
+          <label><input type="radio" name="n-kip" value="not" checked><span>Not</span></label>
+          <label><input type="radio" name="n-kip" value="ok"><span>Ok</span></label>
+        </div>
+        <div class="grid2" style="margin-top:12px">
+          <label class="fld" style="margin-top:0">Renk
+            <input type="color" id="n-renk" value="#a4123f">
+          </label>
+          <label class="fld" style="margin-top:0">Yazı boyutu
+            <select id="n-boyut">
+              <option value="11">küçük</option>
+              <option value="13" selected>orta</option>
+              <option value="16">büyük</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Notlar ve ok uçları sürüklenerek taşınır.</p>
+        <div class="row"><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
+        <div class="msg" id="n-msg"></div>
+        <div id="n-list"></div>
+      </div>
+    </div>
+
     <!-- GÖRÜNÜM -->
     <div class="pane" id="pane-view">
       <header class="pane-head">
@@ -618,6 +662,7 @@
         <label class="check">Sınır mesafeleri <input type="checkbox" class="toggle" id="opt-layer-rings" checked></label>
         <label class="check">Noktalar <input type="checkbox" class="toggle" id="opt-layer-points" checked></label>
         <label class="check">Ölçüm hatları <input type="checkbox" class="toggle" id="opt-layer-measure" checked></label>
+        <label class="check">Notlar ve oklar <input type="checkbox" class="toggle" id="opt-layer-notes" checked></label>
         <label class="check" style="margin-top:8px">Haritada sürükleyerek düzenle <input type="checkbox" class="toggle" id="opt-duzenle" checked></label>
         <p class="hint">Köşe, nokta, daire merkezi ve ölçüm noktalarını haritada tutup sürükleyin; yeni koordinat listeye yazılır. Geri al <kbd>Ctrl</kbd> <kbd>Z</kbd>, yinele <kbd>Ctrl</kbd> <kbd>Y</kbd>.</p>
       </div>
@@ -699,6 +744,7 @@
           <li><span>Sınır mesafesi</span><em>Türkiye ve Mavi Vatan'dan eğriler</em></li>
           <li><span>Noktalar</span><em>isimli konumlar</em></li>
           <li><span>Ölçüm</span><em>tıklayarak mesafe ve kerteriz</em></li>
+          <li><span>Notlar</span><em>açıklama notları ve oklar</em></li>
         </ul>
         <p style="margin:14px 0 0">Bir .pafta projesini ya da koordinat listesini buraya sürükleyip bırakabilirsiniz. Kısayollar: <kbd>F1</kbd></p>
       </div>
@@ -843,7 +889,7 @@
         <dt><kbd>Ctrl</kbd> <kbd>O</kbd></dt><dd>Proje aç</dd>
         <dt class="desk-only"><kbd>Ctrl</kbd> <kbd>N</kbd></dt><dd class="desk-only">Yeni pafta</dd>
         <dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>Haritayı PNG olarak kaydet</dd>
-        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>7</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Görünüm, Çıktı</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>8</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Notlar, Görünüm, Çıktı</dd>
         <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>Geri al, yinele</dd>
         <dt><kbd>Ctrl</kbd> <kbd>0</kbd></dt><dd>Çizime sığdır</dd>
         <dt><kbd>Ctrl</kbd> <kbd>U</kbd></dt><dd>Uydu görüntüsünü aç/kapat</dd>
@@ -2445,6 +2491,7 @@ function draw(){
   if (opt("opt-layer-areas")) drawZones();
   if (opt("opt-layer-points")) drawPointsLayer();
   if (opt("opt-layer-measure")) drawMeasureLayer();
+  if (opt("opt-layer-notes")) drawNotlar();
   if (sev) drawAdmLabels(sev);
   if (opt("opt-fir")) drawFIR("labels");
   if (opt("opt-cities")) drawCities();

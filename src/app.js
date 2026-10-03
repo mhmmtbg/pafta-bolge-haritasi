@@ -32,7 +32,7 @@ $("modal-x").onclick = helpClose;
 $("modal").addEventListener("mousedown", e => { if (e.target === $("modal")) helpClose(); });
 
 /* ---- sekme geçişi ---- */
-const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-view","pane-export"];
+const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-notes","pane-view","pane-export"];
 function sekmeAc(id){ const t = document.querySelector('.tab[data-pane="' + id + '"]'); if (t) t.click(); }
 
 /* ---- proje durumu ---- */
@@ -305,7 +305,7 @@ document.addEventListener("keydown", e => {
     "+": () => zoomBy(1.5), "=": () => zoomBy(1.5), "-": () => zoomBy(1/1.5)
   };
   if (MASAUSTU) map.n = () => yeni();
-  if (/^[1-7]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
+  if (/^[1-8]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
   if (map[k]){ e.preventDefault(); e.stopPropagation(); map[k](); }
 }, true);
 
