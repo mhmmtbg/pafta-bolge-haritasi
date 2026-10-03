@@ -3,6 +3,8 @@
    Her kaynakta görünüm için uygun seviyeye kadar kaba seviyeler önce, ince seviyeler üstüne çizilir;
    böylece ince döşemesi olmayan yerlerde kaba olan görünür kalır. */
 var DOSEME_KAYNAKLARI = [];
+var DOSEME_BEKLEYEN = 0;      // çözülmekte olan döşeme görselleri (baskıda beklenir)
+var DOSEME_OLCEK = 1;        // baskıda aygıt pikseli / mantıksal piksel: daha ince seviye seçilir
 
 function gorselOnbellek(sinir){
   const m = new Map();
@@ -25,7 +27,9 @@ function gomuluDosemeKaynagi(){
       let im = ob.al(k);
       if (!im){
         im = new Image();
-        im.onload = () => scheduleDraw();
+        DOSEME_BEKLEYEN++;
+        im.onload = () => { DOSEME_BEKLEYEN--; scheduleDraw(); };
+        im.onerror = () => { DOSEME_BEKLEYEN--; };
         im.src = "data:image/jpeg;base64," + UYDU_D.doseme[k];
         ob.koy(k, im);
       }
@@ -41,7 +45,7 @@ const dY = (lat, n) => (1 - Math.log(Math.tan(rad(lat)) + 1 / Math.cos(rad(lat))
 /* görünüm için gereken döşeme seviyesi: döşeme pikseli ekran pikselinden kaba olmasın */
 function dosemeSeviyesi(){
   const lat = clamp(latAt(H / 2), -80, 80);
-  return Math.ceil(Math.log2(156543.03 * Math.cos(rad(lat)) / metersPerPixel()) - 0.15);
+  return Math.ceil(Math.log2(156543.03 * Math.cos(rad(lat)) * DOSEME_OLCEK / metersPerPixel()) - 0.15);
 }
 
 function dosemeCiz(im, z, x, y){
