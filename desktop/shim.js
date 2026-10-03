@@ -40,6 +40,9 @@
     kirli: function(d){ window.nativeKirli(!!d, document.title); },
     kapat: function(){ window.nativeKapat(); },
     konumuAc: function(yol){ window.nativeKonum(yol); },
+    uyduPaketi: function(){ return window.nativeUyduPaketi(); },
+    uyduSec: function(){ return diyalog("uydu", "Uydu paketi seç", "", "PAFTA uydu paketi (*.paftauydu)|*.paftauydu|Tüm dosyalar (*.*)|*.*"); },
+    uyduKaldir: function(){ return window.nativeUyduKaldir(); },
     menu: function(cb){ menuCb = cb; },
     bildirim: function(cb){ bildirimCb = cb; }
   };

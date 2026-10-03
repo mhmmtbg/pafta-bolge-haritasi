@@ -21,7 +21,7 @@ function gomuluDosemeKaynagi(){
   const ob = gorselOnbellek(600);
   const zler = Object.keys(UYDU_D.doseme).map(k => +k.split("/")[0]);
   return {
-    ad: "NASA Blue Marble (GIBS)", zmin: Math.min(...zler), zmax: Math.max(...zler),
+    ad: "NASA Blue Marble", zmin: Math.min(...zler), zmax: Math.max(...zler),
     var: k => k in UYDU_D.doseme,
     gorsel(k){
       let im = ob.al(k);
@@ -70,7 +70,7 @@ function drawDosemeler(){
   ctx.save();
   ctx.globalAlpha = $("opt-sat-alpha").value / 100;
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-  let enInce = 0;
+  let enInce = 0, enInceKaynak = null;
   for (const src of DOSEME_KAYNAKLARI){
     const zUst = Math.min(zIdeal, src.zmax);
     for (let z = Math.max(src.zmin, zUst - 3); z <= zUst; z++){
@@ -82,11 +82,12 @@ function drawDosemeler(){
         const k = z + "/" + x + "/" + y;
         if (!src.var(k)) continue;
         const im = src.gorsel(k);
-        if (im){ dosemeCiz(im, z, x, y); enInce = Math.max(enInce, z); }
+        if (im){ dosemeCiz(im, z, x, y); if (z >= enInce){ enInce = z; enInceKaynak = src; } }
       }
     }
   }
   ctx.restore();
   UYDU_SEVIYE = enInce;
+  UYDU_KAYNAK = enInceKaynak;
 }
-var UYDU_SEVIYE = 0;                                // künyede zemin açıklaması için
+var UYDU_SEVIYE = 0, UYDU_KAYNAK = null;            // künyede zemin açıklaması için: en ince seviye ve kaynağı

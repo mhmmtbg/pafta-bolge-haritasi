@@ -216,6 +216,7 @@ type appState struct {
 	LastDir string    `json:"lastDir"`
 	Recent  []string  `json:"recent"`
 	Pencere *yerlesim `json:"pencere,omitempty"`
+	Uydu    string    `json:"uyduPaketi,omitempty"`
 }
 
 var stateMu sync.Mutex
@@ -549,6 +550,25 @@ func baglantilar(w webview2.WebView) {
 		kapanabilir = true
 		pPostMessage.Call(hwndAna, wmClose, 0, 0)
 	})
+	/* uydu paketi: son seçilen paket açılışta yeniden açılır */
+	w.Bind("nativeUyduPaketi", func() interface{} {
+		if b := uyduBilgi(); b != nil {
+			return b
+		}
+		if p := loadState().Uydu; p != "" {
+			if pk, err := uyduAc(p); err == nil {
+				uyduDegistir(pk)
+				return pk.bilgi
+			}
+		}
+		return nil
+	})
+	w.Bind("nativeUyduKaldir", func() {
+		uyduDegistir(nil)
+		st := loadState()
+		st.Uydu = ""
+		saveState(st)
+	})
 	w.Bind("nativeKonum", func(p string) {
 		if _, err := os.Stat(p); err == nil {
 			exec.Command("explorer", "/select,", p).Start()
@@ -578,6 +598,7 @@ func main() {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Write(appHTML)
 	})
+	mux.HandleFunc("/"+jeton+"/__uydu/", uyduSun)
 	/* alert / confirm: senkron istek, uygulama adlı Windows mesaj kutusu */
 	mux.HandleFunc("/"+jeton+"/__mesaj", func(w http.ResponseWriter, r *http.Request) {
 		b, _ := io.ReadAll(io.LimitReader(r.Body, 1<<20))

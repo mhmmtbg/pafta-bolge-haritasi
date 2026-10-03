@@ -52,11 +52,11 @@ function setDosya(ad, yol){ DOSYA = {ad: ad || null, yol: yol || null}; baslikYa
 
 /* panelde yapılan her değişiklik projeyi kirletir; dışa aktarım düğmeleri hariç */
 const PANEL = document.querySelector(".panel");
-PANEL.addEventListener("input", e => { if (e.target.id !== "proj-file") degisti(); });
-PANEL.addEventListener("change", e => { if (e.target.id !== "proj-file") degisti(); });
+PANEL.addEventListener("input", e => { if (e.target.type !== "file") degisti(); });
+PANEL.addEventListener("change", e => { if (e.target.type !== "file") degisti(); });
 PANEL.addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (!b || !b.isConnected || b.closest("#pane-export") || b.dataset.dosya || b.classList.contains("pick") || b.classList.contains("mini")) return;
+  if (!b || !b.isConnected || b.closest("#pane-export") || b.dataset.dosya || b.closest(".paket") || b.classList.contains("pick") || b.classList.contains("mini")) return;
   degisti();
 });
 
@@ -323,6 +323,7 @@ document.addEventListener("drop", async e => {
   const f = e.dataTransfer.files[0];
   if (!f) return;
   const aktif0 = (document.querySelector(".pane.active") || {}).id;
+  if (/\.paftauydu$/i.test(f.name)){ paketDosyadan(f); return; }
   if (/\.xlsx?$|\.xlsm$/i.test(f.name)){
     dosyaYukle(f, {"pane-points": "nokta", "pane-circles": "daire"}[aktif0] || "alan");
     return;

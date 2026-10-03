@@ -279,6 +279,10 @@
   .not-satir .zone-name{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
   .not-metin{width:100%;background:transparent;border:1px solid var(--line);border-radius:5px;color:var(--text);font:inherit;font-size:13px;padding:4px 7px;resize:vertical;min-height:0;height:auto}
   .row[hidden]{display:none}
+  .paket{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+  .paket h4{margin:0 0 4px;font-size:12.5px;font-weight:600;color:#c9d6db}
+  .paket p{margin:0;font-size:12px;line-height:1.5;color:var(--text);word-break:break-word}
+  .paket .dim{color:var(--dim)}
   .tool-card .msg .ok{color:#1f6b45}
   .tool-card .msg .warn{color:#9a5200}
   .xl-ayar{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px 14px}
@@ -624,7 +628,16 @@
           <label class="fld" style="margin-top:4px">Görüntü yoğunluğu
             <input type="range" id="opt-sat-alpha" min="25" max="100" value="100">
           </label>
-          <p class="hint">NASA Blue Marble Next Generation, dosyaya gömülü. Yaklaşık 7 km/piksel: bölge ölçeğinde net, çok yakında yumuşar.</p>
+          <p class="hint">NASA Blue Marble, dosyaya gömülü: dünya geneli ~7 km, bölge ~1 km, Türkiye ~500 m/piksel; yaklaştıkça netleşir. Daha yakın ölçek için uydu paketi yükleyin.</p>
+          <div class="paket">
+            <h4>Uydu paketi</h4>
+            <p id="uydu-paket-durum"></p>
+            <div class="row" style="margin-top:6px">
+              <button class="btn" id="btn-uydu-paket" title="İnternete bağlı bir bilgisayarda tools/uydu_paketi.py ile hazırlanan .paftauydu dosyası">Paket aç…</button>
+              <button class="btn quiet" id="btn-uydu-kaldir" hidden>Kaldır</button>
+              <input type="file" id="uydu-dosya" accept=".paftauydu" hidden>
+            </div>
+          </div>
         </div>
         <label class="fld">Koordinat biçimi
           <select id="opt-kbicim">
@@ -1292,10 +1305,20 @@ function drawSatellite(){
   }
   ctx.restore();
 }
+/* uydu paketi kaynağının atfı (ör. CC BY): ölçek çubuğunun üstünde */
+function drawPaketAtif(t){
+  ctx.save();
+  ctx.font = "9.5px " + FONT();
+  const w = Math.min(W - 60, ctx.measureText(t).width + 12);
+  ctx.fillStyle = "rgba(10,20,30,.6)"; ctx.fillRect(24, H - 140, w, 15);
+  ctx.fillStyle = "#e8f0f3"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText(t, 30, H - 132.5, w - 12);
+  ctx.restore();
+}
 function drawSatCredit(){
   ctx.save();
   ctx.font = "10.5px " + FONT();
-  const t = "Uydu görüntüsü: NASA Blue Marble NG";
+  const t = "Uydu görüntüsü: " + (UYDU_SEVIYE && UYDU_KAYNAK ? UYDU_KAYNAK.ad : "NASA Blue Marble NG");
   const w = ctx.measureText(t).width + 12;
   ctx.fillStyle = "rgba(10,20,30,.6)"; ctx.fillRect(W - 16 - w, H - 64, w, 17);
   ctx.fillStyle = "#e8f0f3"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
@@ -2315,7 +2338,10 @@ function titleRows(){
                 ["Projeksiyon", view.mode === "mercator" ? "Mercator" : "Eş uzaklıklı silindirik"],
                 ["Datum", "WGS84"],
                 ["Tarih", new Date().toLocaleDateString("tr-TR")]];
-  if (SAT) rows.push(["Zemin", UYDU_SEVIYE ? "NASA Blue Marble, ~" + Math.round(156543 * Math.cos(rad(latAt(H/2))) / 2 ** UYDU_SEVIYE / 10) * 10 + " m" : "NASA Blue Marble NG"]);
+  if (SAT){
+    const m = UYDU_SEVIYE ? 156543 * Math.cos(rad(latAt(H/2))) / 2 ** UYDU_SEVIYE : 0;
+    rows.push(["Zemin", UYDU_SEVIYE ? (UYDU_KAYNAK ? UYDU_KAYNAK.ad : "NASA Blue Marble") + ", ~" + (m < 50 ? Math.round(m) : Math.round(m / 10) * 10) + " m" : "NASA Blue Marble NG"]);
+  }
   return rows;
 }
 function titleRect(){
@@ -2524,6 +2550,7 @@ function draw(){
   drawScaleBar();
   if (opt("opt-title")) drawTitleBlock();
   else if (SAT) drawSatCredit();
+  if (SAT && UYDU_SEVIYE && UYDU_KAYNAK && UYDU_KAYNAK.paket && UYDU_PAKET && UYDU_PAKET.atif) drawPaketAtif(UYDU_PAKET.atif);
   if (showLoc) drawLocator();
   drawBaskiCerceve();
   drawDuzenle();
