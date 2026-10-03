@@ -14,8 +14,9 @@ Yöntem (yalnızca standart kütüphane):
 Biçim:
   {"il":   [[ad, boylam, enlem, alan_km2], ...],
    "ilce": [[ad, il_sirasi, boylam, enlem, alan_km2], ...],
-   "ilSinir":   [[b0, e0, b1, e1, ...], ...],     # il sınırları (iç)
-   "ilceSinir": [[...], ...]}                      # aynı ilin ilçeleri arasındaki sınırlar
+   "zincir":    [[b0, e0, b1, e1, ...], ...],     # ortak sınır zincirleri
+   "zTur":      [0 | 1 | 2, ...],                  # il sınırı, ilçe sınırı, dış sınır
+   "ilceHalka": [[[+i, -j, ...], ...], ...]}       # ilçe başına halkalar (1 tabanlı zincir no)
 """
 import heapq, json, math
 from collections import defaultdict
@@ -131,7 +132,7 @@ def ad_duzelt(ad, il_ad):
 for c in ilceler:
     c["ad"] = ad_duzelt(c["ad"], iller[c["il"]]["ad"])
 
-# ---- ortak kenarlar ----
+# ---- kenarlar: sahip çiftine göre (dış kenar: tek sahip, -1) ----
 sahip = defaultdict(list)
 for i, c in enumerate(ilceler):
     for poly in c["polys"]:
@@ -141,12 +142,10 @@ for i, c in enumerate(ilceler):
                 if a != b:
                     sahip[(a, b) if a < b else (b, a)].append(i)
 
-sinif = {"il": [], "ilce": []}
+gruplar = defaultdict(list)                      # (ilçe a, ilçe b | -1) -> kenarlar
 for e, s in sahip.items():
-    if len(s) < 2:
-        continue
-    il_a, il_b = ilceler[s[0]]["il"], ilceler[s[1]]["il"]
-    sinif["il" if il_a != il_b else "ilce"].append(e)
+    s = sorted(set(s))[:2]
+    gruplar[(s[0], s[1] if len(s) > 1 else -1)].append(e)
 
 
 def zincirle(kenarlar):
@@ -174,24 +173,62 @@ def zincirle(kenarlar):
     return zincirler
 
 
-def sadelestir(zincirler, eps):
-    out = []
-    for z in zincirler:
-        p = rdp(z, eps)
-        q, son = [], None
-        for x, y in p:
-            r = (round(x, 3), round(y, 3))
-            if r != son:
-                q.append(r); son = r
-        if len(q) >= 2:
-            out.append([v for t in q for v in t])
-    return out
+def sadelestir(z, eps):
+    """Uçlar sabit kalır; aynı uç her zincirde aynı yuvarlanır, halkalar birebir kapanır."""
+    q, son = [], None
+    for x, y in rdp(z, eps):
+        r = (round(x, 3), round(y, 3))
+        if r != son:
+            q.append(r); son = r
+    if len(q) < 2:
+        q = [q[0], q[0]]
+    return [v for t in q for v in t]
 
 
-il_sinir = sadelestir(zincirle(sinif["il"]), EPS_IL)
-ilce_sinir = sadelestir(zincirle(sinif["ilce"]), EPS_ILCE)
-print(f"il: {len(iller)}, ilçe: {len(ilceler)}, il sınırı çizgisi: {len(il_sinir)} ({sum(len(z) for z in il_sinir) // 2} nokta), "
-      f"ilçe sınırı çizgisi: {len(ilce_sinir)} ({sum(len(z) for z in ilce_sinir) // 2} nokta)")
+EPS_DIS = 0.003
+zincir, z_tur, z_uc, z_sahip = [], [], [], []
+for (a, b), kenarlar in sorted(gruplar.items()):
+    tur = 2 if b < 0 else (0 if ilceler[a]["il"] != ilceler[b]["il"] else 1)
+    for z in zincirle(kenarlar):
+        zincir.append(sadelestir(z, (EPS_IL, EPS_ILCE, EPS_DIS)[tur]))
+        z_tur.append(tur); z_uc.append((z[0], z[-1])); z_sahip.append((a, b))
+
+# ---- ilçe halkaları: zincirleri uçlarından birleştir; +i ileri, -i geri (1 tabanlı) ----
+ilce_zincir = defaultdict(list)
+for i, (a, b) in enumerate(z_sahip):
+    ilce_zincir[a].append(i)
+    if b >= 0:
+        ilce_zincir[b].append(i)
+halkalar, eksik = [], 0
+for d in range(len(ilceler)):
+    zs = ilce_zincir[d]
+    uc = defaultdict(list)
+    for i in zs:
+        uc[z_uc[i][0]].append(i); uc[z_uc[i][1]].append(i)
+    kullan, hl = set(), []
+    for i in zs:
+        if i in kullan:
+            continue
+        kullan.add(i)
+        bas, cur, h = z_uc[i][0], z_uc[i][1], [i + 1]
+        while cur != bas:
+            n = next((j for j in uc[cur] if j not in kullan), None)
+            if n is None:
+                eksik += 1; break
+            kullan.add(n)
+            if z_uc[n][0] == cur:
+                h.append(n + 1); cur = z_uc[n][1]
+            else:
+                h.append(-(n + 1)); cur = z_uc[n][0]
+        else:
+            hl.append(h)
+    halkalar.append(hl)
+
+say = defaultdict(int)
+for t in z_tur:
+    say[t] += 1
+print(f"il: {len(iller)}, ilçe: {len(ilceler)}, zincir: {len(zincir)} (il {say[0]}, ilçe {say[1]}, dış {say[2]}), "
+      f"nokta: {sum(len(z) for z in zincir) // 2}, kapanmayan halka: {eksik}")
 sayac = defaultdict(int)
 for c in ilceler:
     sayac[c["il"]] += 1
@@ -201,6 +238,7 @@ r4 = lambda v: round(v, 4)
 json_yaz("tr_idari.json", {
     "il": [[p["ad"], r4(p["lx"]), r4(p["ly"]), round(p["alan"])] for p in iller],
     "ilce": [[c["ad"], c["il"], r4(c["lx"]), r4(c["ly"]), round(c["alan"], 1)] for c in ilceler],
-    "ilSinir": il_sinir,
-    "ilceSinir": ilce_sinir,
+    "zincir": zincir,
+    "zTur": z_tur,
+    "ilceHalka": halkalar,
 })

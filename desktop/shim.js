@@ -15,7 +15,7 @@
     return new Promise(function(coz, red){ var r = new FileReader(); r.onload = function(){ coz(String(r.result).split(",")[1] || ""); }; r.onerror = red; r.readAsDataURL(blob); });
   }
   var PROJE = "PAFTA projesi (*.pafta)|*.pafta|Tüm dosyalar (*.*)|*.*";
-  var TURLER = { png:"PNG görüntüsü", kml:"KML (Google Earth)", geojson:"GeoJSON", csv:"CSV dosyası", pafta:"PAFTA projesi", json:"JSON dosyası" };
+  var TURLER = { png:"PNG görüntüsü", kml:"KML (Google Earth)", geojson:"GeoJSON", csv:"CSV dosyası", pafta:"PAFTA projesi", json:"JSON dosyası", xlsx:"Excel çalışma kitabı", pdf:"PDF belgesi" };
   function tekFiltre(uz){ return (TURLER[uz] || uz.toUpperCase()) + " (*." + uz + ")|*." + uz + "|Tüm dosyalar (*.*)|*.*"; }
 
   var menuCb = null, bildirimCb = null;

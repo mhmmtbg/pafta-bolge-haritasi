@@ -250,6 +250,22 @@
   .notam-list label b{font-weight:600}
   .notam-list label span.tur{font-size:11.5px;color:#5b6f79}
   .notam-list label small{grid-column:3;font-family:var(--mono);font-size:11px;color:#5b6f79}
+  .rapor{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:14px}
+  .rapor section{background:#f3f6f7;border-radius:8px;padding:12px 14px}
+  .rapor h3{margin:0 0 8px;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .rapor h3 i{width:12px;height:12px;border-radius:3px;flex:none}
+  .rapor dl{display:grid;grid-template-columns:118px 1fr;gap:5px 10px;margin:0;font-size:13px;line-height:1.45}
+  .rapor dt{color:#5b6f79}
+  .rapor dd{margin:0}
+  .rapor small{color:#5b6f79;font-size:11.5px}
+  .rapor .dim{color:#8a9ba2}
+  .rapor .mono{font-family:var(--mono);font-size:12px}
+  .rapor .rapor-mesafe{grid-column:1/-1}
+  .rapor .tablo{overflow:auto}
+  .rapor table{border-collapse:collapse;font-size:12.5px}
+  .rapor th,.rapor td{padding:5px 10px;border-bottom:1px solid #dde5e8;text-align:left;vertical-align:top;white-space:nowrap}
+  .rapor th{font-weight:600;color:#33474f}
+  .rapor-not{font-family:var(--prose);font-size:12px;color:#5b6f79;margin:12px 0 0;line-height:1.5}
   .km-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
   .km-grid textarea{height:120px}
   .km-row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:baseline;padding:5px 8px;border-radius:6px;background:#f3f6f7;font-size:13px}
@@ -359,6 +375,7 @@
         <p class="hint">Tabloyu Excel veya Word'den olduğu gibi yapıştırın. Derece‑dakika‑saniye (41°30'15"K) ve ondalık derece (41.5042) okunur. Bölge adı boş satırlar üstteki bölgeye eklenir, boş satır yeni bölge başlatır.</p>
         <div class="msg" id="msg"></div>
         <div id="zones"></div>
+        <div class="row" id="rapor-row" hidden><button class="btn" id="btn-rapor" title="FIR, il/ilçe, Türkiye'ye uzaklık, Mavi Vatan ve alanlar arası mesafe">Alan raporu</button></div>
       </div>
     </div>
 
@@ -733,6 +750,18 @@
     <div class="ask-btns">
       <button id="km-iptal">Vazgeç</button>
       <button id="km-ekle" class="primary" disabled>Ekle</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="rapor" hidden>
+  <div class="tool-card genis" role="dialog" aria-modal="true" aria-labelledby="rapor-title">
+    <button class="modal-x" id="rapor-x" aria-label="Kapat">×</button>
+    <h2 id="rapor-title">Alan raporu</h2>
+    <div id="rapor-icerik" class="rapor"></div>
+    <p class="rapor-not" id="rapor-not"></p>
+    <div class="ask-btns">
+      <button id="rapor-kapat">Kapat</button>
+      <button id="rapor-excel" class="primary">Excel'e aktar</button>
     </div>
   </div>
 </div>
@@ -2257,6 +2286,8 @@ function drawLocator(){
 
 /* ============ il ve ilçe sınırları ============ */
 /* Türkiye'ye yaklaştıkça önce il sınırları ve adları, daha yakında ilçe sınırları ve adları görünür. */
+TR_ADM.ilSinir = TR_ADM.zincir.filter((_, i) => TR_ADM.zTur[i] === 0);         // dış sınırlar (tür 2) taban haritada
+TR_ADM.ilceSinir = TR_ADM.zincir.filter((_, i) => TR_ADM.zTur[i] === 1);
 const ADM_IL_BB = TR_ADM.ilSinir.map(bbOf), ADM_ILCE_BB = TR_ADM.ilceSinir.map(bbOf);
 const ADM_IL_SIRA = TR_ADM.il.map((_, i) => i).sort((a, b) => TR_ADM.il[b][3] - TR_ADM.il[a][3]);
 const ADM_ILCE_SIRA = TR_ADM.ilce.map((_, i) => i).sort((a, b) => TR_ADM.ilce[b][4] - TR_ADM.ilce[a][4]);
@@ -2509,6 +2540,7 @@ function rowOf(sw, title, meta, off){
 function renderZoneList(){
   const host = $("zones");
   host.innerHTML = "";
+  $("rapor-row").hidden = !ZONES.some(z => z.points.length > 2);
   ZONES.forEach(z => {
     const area = z.points.length > 2 ? fmtArea(sphericalArea(z.points)) : "—";
     const row = rowOf(swatch(z.color, v => z.color = v), z.name,
