@@ -1,24 +1,31 @@
 # PAFTA
 
 Koordinat listelerinden **ölçekli harita** çizen, kurulum gerektirmeyen ve internetsiz çalışan bir araç.
-Bölgeleri, yarıçap halkalarını, Türkiye sınırından ve Mavi Vatan'dan mesafe eğrilerini, isimli noktaları ve ölçümleri tek bir paftada gösterir; sonucu künyesiyle görüntü olarak ya da KML, GeoJSON ve CSV olarak verir.
+Bölgeleri, yarıçap halkalarını, Türkiye sınırından ve Mavi Vatan'dan mesafe eğrilerini, isimli noktaları, ölçümleri ve notları tek bir paftada gösterir; NOTAM, NAVTEX ve Excel'den koordinat okur, alan raporu çıkarır, sonucu künyesiyle ölçekli PDF, görüntü ya da KML, GeoJSON, CSV ve Excel olarak verir.
 Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere tasarlandı.
 
 ![Genel görünüm](docs/images/ekran-genel.png)
 
 ## Öne çıkanlar
 
-- **Alanlar:** Excel veya Word'den yapıştırılan köşe koordinatlarından kapalı bölgeler. Her bölgenin alanı (km²) ve çevresi hesaplanır. Derece‑dakika‑saniye (`42°30'00"K`), boşluklu (`42 30 00 K`) ve ondalık (`42.5`) biçimler okunur.
+- **Alanlar:** Excel veya Word'den yapıştırılan köşe koordinatlarından kapalı bölgeler. Her bölgenin alanı (km²) ve çevresi hesaplanır.
+- **Koordinat biçimleri:** Derece‑dakika‑saniye (`42°30'00"K`), ondalık dakika (`42°30,5'K`), boşluklu (`42 30 00 K`), ondalık (`42.5`), NOTAM (`4230N 03015E`), NAVTEX (`42-30.50K 030-15.00D`), **UTM** ve **MGRS** okunur; gösterim biçimi seçilebilir.
+- **Metinden al:** NOTAM ve NAVTEX metinlerinden alanlar, yarıçaplı daireler ve noktalar; irtifa sınırları ada eklenir.
+- **Excel'den al:** `.xlsx` dosyaları sütun eşleştirme penceresiyle Alanlar, Noktalar ya da Daireler'e (kurulum ve eklenti gerekmez).
+- **Alan raporu:** Her alanın FIR'ları, il/ilçe dağılımı, Türkiye'ye en kısa mesafesi, Mavi Vatan içindeki payı ve alanlar arası mesafeler; Excel'e aktarma.
+- **Kerteriz ve mesafeyle konum:** "Ankara'dan 045°, 120 NM" gibi nokta, alan köşesi ya da daire merkezi üretme (Vincenty).
 - **Daireler:** Bir ya da birden fazla merkezden, istenen yarıçaplarda (km veya NM) gerçek sabit‑uzaklık halkaları. Her yarıçap kendi rengini alır.
 - **Sınır mesafesi:** Türkiye kara sınırı ve kıyısından eşit uzaklık eğrileri. İsteğe bağlı olarak Mavi Vatan da hesaba katılır; mesafenin **Mavi Vatan dış sınırından** mı **Türkiye kara sınırından** mı ölçüleceği seçilir. Eğriler arası bantlar ayrı renklerle doldurulur.
 - **Noktalar:** İsimli konumlar; beş işaret şekli, tek tek renk.
 - **Ölçüm:** Haritaya tıklayarak noktalar ekleyin; her parçanın mesafesi (km / NM) ve kerterizi hatta yazılır, toplam hat sonunda gösterilir. Mesafeler WGS84 elipsoidi üzerinde Vincenty yöntemiyle hesaplanır.
+- **Notlar ve oklar:** Paftaya açıklama notları ve oklar.
+- **Haritada düzenleme:** Köşeler, noktalar, daire merkezleri ve notlar sürüklenerek taşınır, yeni koordinat listeye yazılır; **geri al / yinele** (`Ctrl+Z` / `Ctrl+Y`).
 - **Pafta öğeleri:** Dereceli çerçeve ve koordinat kılavuzu, km ve deniz milli çift ölçek çubuğu, lejant, **bulduru haritası** ve başlık, ölçek, projeksiyon, datum, tarih ve kuzey okunu taşıyan **pafta künyesi**.
 - **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür. Bu ölçekte kıyı da ayrıntılı (1:10 milyon) veriye geçer.
-- **Zemin:** Harita ya da **uydu görüntüsü** (NASA Blue Marble, dosyaya gömülü). Dünya geneli **FIR sınırları ve adları**, ülke sınırları, şehirler.
+- **Zemin:** Harita ya da yaklaştıkça netleşen **uydu görüntüsü** (NASA Blue Marble, dosyaya gömülü; Türkiye'de ~500 m/piksel). Daha yakın ölçek için internete bağlı bir bilgisayarda hazırlanıp taşınan **uydu paketi** (Sentinel-2, 10–30 m). Dünya geneli **FIR sınırları ve adları**, ülke sınırları, şehirler. İmleç göstergesi Türkiye içinde il ve ilçeyi yazar.
 - **Haritadan seç:** Her koordinat listesinin yanında, renk seçicideki damlalık gibi bir konum seçici; haritaya tıklanan yerin koordinatı listeye eklenir.
 - **Proje dosyası (`.pafta`):** Tüm girdiler, renkler, ölçümler ve harita görünümü tek dosyada saklanır; haritaya sürükleyip bırakarak da açılır.
-- **Çıktı:** PNG (ekran, 2× ve 3× çözünürlük), KML (Google Earth), GeoJSON, CSV.
+- **Çıktı:** **Ölçekli PDF** (A4/A3, 1:50.000 gibi sabit ölçek, sayfa çerçevesi önizlemesi), PNG (ekran, 2× ve 3× çözünürlük), KML (Google Earth), GeoJSON, CSV, Excel.
 
 ## İndirme ve çalıştırma
 
@@ -26,34 +33,42 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 
 | Sürüm | Dosya | Nasıl çalışır |
 |---|---|---|
-| **Masaüstü (Windows)** | `PAFTA.exe` ([Releases](../../releases) sayfasından, ~12 MB) | Çift tıklayın. Kurulum ve yönetici yetkisi gerekmez. Kendi penceresinde açılır; dosyalar Windows'un aç/kaydet pencereleriyle açılıp kaydedilir. |
-| **Tarayıcı** | [`app/pafta.html`](app/pafta.html) (~5 MB) | Dosyayı indirip Edge veya Chrome ile açın. İnternet gerekmez. |
+| **Masaüstü (Windows)** | `PAFTA.exe` ([Releases](../../releases) sayfasından, ~16 MB) | Çift tıklayın. Kurulum ve yönetici yetkisi gerekmez. Kendi penceresinde açılır; dosyalar Windows'un aç/kaydet pencereleriyle açılıp kaydedilir. |
+| **Tarayıcı** | [`app/pafta.html`](app/pafta.html) (~9 MB) | Dosyayı indirip Edge veya Chrome ile açın. İnternet gerekmez. |
 
 > Exe sürümü ekranı göstermek için Windows'ta yerleşik gelen **Microsoft Edge WebView2** bileşenini kullanır (Windows 10/11'de normalde yüklüdür).
 > Exe dijital imzalı değildir; kurum güvenlik politikası engellerse HTML sürümünü kullanın.
 
-Masaüstü sürümüne özgü olanlar: son açılan paftalar listesi, `Ctrl+S` ile doğrudan aynı dosyaya kayıt, kaydedilmemiş değişiklikle kapatırken uyarı, beklenmedik kapanmaya karşı kurtarma kaydı, pencere boyutu ve konumunun hatırlanması, `.pafta` dosyasını exe'nin üzerine sürükleyerek açma.
+Masaüstü sürümüne özgü olanlar: uydu paketinin hatırlanması, son açılan paftalar listesi, `Ctrl+S` ile doğrudan aynı dosyaya kayıt, kaydedilmemiş değişiklikle kapatırken uyarı, beklenmedik kapanmaya karşı kurtarma kaydı, pencere boyutu ve konumunun hatırlanması, `.pafta` dosyasını exe'nin üzerine sürükleyerek açma.
 
 ## Hızlı başlangıç
 
 1. Uygulamayı açın. Bir örnek görmek için [`ornekler/ornek-pafta.pafta`](ornekler/ornek-pafta.pafta) dosyasını haritaya sürükleyin ya da **Çıktı → Aç** deyin.
-2. Soldaki şeritten bir araç seçin (**Alanlar**, **Daireler**, **Sınır mesafesi**, **Noktalar**, **Ölçüm**) ve koordinatlarınızı yapıştırın.
-3. **Çıktı** bölümünden künyenin başlığını yazın; **PNG kaydet** ile paftayı görüntü olarak alın.
+2. Soldaki şeritten bir araç seçin (**Alanlar**, **Daireler**, **Sınır mesafesi**, **Noktalar**, **Ölçüm**, **Notlar**) ve koordinatlarınızı yapıştırın; NOTAM için **Metinden al**, Excel için **Dosyadan al**.
+3. **Çıktı** bölümünden künyenin başlığını yazın; **PDF kaydet** ile ölçekli baskı ya da **PNG kaydet** ile görüntü alın.
 4. **Kaydet** (`Ctrl+S`) ile çalışmayı `.pafta` dosyası olarak saklayın.
 
 Kısayolların tamamı uygulamada `F1` ile görünür. Ayrıntılı kullanım: **[docs/KULLANIM.md](docs/KULLANIM.md)**
 
 ## Ekran görüntüleri
 
-| Sınır mesafesi ve Mavi Vatan | Uydu görüntüsü |
+| Alan raporu | NOTAM'dan alma |
+|---|---|
+| ![Alan raporu](docs/images/ekran-rapor.png) | ![NOTAM](docs/images/ekran-notam.png) |
+
+| Excel'den alma (sütun eşleştirme) | Kerteriz ve mesafeyle konum |
+|---|---|
+| ![Excel](docs/images/ekran-excel.png) | ![Kerteriz](docs/images/ekran-kerteriz.png) |
+
+| Sınır mesafesi ve Mavi Vatan | Yaklaştıkça netleşen uydu görüntüsü |
 |---|---|
 | ![Sınır mesafesi](docs/images/ekran-mesafe.png) | ![Uydu](docs/images/ekran-uydu.png) |
 
-| İl ve ilçe sınırları (Ankara) |
-|---|
-| ![İl ve ilçe](docs/images/ekran-il-ilce.png) |
+| İl ve ilçe sınırları, imleçte il/ilçe (Ankara) | Notlar ve oklar |
+|---|---|
+| ![İl ve ilçe](docs/images/ekran-il-ilce.png) | ![Notlar](docs/images/ekran-notlar.png) |
 
-| Ölçüm | Proje ve çıktı |
+| Ölçüm | Ölçekli baskı (sayfa çerçevesi) |
 |---|---|
 | ![Ölçüm](docs/images/ekran-olcum.png) | ![Çıktı](docs/images/ekran-cikti.png) |
 
@@ -63,12 +78,14 @@ Kısayolların tamamı uygulamada `F1` ile görünür. Ayrıntılı kullanım: *
 
 ## Doğruluk ve sınırlar
 
-- **Mesafe ve kerteriz:** WGS84 elipsoidi, Vincenty ters problemi (standart referans vakasında milimetre doğruluğu).
+- **Mesafe ve kerteriz:** WGS84 elipsoidi, Vincenty ters ve doğru problemi (pyproj'a göre milimetre altı).
+- **UTM / MGRS:** Krüger serisi; pyproj ve `mgrs` paketine göre 0,1 mm altı.
 - **Daireler ve alan hesabı:** Küre üzerinde (R = 6371,0088 km).
 - **Sınır mesafe eğrileri:** Eş uzaklıklı azimutal projeksiyonda kurulan sayısal mesafe alanından üretilir. Çizim sonrasında çözünürlük yazılır (tipik olarak 1–3 km); sapma 250 km'de ±2 km, 1000 km'de yaklaşık %1 mertebesindedir.
 - **Kıyı ve sınırlar:** Natural Earth 1:50 milyon (taban harita); Türkiye ve çevresinde yaklaşınca 1:10 milyon. Bölge ölçeğinde doğrudur; birkaç kilometreden yakında kıyı köşeli görünür.
 - **İl ve ilçe sınırları:** OpenStreetMap (geoBoundaries, 2021–2023), yaklaşık 250 m'ye sadeleştirilmiş. İl sınırları ilçe sınırlarından türetildiği için ikisi birebir çakışır.
-- **Uydu görüntüsü:** ~7 km/piksel. Bölge ölçeğinde nettir, çok yakınlaşınca yumuşar.
+- **Uydu görüntüsü:** Gömülü olarak dünya ~7 km, bölge ~1 km, Türkiye ~500 m/piksel; il ölçeğinden yakında yumuşar. Uydu paketiyle 10–30 m.
+- **Alan raporu:** Yüzdeler alan içindeki düzenli örnek noktalardan hesaplanır; il/ilçe sorgusu sadeleştirilmiş sınırlarla yapıldığından sınıra birkaç yüz metre yakın noktalarda komşu ilçe çıkabilir.
 - **FIR ve Mavi Vatan sınırları bilgi amaçlıdır.** Seyrüsefer ve resmî işlemler için AIP ve resmî kaynaklar esas alınmalıdır.
 
 ### Mavi Vatan sınırı hakkında
@@ -92,7 +109,8 @@ Ege ve Akdeniz arasındaki fark, iki denizi ayırmak için kullanılan 28,55°D 
 | Kıyı, göller, ülke sınırları, şehirler, Türkiye sınırı | [Natural Earth](https://www.naturalearthdata.com) | Kamu malı |
 | Türkiye il ve ilçe sınırları ve adları | [OpenStreetMap](https://www.openstreetmap.org/copyright), [geoBoundaries](https://www.geoboundaries.org) üzerinden | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) — © OpenStreetMap katkıcıları; `data/tr_idari.json` aynı lisansla paylaşılır |
 | FIR sınırları ve adları | [VATSpy Data Project](https://github.com/vatsimnetwork/vatspy-data-project) (VATSIM) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) — `data/fir.json` sadeleştirilmiş bir türevdir ve aynı lisansla paylaşılır |
-| Uydu görüntüsü | NASA Blue Marble Next Generation | Kamu malı |
+| Uydu görüntüsü | NASA Blue Marble Next Generation; yakın ölçek döşemeleri NASA GIBS ([FreeTiler](https://github.com/freetiler/nasa-bluemarble) aynası) | Kamu malı |
+| Uydu paketi (isteğe bağlı, depoda yok) | EOX Sentinel-2 cloudless 2016 ([s2maps.eu](https://s2maps.eu)), Copernicus Sentinel verisi | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); atıf pakete yazılır ve paftaya basılır |
 | Mavi Vatan sınırı | Bu projede medyan hat kuralıyla üretildi (`tools/veri/mavi_vatan.py`) | — |
 
 Ayrıntılar: [data/KAYNAKLAR.md](data/KAYNAKLAR.md)

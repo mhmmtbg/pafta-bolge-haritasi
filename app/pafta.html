@@ -934,23 +934,25 @@
         <dt>Tekerlek, sürükle</dt><dd>Yakınlaş, haritayı kaydır</dd>
         <dt><kbd>Esc</kbd></dt><dd>Ölçümde yeni hat başlat; haritadan seçimi bitir</dd>
         <dt><kbd>Geri</kbd></dt><dd>Ölçümde son noktayı sil</dd>
+        <dt>Sürükle (köşe, nokta, not)</dt><dd>Haritada taşı; koordinat listeye yazılır</dd>
         <dt><kbd>F1</kbd></dt><dd>Bu pencere</dd>
       </dl>
       <h3>Sürükle-bırak</h3>
-      <p>Bir <b>.pafta</b> projesini haritaya bırakmak onu açar. Bir koordinat listesini (.txt, .csv) bırakmak, açık araçtaki listeye yükleyip çizer.</p>
+      <p>Bir <b>.pafta</b> projesini haritaya bırakmak onu açar. Bir koordinat listesini (.txt, .csv) ya da Excel dosyasını (.xlsx) bırakmak, açık araçtaki listeye yükler. Bir <b>.paftauydu</b> uydu paketini bırakmak onu zemine ekler.</p>
     </section>
     <section>
       <h2>PAFTA</h2>
       <div class="ver" id="ver-line"></div>
-      <p>Koordinat listelerinden ölçekli harita: alanlar, daireler, sınır mesafe eğrileri, noktalar ve ölçümler. İnternet ve kurulum gerektirmez.</p>
+      <p>Koordinat listelerinden ölçekli harita: alanlar, daireler, sınır mesafe eğrileri, noktalar, ölçümler ve notlar; NOTAM, NAVTEX ve Excel'den okuma, alan raporu, ölçekli PDF. İnternet ve kurulum gerektirmez.</p>
       <h3>Hesap</h3>
-      <small>Mesafe ve kerteriz WGS84 elipsoidi üzerinde Vincenty yöntemiyle; daireler ve alanlar küre üzerinde; sınır mesafe eğrileri eş uzaklıklı azimutal projeksiyonda kurulan mesafe alanından üretilir.</small>
+      <small>Mesafe, kerteriz ve kerteriz-mesafeyle konum WGS84 elipsoidi üzerinde Vincenty yöntemiyle; UTM ve MGRS Krüger serisiyle; daireler ve alanlar küre üzerinde; sınır mesafe eğrileri eş uzaklıklı azimutal projeksiyonda kurulan mesafe alanından üretilir.</small>
       <h3>Veri kaynakları</h3>
       <ul class="src">
         <li><b>Natural Earth</b>, kıyı, sınır, göl ve şehirler. Kamu malı.</li>
         <li><b>VATSpy Data Project</b>, FIR sınırları ve adları (VATSIM). CC BY-SA 4.0; sadeleştirilmiş türev.</li>
         <li><b>OpenStreetMap</b> (geoBoundaries üzerinden), Türkiye il ve ilçe sınırları ve adları. © OpenStreetMap katkıcıları, ODbL 1.0.</li>
-        <li><b>NASA Blue Marble Next Generation</b>, uydu görüntüsü. Kamu malı.</li>
+        <li><b>NASA Blue Marble Next Generation</b> ve <b>NASA GIBS</b> Blue Marble döşemeleri (FreeTiler aynası), uydu görüntüsü. Kamu malı.</li>
+        <li id="paket-kaynak" hidden></li>
         <li><b>Mavi Vatan</b>, medyan hat kuralıyla geometrik yeniden kurulum; resmî koordinat değildir.</li>
       </ul>
       <small class="desk-only" id="data-dir" style="margin-top:14px"></small>
@@ -3109,7 +3111,7 @@ window.addEventListener("resize", resize);
 resize();
 fitWorld(true);
 /* ============ uygulama: proje dosyası, masaüstü köprüsü, kısayollar ============ */
-const APP_VER = "1.2.0";
+const APP_VER = "2.0.0";
 const MASAUSTU = window.masaustu || null;          // exe sürümünde shim.js sağlar
 document.body.classList.toggle("desktop", !!MASAUSTU);
 $("ver-line").textContent = "Sürüm " + APP_VER + (MASAUSTU ? ", masaüstü" : ", tarayıcı");
@@ -4098,7 +4100,9 @@ function paketKur(bilgi, okuyucu){
 }
 
 function paketDurum(){
-  const p = UYDU_PAKET, d = $("uydu-paket-durum");
+  const p = UYDU_PAKET, d = $("uydu-paket-durum"), k = $("paket-kaynak");
+  k.hidden = !p;
+  if (p) k.innerHTML = "<b>" + esc(p.ad) + "</b>, yüklü uydu paketi. " + esc(p.atif || "") + (p.lisans ? " " + esc(p.lisans) + "." : "");
   if (!p){ d.innerHTML = 'Yüklü paket yok. <span class="dim">Hazırlamak için: tools/uydu_paketi.py</span>'; $("btn-uydu-kaldir").hidden = true; return; }
   const m = 156543 * Math.cos(rad(39)) / 2 ** p.zmax;
   d.innerHTML = "<b>" + esc(p.ad) + "</b><br>" + esc(p.dosya) + " · " + p.sayi.toLocaleString("tr-TR") + " döşeme · z" + p.zmin + "–z" + p.zmax +

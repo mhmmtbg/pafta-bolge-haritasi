@@ -37,7 +37,9 @@ function paketKur(bilgi, okuyucu){
 }
 
 function paketDurum(){
-  const p = UYDU_PAKET, d = $("uydu-paket-durum");
+  const p = UYDU_PAKET, d = $("uydu-paket-durum"), k = $("paket-kaynak");
+  k.hidden = !p;
+  if (p) k.innerHTML = "<b>" + esc(p.ad) + "</b>, yüklü uydu paketi. " + esc(p.atif || "") + (p.lisans ? " " + esc(p.lisans) + "." : "");
   if (!p){ d.innerHTML = 'Yüklü paket yok. <span class="dim">Hazırlamak için: tools/uydu_paketi.py</span>'; $("btn-uydu-kaldir").hidden = true; return; }
   const m = 156543 * Math.cos(rad(39)) / 2 ** p.zmax;
   d.innerHTML = "<b>" + esc(p.ad) + "</b><br>" + esc(p.dosya) + " · " + p.sayi.toLocaleString("tr-TR") + " döşeme · z" + p.zmin + "–z" + p.zmax +
