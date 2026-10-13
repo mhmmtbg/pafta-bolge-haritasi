@@ -1,6 +1,6 @@
 # Değişiklik Günlüğü
 
-## Yayımlanmamış
+## v2.1.0 — 2026-10-13
 
 - **Nokta adlarını göster / gizle:** Noktalar → İşaret bölümünde anahtar; kapalıyken yalnız işaretler çizilir (koordinat etiketi açıksa yalnız koordinat yazar). Seçim projeye kaydedilir.
 - **Çizgi:** Notlar sekmesinde yeni **Çizgi** kipi; tıklayarak çok köşeli çizgiler, düz / kesikli / noktalı tip, üç kalınlık, isteğe bağlı etiket. Köşeler sürüklenerek taşınır; geri al / yinele ve PDF baskıda yer alır; `.pafta` dosyasında `notlar` içinde `tur: "cizgi"` olarak saklanır.

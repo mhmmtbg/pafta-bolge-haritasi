@@ -87,7 +87,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 
 - `form`, paneldeki bütün giriş alanlarının değerleridir (anahtar: öğe kimliği). Alanlar, daireler ve mesafe eğrileri açılışta bu girdilerden **yeniden hesaplanır**; dosyada yalnızca renk ve görünürlük gibi kullanıcı seçimleri saklanır.
 - `alanlar`, `daireler`, `mesafe` boşsa `null`'dır; o katman çizilmemiş demektir.
-- Noktalar, ölçüm hatları ve notlar olduğu gibi saklanır. `notlar` alanı v2.0'da eklendi; eski sürümler onu yok sayar, v2.0 notsuz dosyaları sorunsuz açar. `tur: "cizgi"` kayıtları (`tip`: `duz` | `kesikli` | `noktali`) sonraki sürümde eklendi; v2.0.0 bunları atlar, diğer notları açar.
+- Noktalar, ölçüm hatları ve notlar olduğu gibi saklanır. `notlar` alanı v2.0'da eklendi; eski sürümler onu yok sayar, v2.0 notsuz dosyaları sorunsuz açar. `tur: "cizgi"` kayıtları (`tip`: `duz` | `kesikli` | `noktali`) v2.1'de eklendi; v2.0 bunları atlar, diğer notları açar.
 
 ### Uydu paketi (`.paftauydu`)
 
