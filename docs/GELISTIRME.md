@@ -49,7 +49,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `22_excel_al.js` | Dosyadan al: metin ve Excel; sütun eşleştirme penceresi |
 | `25_kerteriz.js` | Vincenty doğru problemi; kerteriz ve mesafeyle konum |
 | `30_rapor.js` | İlçe poligonları, `ilIlceBul`, alan raporu ve Excel çıktısı |
-| `35_notlar.js` | Notlar ve oklar |
+| `35_notlar.js` | Notlar, oklar ve çizgiler |
 | `40_duzenle.js` | Haritada sürükleyerek düzenleme, geri al / yinele |
 | `45_baski.js` | Ölçekli PDF baskı (bağımlılıksız PDF yazıcı, JPEG gömülü) |
 
@@ -79,14 +79,15 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
   "noktalar": [ { "ad": "Ankara", "enlem": 39.916667, "boylam": 32.85, "renk": "#b3541e" } ],
   "olcum":    [ { "renk": "#d1495b", "noktalar": [ { "enlem": 41.0136, "boylam": 28.9761, "ad": "İstanbul" } ] } ],
   "notlar":   [ { "tur": "not", "metin": "Tatbikat", "enlem": 43.35, "boylam": 29.2, "renk": "#a4123f", "boyut": 13 },
-                { "tur": "ok", "bas": { "enlem": 44.0, "boylam": 36.2 }, "uc": { "enlem": 42.75, "boylam": 33.9 }, "metin": "", "renk": "#16222a", "boyut": 13 } ],
+                { "tur": "ok", "bas": { "enlem": 44.0, "boylam": 36.2 }, "uc": { "enlem": 42.75, "boylam": 33.9 }, "metin": "", "renk": "#16222a", "boyut": 13 },
+                { "tur": "cizgi", "noktalar": [ { "enlem": 41.0, "boylam": 29.0 }, { "enlem": 39.9, "boylam": 32.8 } ], "metin": "", "renk": "#a4123f", "boyut": 13, "tip": "kesikli", "kalinlik": 2.5 } ],
   "gorunum":  { "projeksiyon": "mercator", "latMin": 33.5, "lonMin": 22.5, "latMax": 45.5, "lonMax": 45.5 }
 }
 ```
 
 - `form`, paneldeki bütün giriş alanlarının değerleridir (anahtar: öğe kimliği). Alanlar, daireler ve mesafe eğrileri açılışta bu girdilerden **yeniden hesaplanır**; dosyada yalnızca renk ve görünürlük gibi kullanıcı seçimleri saklanır.
 - `alanlar`, `daireler`, `mesafe` boşsa `null`'dır; o katman çizilmemiş demektir.
-- Noktalar, ölçüm hatları ve notlar olduğu gibi saklanır. `notlar` alanı v2.0'da eklendi; eski sürümler onu yok sayar, v2.0 notsuz dosyaları sorunsuz açar.
+- Noktalar, ölçüm hatları ve notlar olduğu gibi saklanır. `notlar` alanı v2.0'da eklendi; eski sürümler onu yok sayar, v2.0 notsuz dosyaları sorunsuz açar. `tur: "cizgi"` kayıtları (`tip`: `duz` | `kesikli` | `noktali`) sonraki sürümde eklendi; v2.0.0 bunları atlar, diğer notları açar.
 
 ### Uydu paketi (`.paftauydu`)
 

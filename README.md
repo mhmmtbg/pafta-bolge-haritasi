@@ -16,9 +16,9 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 - **Kerteriz ve mesafeyle konum:** "Ankara'dan 045°, 120 NM" gibi nokta, alan köşesi ya da daire merkezi üretme (Vincenty).
 - **Daireler:** Bir ya da birden fazla merkezden, istenen yarıçaplarda (km veya NM) gerçek sabit‑uzaklık halkaları. Her yarıçap kendi rengini alır.
 - **Sınır mesafesi:** Türkiye kara sınırı ve kıyısından eşit uzaklık eğrileri. İsteğe bağlı olarak Mavi Vatan da hesaba katılır; mesafenin **Mavi Vatan dış sınırından** mı **Türkiye kara sınırından** mı ölçüleceği seçilir. Eğriler arası bantlar ayrı renklerle doldurulur.
-- **Noktalar:** İsimli konumlar; beş işaret şekli, tek tek renk.
+- **Noktalar:** İsimli konumlar; beş işaret şekli, tek tek renk; adlar haritada gösterilip gizlenebilir.
 - **Ölçüm:** Haritaya tıklayarak noktalar ekleyin; her parçanın mesafesi (km / NM) ve kerterizi hatta yazılır, toplam hat sonunda gösterilir. Mesafeler WGS84 elipsoidi üzerinde Vincenty yöntemiyle hesaplanır.
-- **Notlar ve oklar:** Paftaya açıklama notları ve oklar.
+- **Notlar, oklar ve çizgiler:** Paftaya açıklama notları, oklar ve düz, kesikli ya da noktalı çok köşeli çizgiler.
 - **Haritada düzenleme:** Köşeler, noktalar, daire merkezleri ve notlar sürüklenerek taşınır, yeni koordinat listeye yazılır; **geri al / yinele** (`Ctrl+Z` / `Ctrl+Y`).
 - **Pafta öğeleri:** Dereceli çerçeve ve koordinat kılavuzu, km ve deniz milli çift ölçek çubuğu, lejant, **bulduru haritası** ve başlık, ölçek, projeksiyon, datum, tarih ve kuzey okunu taşıyan **pafta künyesi**.
 - **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür. Bu ölçekte kıyı da ayrıntılı (1:10 milyon) veriye geçer.

@@ -117,7 +117,7 @@ Mesafeleri virgülle yazın ve **Eğrileri çiz** deyin. Eğriler Türkiye kara 
 
 ### Noktalar
 
-Her satır: `isim, enlem, boylam`. Satıra `#d62828` gibi bir renk kodu eklenirse o nokta o renkte çizilir. İşaret şekli, boyutu ve varsayılan rengi aynı bölümden seçilir; **Etikette koordinatı da göster** ile ismin altına DMS koordinat yazılır.
+Her satır: `isim, enlem, boylam`. Satıra `#d62828` gibi bir renk kodu eklenirse o nokta o renkte çizilir. İşaret şekli, boyutu ve varsayılan rengi aynı bölümden seçilir. **Nokta adlarını göster** kapatılırsa haritada yalnız işaretler kalır (adlar listede ve projede korunur). **Etikette koordinatı da göster** ile ismin altına koordinat yazılır; adlar kapalıyken etikette yalnız koordinat görünür.
 
 ### Ölçüm
 
@@ -131,15 +131,16 @@ Her satır: `isim, enlem, boylam`. Satıra `#d62828` gibi bir renk kodu eklenirs
 
 ### Notlar
 
-Notlar bölümü açıkken haritaya açıklama notları ve oklar eklenir; paftayla birlikte basılır ve projeye kaydedilir.
+Notlar bölümü açıkken haritaya açıklama notları, oklar ve çizgiler eklenir; paftayla birlikte basılır ve projeye kaydedilir.
 
 - **Not** kipinde haritaya tıklayın; not listeye eklenir ve metin kutusu açılır. Birden çok satır yazılabilir.
 - **Ok** kipinde önce okun başlangıcına, sonra ucuna tıklayın (`Esc` yarım oku bırakır). Oka isteğe bağlı bir etiket yazılabilir; listede uzunluğu ve kerterizi görünür.
+- **Çizgi** kipinde her tıklama bir köşe ekler; çizgi düz parçalarla çizilir. Son köşeye yeniden tıklamak, çift tıklamak, `Enter` ya da **Çizgiyi bitir** çizgiyi tamamlar; `Geri` tuşu son köşeyi siler, `Esc` yarım çizgiyi bırakır. **Çizgi tipi** (düz, kesikli, noktalı) ve **kalınlık** yeni çizgilere uygulanır. Çizgiye isteğe bağlı bir etiket yazılabilir (ortasında görünür); listede köşe sayısı ve toplam uzunluğu yazar.
 - Renk ve yazı boyutu yeni eklenenlere uygulanır; listedeki renk kutusuyla tek tek değiştirilir.
 
 ## Haritada düzenleme, geri al
 
-Alan köşeleri, noktalar, daire merkezleri, ölçüm noktaları, notlar ve ok uçları haritada **tutup sürüklenerek** taşınır: imleç üzerlerine gelince taşıma imlecine döner, sürüklerken yeni koordinat yanında yazar. Bırakınca yeni koordinat listedeki satıra, yalnız koordinat kısmı değiştirilerek yazılır (ad, nokta no, renk kodu ve yarıçap korunur).
+Alan köşeleri, noktalar, daire merkezleri, ölçüm noktaları, notlar, ok uçları ve çizgi köşeleri haritada **tutup sürüklenerek** taşınır: imleç üzerlerine gelince taşıma imlecine döner, sürüklerken yeni koordinat yanında yazar. Bırakınca yeni koordinat listedeki satıra, yalnız koordinat kısmı değiştirilerek yazılır (ad, nokta no, renk kodu ve yarıçap korunur).
 
 - Liste çizimden sonra elle değiştirildiyse taşıma geri alınır ve önce yeniden çizmeniz istenir.
 - Görünüm → **Haritada sürükleyerek düzenle** ile kapatılabilir.

@@ -279,6 +279,7 @@
   .not-satir .zone-name{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
   .not-metin{width:100%;background:transparent;border:1px solid var(--line);border-radius:5px;color:var(--text);font:inherit;font-size:13px;padding:4px 7px;resize:vertical;min-height:0;height:auto}
   .row[hidden]{display:none}
+  .grid2[hidden],button.btn[hidden]{display:none}
   .paket{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
   .paket h4{margin:0 0 4px;font-size:12.5px;font-weight:600;color:#c9d6db}
   .paket p{margin:0;font-size:12px;line-height:1.5;color:var(--text);word-break:break-word}
@@ -370,7 +371,7 @@
       <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M11 6.2 5.5 20.5M13 6.2l5.5 14.3"/><path d="M7.4 15.5a7.5 7.5 0 0 0 9.2 0"/></svg>
       Ölçüm
     </button>
-    <button class="tab" data-pane="pane-notes" title="Haritaya not ve ok ekle">
+    <button class="tab" data-pane="pane-notes" title="Haritaya not, ok ve çizgi ekle">
       <svg viewBox="0 0 24 24"><path d="M4 5h12v8H9l-3.5 3v-3H4Z"/><path d="M13 19.5 20 12.5M20 12.5h-4.2M20 12.5v4.2"/></svg>
       Notlar
     </button>
@@ -539,7 +540,8 @@
         <label class="fld">Varsayılan renk
           <input type="color" id="p-color" value="#b3541e">
         </label>
-        <label class="check" style="margin-top:8px">Etikette koordinatı da göster <input type="checkbox" class="toggle" id="p-coords"></label>
+        <label class="check" style="margin-top:8px">Nokta adlarını göster <input type="checkbox" class="toggle" id="p-names" checked></label>
+        <label class="check">Etikette koordinatı da göster <input type="checkbox" class="toggle" id="p-coords"></label>
       </div>
     </div>
 
@@ -588,13 +590,14 @@
     <div class="pane" id="pane-notes">
       <header class="pane-head">
         <h2>Notlar</h2>
-        <p>Haritaya açıklama notları ve oklar ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
+        <p>Haritaya açıklama notları, oklar ve çizgiler ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
       </header>
       <div class="group">
         <div class="mode-on">Not modu açık</div>
         <div class="seg" role="radiogroup" aria-label="Eklenecek öğe">
           <label><input type="radio" name="n-kip" value="not" checked><span>Not</span></label>
           <label><input type="radio" name="n-kip" value="ok"><span>Ok</span></label>
+          <label><input type="radio" name="n-kip" value="cizgi"><span>Çizgi</span></label>
         </div>
         <div class="grid2" style="margin-top:12px">
           <label class="fld" style="margin-top:0">Renk
@@ -608,8 +611,24 @@
             </select>
           </label>
         </div>
-        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Notlar ve ok uçları sürüklenerek taşınır.</p>
-        <div class="row"><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
+        <div class="grid2" id="n-cizgi-ayar" style="margin-top:10px" hidden>
+          <label class="fld" style="margin-top:0">Çizgi tipi
+            <select id="n-tip">
+              <option value="duz" selected>düz</option>
+              <option value="kesikli">kesikli</option>
+              <option value="noktali">noktalı</option>
+            </select>
+          </label>
+          <label class="fld" style="margin-top:0">Kalınlık
+            <select id="n-kalinlik">
+              <option value="1.5">ince</option>
+              <option value="2.5" selected>orta</option>
+              <option value="4">kalın</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Çizgi kipinde her tıklama bir köşe ekler; son köşeye yeniden tıklamak, çift tıklamak ya da Enter çizgiyi bitirir, Geri tuşu son köşeyi siler, Esc yarım çizgiyi bırakır. Notlar, ok uçları ve çizgi köşeleri sürüklenerek taşınır.</p>
+        <div class="row"><button class="btn" id="btn-n-bitir" hidden>Çizgiyi bitir</button><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
         <div class="msg" id="n-msg"></div>
         <div id="n-list"></div>
       </div>
@@ -675,7 +694,7 @@
         <label class="check">Sınır mesafeleri <input type="checkbox" class="toggle" id="opt-layer-rings" checked></label>
         <label class="check">Noktalar <input type="checkbox" class="toggle" id="opt-layer-points" checked></label>
         <label class="check">Ölçüm hatları <input type="checkbox" class="toggle" id="opt-layer-measure" checked></label>
-        <label class="check">Notlar ve oklar <input type="checkbox" class="toggle" id="opt-layer-notes" checked></label>
+        <label class="check">Notlar, oklar ve çizgiler <input type="checkbox" class="toggle" id="opt-layer-notes" checked></label>
         <label class="check" style="margin-top:8px">Haritada sürükleyerek düzenle <input type="checkbox" class="toggle" id="opt-duzenle" checked></label>
         <p class="hint">Köşe, nokta, daire merkezi ve ölçüm noktalarını haritada tutup sürükleyin; yeni koordinat listeye yazılır. Geri al <kbd>Ctrl</kbd> <kbd>Z</kbd>, yinele <kbd>Ctrl</kbd> <kbd>Y</kbd>.</p>
       </div>
@@ -2065,7 +2084,7 @@ function markerPath(shape, X, Y, s){
 
 function drawPointsLayer(){
   if (!POINTS.length) return;
-  const shape = $("p-shape").value, s = parseFloat($("p-size").value), withCoords = opt("p-coords");
+  const shape = $("p-shape").value, s = parseFloat($("p-size").value), withCoords = opt("p-coords"), withNames = opt("p-names");
   const b = viewBounds();
   ctx.save();
   // önce işaretler, sonra etiketler (etiket işaretin altında kalmasın)
@@ -2078,12 +2097,14 @@ function drawPointsLayer(){
     markerPath(shape, X, Y, s + 1.4);
     ctx.strokeStyle = "rgba(22,34,42,.55)"; ctx.lineWidth = .8; ctx.stroke();
   }
+  if (!withNames && !withCoords){ ctx.restore(); return; }        // etiketler kapalı: yalnız işaretler
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   for (const p of vis){
     const X = sx(p.lon), Y = sy(p.lat);
-    const sub = withCoords ? fk(p.lat, p.lon) : "";
+    const name = withNames ? p.name : fk(p.lat, p.lon);             // ad kapalıysa satırda yalnız koordinat
+    const sub = withNames && withCoords ? fk(p.lat, p.lon) : "";
     ctx.font = "600 12.5px " + FONT();
-    const w1 = ctx.measureText(p.name).width;
+    const w1 = ctx.measureText(name).width;
     ctx.font = "10.5px " + FONT();
     const w2 = sub ? ctx.measureText(sub).width : 0;
     const w = Math.max(w1, w2) + 8, h = sub ? 30 : 17;
@@ -2094,8 +2115,8 @@ function drawPointsLayer(){
     const top = slot[1];
     ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 4; ctx.lineJoin = "round";
     ctx.font = "600 12.5px " + FONT();
-    ctx.strokeText(p.name, slot[0], top + 13);
-    ctx.fillStyle = "#16222a"; ctx.fillText(p.name, slot[0], top + 13);
+    ctx.strokeText(name, slot[0], top + 13);
+    ctx.fillStyle = "#16222a"; ctx.fillText(name, slot[0], top + 13);
     if (sub){
       ctx.font = "10.5px " + FONT();
       ctx.strokeText(sub, slot[0], top + 26);
@@ -2660,7 +2681,7 @@ $("opt-sat").addEventListener("change", e => { $("sat-box").hidden = !e.target.c
 $("opt-sat-alpha").addEventListener("input", draw);
 ["opt-grid","opt-nums","opt-fill","opt-cities","opt-borders","opt-adm","opt-fir","opt-legend",
  "opt-layer-areas","opt-layer-circles","opt-layer-rings","opt-layer-points",
- "opt-layer-measure","opt-title","opt-locator","p-shape","p-size","p-coords"].forEach(id => $(id).addEventListener("change", draw));
+ "opt-layer-measure","opt-title","opt-locator","p-shape","p-size","p-names","p-coords"].forEach(id => $(id).addEventListener("change", draw));
 ["t-title","t-sub"].forEach(id => $(id).addEventListener("input", draw));
 $("opt-proj").addEventListener("change", e => { view.mode = e.target.value; fitAll(true); });
 
