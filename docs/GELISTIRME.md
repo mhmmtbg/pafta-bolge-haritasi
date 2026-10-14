@@ -47,6 +47,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `12_uydu_paketi.js` | `.paftauydu` uydu paketi: tarayıcıda `File.slice`, exe'de yerel sunucu |
 | `20_notam.js` | NOTAM / NAVTEX metninden alan, daire ve nokta çıkarma |
 | `22_excel_al.js` | Dosyadan al: metin ve Excel; sütun eşleştirme penceresi |
+| `24_kml_al.js` | KML / KMZ içe aktarma: stiller (StyleMap), daire tanıma, sadeleştirme, önizleme penceresi |
 | `25_kerteriz.js` | Vincenty doğru problemi; kerteriz ve mesafeyle konum |
 | `30_rapor.js` | İlçe poligonları, `ilIlceBul`, alan raporu ve Excel çıktısı |
 | `35_notlar.js` | Notlar, oklar ve çizgiler |

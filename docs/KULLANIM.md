@@ -56,7 +56,18 @@ Excel dosyası seçildiğinde **sütun eşleştirme** penceresi açılır:
 3. Önizleme tablosunda her satırın okunan koordinatı görünür; okunamayan satırlar atlanır.
 4. **Ekle**: satırlar seçilen listeye eklenir (ya da **Mevcut listeyi değiştir** ile onun yerine yazılır) ve çizilir.
 
-Aynı bölge adının her satırda tekrarlandığı tablolar tek alan olarak okunur. Daireler için yarıçap sütununda yalnız sayı varsa seçilen birim eklenir. Eski `.xls` biçimi okunmaz; Excel'de `.xlsx` olarak kaydedin.
+Aynı bölge adının her satırda tekrarlandığı tablolar tek alan olarak okunur (araya boş satır girerse aynı adla yeni bir alan başlar). Daireler için yarıçap sütununda yalnız sayı varsa seçilen birim eklenir. Eski `.xls` biçimi okunmaz; Excel'de `.xlsx` olarak kaydedin.
+
+## KML / KMZ'den al
+
+Google Earth'ten ya da başka bir programdan gelen `.kml` ve `.kmz` dosyaları **Dosyadan al** ile seçilir ya da haritaya sürüklenir. Bir önizleme penceresi açılır:
+
+- **Poligonlar** alan, **noktalar** nokta, **çizgiler** Notlar'da çizgi olarak önerilir. Daireye benzeyen kapalı şekiller (köşeleri bir merkezden eşit uzaklıkta) merkez ve yarıçapıyla **daire** olarak tanınır.
+- Her satırın sağındaki seçimle öğenin nereye ekleneceği değiştirilir: alan, daire, nokta, not, çizgi, ölçüm hattı ya da **Alma**. Üstteki **Hepsini** seçimleri bir türün tamamını tek seferde değiştirir.
+- **KML renklerini kullan** açıkken çizgi, dolgu ve ikon renkleri alınır (beyaz ve saydam renkler hariç).
+- **Mevcut listeleri değiştir** kapalıyken öğeler listelerin sonuna eklenir.
+
+Klasörler ve çoklu geometriler (MultiGeometry) açılır; adı olmayan öğeler klasör adıyla numaralanır. 400'den çok köşeli şekiller şekli koruyarak sadeleştirilir, poligonların iç boşlukları alınmaz. PAFTA'nın kendi KML çıktısı geri okunduğunda alanlar, daireler, noktalar ve ölçüm hatları aynen geri gelir.
 
 ## Kerteriz ve mesafeyle konum
 
@@ -193,7 +204,7 @@ Bir `.pafta` dosyası tüm girdileri, renkleri, gizli/görünür durumları, öl
 
 Bir `.pafta` dosyası notları ve okları da saklar.
 
-**Sürükle-bırak:** `.pafta` dosyası projeyi açar. Bir koordinat listesi (`.txt`, `.csv`) ya da Excel dosyası (`.xlsx`) açık araca yüklenir (Noktalar ve Daireler açıksa oraya, aksi halde Alanlar'a). Bir `.paftauydu` dosyası uydu paketi olarak yüklenir.
+**Sürükle-bırak:** `.pafta` dosyası projeyi açar. Bir koordinat listesi (`.txt`, `.csv`) ya da Excel dosyası (`.xlsx`) açık araca yüklenir (Noktalar ve Daireler açıksa oraya, aksi halde Alanlar'a). Bir `.kml` ya da `.kmz` dosyası içe aktarma penceresini açar. Bir `.paftauydu` dosyası uydu paketi olarak yüklenir.
 
 ### Masaüstü sürümüne özgü
 

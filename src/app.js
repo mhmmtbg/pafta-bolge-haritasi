@@ -324,6 +324,7 @@ document.addEventListener("drop", async e => {
   if (!f) return;
   const aktif0 = (document.querySelector(".pane.active") || {}).id;
   if (/\.paftauydu$/i.test(f.name)){ paketDosyadan(f); return; }
+  if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
   if (/\.xlsx?$|\.xlsm$/i.test(f.name)){
     dosyaYukle(f, {"pane-points": "nokta", "pane-circles": "daire"}[aktif0] || "alan");
     return;

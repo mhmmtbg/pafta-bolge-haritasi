@@ -103,6 +103,7 @@ function zipAc(ab){
   }
   return {
     var: ad => ad in dosyalar,
+    adlar: () => Object.keys(dosyalar),
     metin(ad){
       const f = dosyalar[ad]; if (!f) return null;
       const bas = f.yerel + 30 + dv.getUint16(f.yerel + 26, true) + dv.getUint16(f.yerel + 28, true);

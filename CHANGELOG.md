@@ -1,5 +1,11 @@
 # Değişiklik Günlüğü
 
+## v2.2.0 — 2026-10-14
+
+- **KML / KMZ'den al:** Google Earth dosyaları (`.kml`, `.kmz`) **Dosyadan al** düğmesiyle ya da haritaya sürüklenerek içe aktarılır. Poligonlar alan, noktalar nokta, çizgiler Notlar'da çizgi olur; daireye benzeyen kapalı şekiller merkez ve yarıçapıyla daire olarak tanınır. Önizlemede her öğenin nereye ekleneceği (alan, daire, nokta, not, çizgi, ölçüm hattı ya da alma) tek tek ya da türe göre topluca seçilir. Renkler KML stillerinden (StyleMap dahil) alınır; 400'den çok köşeli şekiller sadeleştirilir; klasörler ve MultiGeometry açılır.
+- PAFTA'nın kendi KML çıktısı geri okunduğunda alanlar, daireler (yarıçaplarıyla), noktalar ve ölçüm hatları aynen geri gelir.
+- Alanlar listesinde boş satırdan sonra aynı bölge adı yeni bir bölge başlatır (önceden üstteki bölgeye ekleniyordu).
+
 ## v2.1.0 — 2026-10-13
 
 - **Nokta adlarını göster / gizle:** Noktalar → İşaret bölümünde anahtar; kapalıyken yalnız işaretler çizilir (koordinat etiketi açıksa yalnız koordinat yazar). Seçim projeye kaydedilir.

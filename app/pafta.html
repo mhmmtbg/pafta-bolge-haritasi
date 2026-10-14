@@ -286,6 +286,17 @@
   .paket .dim{color:var(--dim)}
   .tool-card .msg .ok{color:#1f6b45}
   .tool-card .msg .warn{color:#9a5200}
+  .kml-toplu{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:12.5px;color:#4d626b}
+  .kml-toplu:empty{display:none}
+  .kml-toplu select,.kml-satir select{font-size:12.5px;padding:3px 6px;border:1px solid #cbd6da;border-radius:5px;background:#f6f9fa;color:var(--chart-ink)}
+  .kml-liste{margin-top:10px;display:grid;gap:4px;max-height:340px;overflow:auto}
+  .kml-satir{display:grid;grid-template-columns:12px 86px minmax(0,1fr) 128px;gap:4px 10px;align-items:center;padding:6px 8px;border-radius:6px;background:#f3f6f7;font-size:13px}
+  .kml-satir i{width:12px;height:12px;border-radius:3px;border:1px solid #cbd6da}
+  .kml-satir .tur{font-size:11.5px;color:#5b6f79}
+  .kml-satir b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kml-satir small{grid-column:3;font-family:var(--mono);font-size:11px;color:#5b6f79}
+  .kml-satir select{grid-column:4;grid-row:1/span 2}
+  .kml-liste .bos{font-family:var(--prose);font-size:13px;color:#8a5a00;padding:6px 2px}
   .xl-ayar{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px 14px}
   .xl-ayar label[hidden]{display:none}
   .xl-secim{display:flex;gap:28px;margin-top:10px}
@@ -404,11 +415,11 @@
         <textarea id="input" spellcheck="false" placeholder="Bölge&#9;Nokta&#9;Enlem&#9;Boylam&#10;A bölgesi&#9;1&#9;41°30'00&quot;K&#9;30°15'00&quot;D&#10;&#9;2&#9;41°45'30&quot;K&#9;31°20'00&quot;D"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-draw">Bölgeleri çiz</button>
-          <button class="btn" id="btn-file" data-dosya="alan" title="Metin, CSV ya da Excel (.xlsx) dosyası">Dosyadan al</button>
+          <button class="btn" id="btn-file" data-dosya="alan" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
           <button class="btn" id="btn-notam" title="NOTAM, NAVTEX ya da düz metinden alan ve daire çıkar">Metinden al</button>
           <button class="btn quiet" id="btn-sample">Örnek</button>
           <button class="btn quiet" id="btn-clear">Temizle</button>
-          <input type="file" id="file" accept=".txt,.csv,.tsv,.xlsx" hidden>
+          <input type="file" id="file" accept=".txt,.csv,.tsv,.xlsx,.kml,.kmz" hidden>
         </div>
         <p class="hint">Tabloyu Excel veya Word'den olduğu gibi yapıştırın. Derece‑dakika‑saniye (41°30'15"K) ve ondalık derece (41.5042) okunur. Bölge adı boş satırlar üstteki bölgeye eklenir, boş satır yeni bölge başlatır.</p>
         <div class="msg" id="msg"></div>
@@ -439,7 +450,7 @@
         </div>
         <div class="row">
           <button class="btn primary" id="btn-circles">Daireleri çiz</button>
-          <button class="btn" id="btn-c-file" data-dosya="daire" title="Metin, CSV ya da Excel (.xlsx) dosyası">Dosyadan al</button>
+          <button class="btn" id="btn-c-file" data-dosya="daire" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
           <button class="btn quiet" id="btn-circles-sample">Örnek</button>
           <button class="btn quiet" id="btn-circles-clear">Temizle</button>
         </div>
@@ -509,7 +520,7 @@
         <textarea id="p-input" spellcheck="false" placeholder="İsim&#9;Enlem&#9;Boylam&#10;Ankara&#9;39°55'0&quot;K&#9;32°51'0&quot;D&#10;Sinop&#9;42.0231&#9;35.1531"></textarea>
         <div class="row">
           <button class="btn primary" id="btn-points">Noktaları işaretle</button>
-          <button class="btn" id="btn-p-file" data-dosya="nokta" title="Metin, CSV ya da Excel (.xlsx) dosyası">Dosyadan al</button>
+          <button class="btn" id="btn-p-file" data-dosya="nokta" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
           <button class="btn quiet" id="btn-points-sample">Örnek</button>
           <button class="btn quiet" id="btn-points-clear">Temizle</button>
         </div>
@@ -927,6 +938,24 @@
     </div>
   </div>
 </div>
+<div class="modal" id="kml" hidden>
+  <div class="tool-card genis" role="dialog" aria-modal="true" aria-labelledby="kml-title">
+    <button class="modal-x" id="kml-x" aria-label="Kapat">×</button>
+    <h2 id="kml-title">KML / KMZ'den al</h2>
+    <p><b id="kml-dosya"></b> — Her öğenin nereye ekleneceğini seçin. Poligonlar alan, noktalar nokta, çizgiler Notlar'da çizgi olur; daireye benzeyen kapalı şekiller daire olarak tanınır. 400'den çok köşeli şekiller sadeleştirilir.</p>
+    <div class="kml-toplu" id="kml-toplu"></div>
+    <div id="kml-liste" class="kml-liste"></div>
+    <div class="xl-secim">
+      <label class="check">KML renklerini kullan <input type="checkbox" class="toggle" id="kml-renk" checked></label>
+      <label class="check">Mevcut listeleri değiştir <input type="checkbox" class="toggle" id="kml-degistir"></label>
+    </div>
+    <div class="msg" id="kml-ozet"></div>
+    <div class="ask-btns">
+      <button id="kml-iptal">Vazgeç</button>
+      <button id="kml-ekle" class="primary" disabled>Ekle</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="ask" hidden>
   <div class="ask-card" role="alertdialog" aria-modal="true" aria-labelledby="ask-title" aria-describedby="ask-text">
     <h2 id="ask-title"></h2>
@@ -957,7 +986,7 @@
         <dt><kbd>F1</kbd></dt><dd>Bu pencere</dd>
       </dl>
       <h3>Sürükle-bırak</h3>
-      <p>Bir <b>.pafta</b> projesini haritaya bırakmak onu açar. Bir koordinat listesini (.txt, .csv) ya da Excel dosyasını (.xlsx) bırakmak, açık araçtaki listeye yükler. Bir <b>.paftauydu</b> uydu paketini bırakmak onu zemine ekler.</p>
+      <p>Bir <b>.pafta</b> projesini haritaya bırakmak onu açar. Bir koordinat listesini (.txt, .csv) ya da Excel dosyasını (.xlsx) bırakmak, açık araçtaki listeye yükler; bir Google Earth dosyasını (.kml, .kmz) bırakmak içe aktarma penceresini açar. Bir <b>.paftauydu</b> uydu paketini bırakmak onu zemine ekler.</p>
     </section>
     <section>
       <h2>PAFTA</h2>
@@ -1142,7 +1171,7 @@ function parseText(text){
       else errors.push((idx+1) + ". satır okunamadı: " + line.slice(0,40));
       return;
     }
-    if (name && (!cur || cur.name !== name)) newZone(name);
+    if (name && (!cur || cur.name !== name || breakPending)) newZone(name);     // boş satırdan sonra aynı ad: yeni bölge
     else if (!cur || breakPending) newZone(null);
     cur.points.push({no: pno || String(cur.points.length + 1), lat: pair.lat, lon: pair.lon, li: idx, cs: lead + pair.start, ce: lead + pair.end});
   });
@@ -3132,7 +3161,7 @@ window.addEventListener("resize", resize);
 resize();
 fitWorld(true);
 /* ============ uygulama: proje dosyası, masaüstü köprüsü, kısayollar ============ */
-const APP_VER = "2.1.0";
+const APP_VER = "2.2.0";
 const MASAUSTU = window.masaustu || null;          // exe sürümünde shim.js sağlar
 document.body.classList.toggle("desktop", !!MASAUSTU);
 $("ver-line").textContent = "Sürüm " + APP_VER + (MASAUSTU ? ", masaüstü" : ", tarayıcı");
@@ -3457,6 +3486,7 @@ document.addEventListener("drop", async e => {
   if (!f) return;
   const aktif0 = (document.querySelector(".pane.active") || {}).id;
   if (/\.paftauydu$/i.test(f.name)){ paketDosyadan(f); return; }
+  if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
   if (/\.xlsx?$|\.xlsm$/i.test(f.name)){
     dosyaYukle(f, {"pane-points": "nokta", "pane-circles": "daire"}[aktif0] || "alan");
     return;
@@ -3873,6 +3903,7 @@ function zipAc(ab){
   }
   return {
     var: ad => ad in dosyalar,
+    adlar: () => Object.keys(dosyalar),
     metin(ad){
       const f = dosyalar[ad]; if (!f) return null;
       const bas = f.yerel + 30 + dv.getUint16(f.yerel + 26, true) + dv.getUint16(f.yerel + 28, true);
@@ -4491,6 +4522,7 @@ function excelAc(ab, ad, hedef){
 async function dosyaYukle(f, hedef){
   const H = XL_HEDEF[hedef] || XL_HEDEF.alan;
   if (/\.xlsx$|\.xlsm$/i.test(f.name)){ excelAc(await f.arrayBuffer(), f.name, hedef); return; }
+  if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
   if (/\.xls$/i.test(f.name)){ uyar("Eski Excel biçimi (.xls) okunamıyor.", "Dosyayı Excel'de açıp \"Farklı kaydet\" ile .xlsx ya da CSV olarak kaydedin."); return; }
   const txt = await f.text();
   sekmeAc(H.pane);
@@ -4500,7 +4532,7 @@ async function dosyaYukle(f, hedef){
   toast(f.name + " yüklendi");
 }
 
-$("file").setAttribute("accept", ".txt,.csv,.tsv,.xlsx,.xlsm,.xls");
+$("file").setAttribute("accept", ".txt,.csv,.tsv,.xlsx,.xlsm,.xls,.kml,.kmz");
 $("file").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) dosyaYukle(f, $("file").dataset.hedef || "alan"); };
 document.querySelectorAll("[data-dosya]").forEach(b => b.onclick = () => { $("file").dataset.hedef = b.dataset.dosya; $("file").click(); });
 $("xl-sayfa").onchange = () => { xlSecenekler(); xlTahmin(); xlSecenekler(); xlOnizle(); };
@@ -4511,6 +4543,317 @@ $("xl-birim").onchange = xlOnizle;
 $("xl-ekle").onclick = xlEkle;
 [$("xl-x"), $("xl-iptal")].forEach(b => b.onclick = () => { $("xl").hidden = true; });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("xl").hidden){ e.stopPropagation(); $("xl").hidden = true; } }, true);
+
+/* ============ KML / KMZ'den al ============ */
+/* Google Earth ve benzerlerinden gelen .kml ve .kmz (ZIP içinde doc.kml) dosyaları okunur.
+   Poligonlar alan, noktalar nokta, çizgiler Notlar'da çizgi olur; daireye benzeyen kapalı halkalar
+   (PAFTA'nın kendi KML çıktısındaki daireler dahil) daire olarak tanınır. Her öğenin nereye
+   ekleneceği önizlemede değiştirilebilir; renkler KML stillerinden alınır. */
+
+const KML_SINIR = 400;              // bir alan ya da çizgide en çok köşe (fazlası sadeleştirilir)
+let KML_SON = null;                  // {ad, ogeler}
+
+/* ---- KML rengi aabbggrr -> #rrggbb; beyaza yakın ve tamamen saydam renkler yok sayılır ---- */
+function kmlRengi(t){
+  t = (t || "").trim().replace(/^#/, "");
+  if (!/^[0-9a-f]{8}$/i.test(t)) return null;
+  const a = parseInt(t.slice(0, 2), 16), r = t.slice(6, 8), g = t.slice(4, 6), b = t.slice(2, 4);
+  if (a < 40) return null;
+  const h = "#" + (r + g + b).toLowerCase();
+  const n = parseInt(r + g + b, 16), L = (((n >> 16) & 255) + ((n >> 8) & 255) + (n & 255)) / 3;
+  return L > 235 ? null : h;
+}
+
+/* ---- stiller: id -> {cizgi, dolgu, ikon, kalinlik}; StyleMap "normal" eşine çözülür ---- */
+function kmlStilOku(el){                          // yalnız bulunan alanlar döner
+  const r = {};
+  const ls = xmlEtiket(el, "LineStyle")[0], ps = xmlEtiket(el, "PolyStyle")[0], is = xmlEtiket(el, "IconStyle")[0];
+  const renk = s => { const c = s && xmlEtiket(s, "color")[0]; return c ? kmlRengi(c.textContent) : null; };
+  const c = renk(ls), d = renk(ps), i = renk(is);
+  if (c) r.cizgi = c; if (d) r.dolgu = d; if (i) r.ikon = i;
+  const w = ls && xmlEtiket(ls, "width")[0];
+  if (w && +w.textContent > 0) r.kalinlik = +w.textContent;
+  return r;
+}
+function kmlStiller(doc){
+  const tek = kmlStilOku;
+  const S = {}, M = {};
+  xmlEtiket(doc, "Style").forEach(s => { const id = s.getAttribute("id"); if (id) S[id] = tek(s); });
+  xmlEtiket(doc, "StyleMap").forEach(m => {
+    const id = m.getAttribute("id"); if (!id) return;
+    const cift = xmlEtiket(m, "Pair").find(p => (xmlEtiket(p, "key")[0] || {}).textContent === "normal") || xmlEtiket(m, "Pair")[0];
+    const url = cift && xmlEtiket(cift, "styleUrl")[0];
+    if (url) M[id] = url.textContent.trim().replace(/^.*#/, "");
+  });
+  return url => { if (!url) return {}; const id = url.trim().replace(/^.*#/, ""); return S[M[id] || id] || {}; };
+}
+
+function kmlKoordlar(el){
+  const c = el && xmlEtiket(el, "coordinates")[0];
+  if (!c) return [];
+  return c.textContent.trim().split(/\s+/).map(t => t.split(",")).filter(p => p.length >= 2)
+    .map(p => ({lon: +p[0], lat: +p[1]})).filter(p => isFinite(p.lat) && isFinite(p.lon) && Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180);
+}
+
+/* ---- sadeleştirme: köşe sayısı sınırın altına inene dek Douglas–Peucker toleransını büyüt ---- */
+function kmlSadelestir(pts, sinir){
+  if (pts.length <= sinir) return pts;
+  const rdp = eps => {
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+    const st = [[0, pts.length - 1]];
+    while (st.length){
+      const [s, e] = st.pop(); if (e <= s + 1) continue;
+      const k = Math.cos(rad((pts[s].lat + pts[e].lat) / 2));
+      const ax = pts[s].lon * k, ay = pts[s].lat, dx = pts[e].lon * k - ax, dy = pts[e].lat - ay, L = dx * dx + dy * dy;
+      let en = -1, ei = -1;
+      for (let i = s + 1; i < e; i++){
+        const px = pts[i].lon * k - ax, py = pts[i].lat - ay;
+        const t = L ? clamp((px * dx + py * dy) / L, 0, 1) : 0;
+        const d = Math.hypot(px - t * dx, py - t * dy);
+        if (d > en){ en = d; ei = i; }
+      }
+      if (en > eps){ keep[ei] = 1; st.push([s, ei], [ei, e]); }
+    }
+    return pts.filter((_, i) => keep[i]);
+  };
+  let lo = 0, hi = 1, out = rdp(hi);
+  for (let i = 0; i < 30; i++){ const m = (lo + hi) / 2, r = rdp(m); if (r.length > sinir) lo = m; else { hi = m; out = r; } }
+  return out;
+}
+
+/* ---- daire tanıma: kapalı, çok köşeli, köşeleri bir merkezden eşit uzaklıkta ---- */
+function kmlDaireMi(pts, ad){
+  if (pts.length < 24) return null;
+  const v = pts.map(p => [Math.cos(rad(p.lat)) * Math.cos(rad(p.lon)), Math.cos(rad(p.lat)) * Math.sin(rad(p.lon)), Math.sin(rad(p.lat))]);
+  const m = v.reduce((a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], [0, 0, 0]), n = Math.hypot(...m);
+  if (n < 1e-9) return null;
+  const merkez = {lat: Math.asin(m[2] / n) * 180 / Math.PI, lon: Math.atan2(m[1], m[0]) * 180 / Math.PI};
+  const d = pts.map(p => haversine(merkez, p)), ort = d.reduce((a, b) => a + b, 0) / d.length;
+  if (ort < 50) return null;
+  const sap = Math.max(...d.map(x => Math.abs(x - ort))) / ort;
+  if (sap > 0.006) return null;
+  // ad "… — 150 km" biçimindeyse yarıçap ondan, yoksa ölçülen değerden (km ya da NM'de yuvarlak olanı)
+  const m2 = (ad || "").match(/(\d+(?:[.,]\d+)?)\s*(km|nm|NM|m)\b\s*$/);
+  let v_, u;
+  if (m2){ v_ = +m2[1].replace(",", "."); u = birimAdi(m2[2]); }
+  else {
+    const km = ort / 1000, nm = ort / 1852;
+    if (Math.abs(nm - Math.round(nm)) < 0.02 * Math.max(1, nm) && Math.abs(km - Math.round(km)) > Math.abs(nm - Math.round(nm)) * 1.852){ v_ = Math.round(nm); u = "nm"; }
+    else { v_ = km >= 10 ? Math.round(km) : Math.round(km * 10) / 10; u = "km"; }
+  }
+  return {lat: merkez.lat, lon: merkez.lon, v: v_, u};
+}
+
+/* ---- KML belgesi -> öğeler ---- */
+function kmlCoz(metin){
+  const doc = new DOMParser().parseFromString(metin, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) throw new Error("KML dosyası okunamadı (XML hatalı).");
+  const stil = kmlStiller(doc), ogeler = [];
+  let adsiz = 0;
+  xmlEtiket(doc, "Placemark").forEach(pm => {
+    const adEl = [...pm.children].find(c => c.localName === "name");
+    let ad = adEl ? adEl.textContent.trim().replace(/\s+/g, " ") : "";
+    if (!ad){
+      const kl = pm.parentElement && [...pm.parentElement.children].find(c => c.localName === "name");
+      ad = (kl ? kl.textContent.trim() + " " : "Öğe ") + (++adsiz);
+    }
+    const ic = xmlEtiket(pm, "Style")[0], url = xmlEtiket(pm, "styleUrl")[0];
+    const st = Object.assign({}, stil(url && url.textContent), ic ? kmlStilOku(ic) : {});   // satır içi stil paylaşılanı ezer
+    const geo = [];
+    const topla = el => {
+      [...el.children].forEach(c => {
+        if (c.localName === "MultiGeometry") topla(c);
+        else if (["Point", "LineString", "LinearRing", "Polygon"].includes(c.localName)) geo.push(c);
+      });
+    };
+    topla(pm);
+    geo.forEach((g, gi) => {
+      const ad2 = geo.length > 1 ? ad + " (" + (gi + 1) + ")" : ad;
+      let pts, tur;
+      if (g.localName === "Point"){ pts = kmlKoordlar(g); if (pts.length) ogeler.push({geo: "nokta", ad: ad2, pts: pts.slice(0, 1), renk: st.ikon || st.cizgi, hedef: "nokta"}); return; }
+      if (g.localName === "Polygon"){
+        const dis = xmlEtiket(g, "outerBoundaryIs")[0] || g;
+        pts = kmlKoordlar(xmlEtiket(dis, "LinearRing")[0] || dis); tur = "poligon";
+        var bosluk = xmlEtiket(g, "innerBoundaryIs").length;
+      } else { pts = kmlKoordlar(g); tur = g.localName === "LinearRing" ? "poligon" : "cizgi"; }
+      if (pts.length < 2) return;
+      const kapali = pts.length > 3 && haversine(pts[0], pts[pts.length - 1]) < 1;
+      if (kapali){ pts = pts.slice(0, -1); if (tur === "cizgi") tur = "kapali"; }
+      const daire = (tur === "poligon" || tur === "kapali") ? kmlDaireMi(pts, ad2) : null;
+      const ham = pts.length;
+      if (!daire) pts = kmlSadelestir(pts, KML_SINIR);
+      const o = {geo: daire ? "daire" : tur, ad: daire ? ad2.replace(/\s*[—–-]\s*\d+(?:[.,]\d+)?\s*(km|nm|NM|m)\s*$/, "") || ad2 : ad2,
+                 pts, ham, renk: st.cizgi || st.dolgu, kalinlik: st.kalinlik, daire, bosluk: g.localName === "Polygon" ? bosluk : 0,
+                 hedef: daire ? "daire" : tur === "poligon" && pts.length >= 3 ? "alan" : "cizgi"};
+      ogeler.push(o);
+    });
+  });
+  return pafatOlcumleri(ogeler);
+}
+
+/* PAFTA'nın kendi KML çıktısındaki ölçüm hatları: "H1-2 Ad" noktalarından hat yeniden kurulur,
+   büyük daire yayıyla sıklaştırılmış "Ölçüm hattı 1 — …" çizgisi atlanır */
+function pafatOlcumleri(ogeler){
+  const hat = {};
+  ogeler.forEach(o => {
+    const m = o.geo === "nokta" && o.ad.match(/^H(\d+)-(\d+)(?:\s+(.*))?$/);
+    if (m) (hat[m[1]] = hat[m[1]] || []).push({i: +m[2], lat: o.pts[0].lat, lon: o.pts[0].lon, name: m[3] || null, o});
+  });
+  const no = Object.keys(hat).filter(k => hat[k].length >= 2);
+  if (!no.length) return ogeler;
+  const at = new Set();
+  const yeni = no.map(k => {
+    const pts = hat[k].sort((a, b) => a.i - b.i);
+    pts.forEach(p => at.add(p.o));
+    const cizgi = ogeler.find(o => o.geo === "cizgi" && new RegExp("^Ölçüm hattı " + k + "\\b").test(o.ad));
+    if (cizgi) at.add(cizgi);
+    return {geo: "olcum", ad: "Ölçüm hattı " + k, pts: pts.map(p => ({lat: p.lat, lon: p.lon, name: p.name})), ham: pts.length,
+            renk: cizgi && cizgi.renk, hedef: "olcum"};
+  });
+  return ogeler.filter(o => !at.has(o)).concat(yeni);
+}
+
+/* ---- dosya: .kml metin, .kmz ZIP (doc.kml ya da ilk .kml) ---- */
+async function kmlDosyasi(f){
+  if (/\.kmz$/i.test(f.name)){
+    const z = zipAc(await f.arrayBuffer());
+    const ad = z.var("doc.kml") ? "doc.kml" : z.adlar().find(a => /\.kml$/i.test(a));
+    if (!ad) throw new Error("KMZ içinde KML dosyası bulunamadı.");
+    return z.metin(ad);
+  }
+  return await f.text();
+}
+
+/* ---- pencere ---- */
+const KML_HEDEFLER = {
+  nokta:   [["nokta", "Nokta"], ["not", "Not"], ["", "Alma"]],
+  poligon: [["alan", "Alan"], ["cizgi", "Çizgi"], ["", "Alma"]],
+  kapali:  [["alan", "Alan"], ["cizgi", "Çizgi"], ["olcum", "Ölçüm hattı"], ["", "Alma"]],
+  cizgi:   [["cizgi", "Çizgi"], ["olcum", "Ölçüm hattı"], ["alan", "Alan"], ["", "Alma"]],
+  daire:   [["daire", "Daire"], ["alan", "Alan"], ["cizgi", "Çizgi"], ["", "Alma"]],
+  olcum:   [["olcum", "Ölçüm hattı"], ["cizgi", "Çizgi"], ["", "Alma"]]
+};
+const KML_TUR_ADI = {nokta: "Nokta", poligon: "Poligon", kapali: "Kapalı çizgi", cizgi: "Çizgi", daire: "Daire", olcum: "Ölçüm hattı"};
+
+function kmlOnizle(){
+  const host = $("kml-liste"), O = KML_SON.ogeler;
+  host.innerHTML = "";
+  const gos = O.slice(0, 800);
+  gos.forEach((o, i) => {
+    const r = document.createElement("div");
+    r.className = "kml-satir";
+    const sec = document.createElement("select");
+    sec.innerHTML = KML_HEDEFLER[o.geo].filter(h => !(h[0] === "alan" && o.pts.length < 3)).map(h => '<option value="' + h[0] + '">' + h[1] + "</option>").join("");
+    sec.value = o.hedef; sec.onchange = () => { o.hedef = sec.value; kmlSay(); };
+    const ayr = o.geo === "nokta" ? fk(o.pts[0].lat, o.pts[0].lon)
+      : o.geo === "daire" ? yaricapEtiketi(o.daire.v, o.daire.u) + ", merkez " + fk(o.daire.lat, o.daire.lon)
+      : o.pts.length + " köşe" + (o.ham > o.pts.length ? " (" + o.ham.toLocaleString("tr-TR") + " köşeden sadeleştirildi)" : "") +
+        (o.geo !== "cizgi" && o.pts.length >= 3 ? ", " + fmtArea(sphericalArea(o.pts)) : ", " + fmtDist(o.pts.reduce((s, p, k) => k ? s + haversine(o.pts[k - 1], p) : 0, 0))) +
+        (o.bosluk ? ", iç boşluk (" + o.bosluk + ") alınmaz" : "");
+    r.innerHTML = '<i style="background:' + (o.renk || "transparent") + '"></i><span class="tur">' + KML_TUR_ADI[o.geo] + "</span><b>" + esc(o.ad) + "</b><small>" + esc(ayr) + "</small>";
+    r.appendChild(sec);
+    host.appendChild(r);
+  });
+  if (O.length > gos.length) host.insertAdjacentHTML("beforeend", '<div class="bos">… ve ' + (O.length - gos.length).toLocaleString("tr-TR") + " öğe daha (önerilen yerlerine eklenir)</div>");
+  if (!O.length) host.innerHTML = '<div class="bos">Dosyada okunabilir yer işareti (Placemark) bulunamadı.</div>';
+  kmlSay();
+}
+function kmlSay(){
+  const n = {}; KML_SON.ogeler.forEach(o => { if (o.hedef) n[o.hedef] = (n[o.hedef] || 0) + 1; });
+  const ad = {alan: "alan", daire: "daire", nokta: "nokta", not: "not", cizgi: "çizgi", olcum: "ölçüm hattı"};
+  const t = Object.keys(ad).filter(k => n[k]).map(k => n[k].toLocaleString("tr-TR") + " " + ad[k]);
+  $("kml-ozet").textContent = t.length ? "Eklenecek: " + t.join(", ") : "Eklenecek öğe seçilmedi.";
+  $("kml-ekle").disabled = !t.length;
+}
+function kmlTopluHedef(geo, hedef){
+  KML_SON.ogeler.forEach(o => { if (o.geo === geo && KML_HEDEFLER[geo].some(h => h[0] === hedef) && !(hedef === "alan" && o.pts.length < 3)) o.hedef = hedef; });
+  kmlOnizle();
+}
+
+function kmlEkle(){
+  const O = KML_SON.ogeler.filter(o => o.hedef), renkli = $("kml-renk").checked, degistir = $("kml-degistir").checked;
+  const yaz = (id, metin, ayir) => {
+    const t = $(id);
+    t.value = degistir || !t.value.trim() ? metin : t.value.replace(/\s+$/, "") + (ayir ? "\n\n" : "\n") + metin;
+    t.dispatchEvent(new Event("input", {bubbles: true}));
+  };
+  const kk = p => fk(p.lat, p.lon, "\t", null, true);
+  const temizAd = s => s.replace(/[\t\r\n]+/g, " ").replace(/#[0-9a-f]{6}\b/gi, "").trim() || "Öğe";
+  const A = O.filter(o => o.hedef === "alan"), D = O.filter(o => o.hedef === "daire"), N = O.filter(o => o.hedef === "nokta");
+  const C = O.filter(o => o.hedef === "cizgi" || o.hedef === "not"), M = O.filter(o => o.hedef === "olcum");
+  SUPPRESS_FIT = true;
+  try {
+    if (A.length){
+      // aynı adlı alanlar ayrı kalsın: tekrar eden adlara sıra eklenir
+      const say = {};
+      const ad = o => { const a = temizAd(o.ad); say[a] = (say[a] || 0) + 1; return say[a] > 1 ? a + " " + say[a] : a; };
+      const adlar = A.map(ad);
+      yaz("input", A.map((o, i) => (o.geo === "daire" ? geodesicRingPts(o.daire) : o.pts).map((p, k) => (k ? "" : adlar[i]) + "\t" + (k + 1) + "\t" + kk(p)).join("\n")).join("\n\n"), true);
+      build();
+      if (renkli) A.forEach((o, i) => { const z = [...ZONES].reverse().find(z => z.name === adlar[i]); if (z && o.renk) z.color = o.renk; });
+      renderZoneList();
+    }
+    if (D.length){
+      // aynı adlı merkezler (ör. bir merkezin 150 ve 300 km halkaları) boş satırla ayrılır: her satır kendi yarıçapıyla
+      yaz("c-center", D.map((o, i) => (i && temizAd(D[i - 1].ad) === temizAd(o.ad) ? "\n" : "") + temizAd(o.ad) + "\t" + kk(o.daire) + "\t" + yaricapEtiketi(o.daire.v, o.daire.u).replace(/\./g, "")).join("\n"));
+      buildCircles();
+      if (renkli) D.forEach(o => { if (o.renk) CIRCLES.forEach(c => { if (c.label === yaricapEtiketi(o.daire.v, o.daire.u)) c.color = o.renk; }); });
+      circleList();
+    }
+    if (N.length){
+      yaz("p-input", N.map(o => temizAd(o.ad) + "\t" + kk(o.pts[0]) + (renkli && o.renk ? "\t" + o.renk : "")).join("\n"));
+      buildPoints();
+    }
+    const nr = $("n-renk").value;
+    C.forEach(o => {
+      if (o.hedef === "not") NOTLAR.push({tur: "not", lat: o.pts[0].lat, lon: o.pts[0].lon, metin: o.ad, renk: renkli && o.renk || nr, boyut: 13});
+      else {
+        const pts = o.geo === "daire" ? geodesicRingPts(o.daire) : o.pts.slice();
+        if (o.geo !== "cizgi") pts.push(pts[0]);                  // kapalı şekil kapalı kalsın
+        const w = o.kalinlik || 2.5;
+        NOTLAR.push({tur: "cizgi", pts, metin: o.ad, renk: renkli && o.renk || nr, boyut: 13, tip: "duz", kalinlik: w <= 2 ? 1.5 : w <= 3 ? 2.5 : 4});
+      }
+    });
+    if (C.length){ notListe(); hideEmpty(); }
+    M.forEach(o => {
+      newChain();
+      const ch = MEASURE[MEASURE.length - 1];
+      if (renkli && o.renk) ch.color = o.renk;
+      if (o.geo === "olcum") o.pts.forEach(p => ch.pts.push({lat: p.lat, lon: p.lon, name: p.name}));
+      else kmlSadelestir(o.pts, 60).forEach((p, k) => ch.pts.push({lat: p.lat, lon: p.lon, name: k ? null : o.ad}));
+    });
+    if (M.length){ measureList(); hideEmpty(); }
+  } finally { SUPPRESS_FIT = false; }
+  $("kml").hidden = true;
+  degisti();
+  sekmeAc(A.length ? "pane-areas" : D.length ? "pane-circles" : N.length ? "pane-points" : C.length ? "pane-notes" : "pane-measure");
+  fitAll();
+  toast(KML_SON.ad + ": " + O.length.toLocaleString("tr-TR") + " öğe eklendi");
+}
+/* daire alana/çizgiye çevrilirken: 72 köşeli jeodezik halka */
+function geodesicRingPts(d){
+  const r = geodesicRing(d.lat, d.lon, d.v * UNIT_M[d.u], 72), out = [];
+  for (let i = 0; i < r.length - 2; i += 2) out.push({lat: r[i + 1], lon: r[i]});
+  return out;
+}
+
+async function kmlAc(f){
+  let metin;
+  try { metin = await kmlDosyasi(f); KML_SON = {ad: f.name, ogeler: kmlCoz(metin)}; }
+  catch (e){ uyar(f.name + " okunamadı.", (e && e.message) || "Dosya bozuk ya da desteklenmeyen bir biçimde."); return; }
+  $("kml-dosya").textContent = f.name;
+  const sayi = {}; KML_SON.ogeler.forEach(o => sayi[o.geo] = (sayi[o.geo] || 0) + 1);
+  $("kml-toplu").innerHTML = Object.keys(sayi).length < 1 ? "" : "<span>Hepsini:</span>" + Object.keys(sayi).map(g => '<label>' + KML_TUR_ADI[g] + " (" + sayi[g].toLocaleString("tr-TR") + ') <select data-geo="' + g + '"><option value="-">…</option>' +
+    KML_HEDEFLER[g].map(h => '<option value="' + h[0] + '">' + h[1] + "</option>").join("") + "</select></label>").join("");
+  $("kml-toplu").querySelectorAll("select").forEach(s => s.onchange = () => { if (s.value !== "-") kmlTopluHedef(s.dataset.geo, s.value); s.value = "-"; });
+  $("kml-degistir").checked = false;
+  kmlOnizle();
+  $("kml").hidden = false;
+}
+
+$("kml-ekle").onclick = kmlEkle;
+[$("kml-x"), $("kml-iptal")].forEach(b => b.onclick = () => { $("kml").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("kml").hidden){ e.stopPropagation(); $("kml").hidden = true; } }, true);
 
 /* ============ kerteriz ve mesafeyle konum: "Ankara'dan 045°, 120 NM" ============ */
 

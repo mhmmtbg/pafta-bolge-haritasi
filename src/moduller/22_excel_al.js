@@ -169,6 +169,7 @@ function excelAc(ab, ad, hedef){
 async function dosyaYukle(f, hedef){
   const H = XL_HEDEF[hedef] || XL_HEDEF.alan;
   if (/\.xlsx$|\.xlsm$/i.test(f.name)){ excelAc(await f.arrayBuffer(), f.name, hedef); return; }
+  if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
   if (/\.xls$/i.test(f.name)){ uyar("Eski Excel biçimi (.xls) okunamıyor.", "Dosyayı Excel'de açıp \"Farklı kaydet\" ile .xlsx ya da CSV olarak kaydedin."); return; }
   const txt = await f.text();
   sekmeAc(H.pane);
@@ -178,7 +179,7 @@ async function dosyaYukle(f, hedef){
   toast(f.name + " yüklendi");
 }
 
-$("file").setAttribute("accept", ".txt,.csv,.tsv,.xlsx,.xlsm,.xls");
+$("file").setAttribute("accept", ".txt,.csv,.tsv,.xlsx,.xlsm,.xls,.kml,.kmz");
 $("file").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) dosyaYukle(f, $("file").dataset.hedef || "alan"); };
 document.querySelectorAll("[data-dosya]").forEach(b => b.onclick = () => { $("file").dataset.hedef = b.dataset.dosya; $("file").click(); });
 $("xl-sayfa").onchange = () => { xlSecenekler(); xlTahmin(); xlSecenekler(); xlOnizle(); };
