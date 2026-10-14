@@ -8,7 +8,7 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 
 ## Öne çıkanlar
 
-- **Alanlar:** Excel veya Word'den yapıştırılan köşe koordinatlarından kapalı bölgeler. Her bölgenin alanı (km²) ve çevresi hesaplanır.
+- **Alanlar:** Excel veya Word'den yapıştırılan köşe koordinatlarından kapalı bölgeler. Her bölgenin alanı (km²) ve çevresi hesaplanır. Alan başına dolgu (düz, tarama, çapraz tarama) ve sınır (düz, kesikli, ICAO kısıtlı saha gösterimi gibi taraklı) seçilir; ad poligonun iç merkezine yazılır.
 - **Koordinat biçimleri:** Derece‑dakika‑saniye (`42°30'00"K`), ondalık dakika (`42°30,5'K`), boşluklu (`42 30 00 K`), ondalık (`42.5`), NOTAM (`4230N 03015E`), NAVTEX (`42-30.50K 030-15.00D`), **UTM** ve **MGRS** okunur; gösterim biçimi seçilebilir.
 - **Metinden al:** NOTAM ve NAVTEX metinlerinden alanlar, yarıçaplı daireler ve noktalar; irtifa sınırları ada eklenir.
 - **Excel'den al:** `.xlsx` dosyaları sütun eşleştirme penceresiyle Alanlar, Noktalar ya da Daireler'e (kurulum ve eklenti gerekmez).

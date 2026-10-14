@@ -125,6 +125,19 @@
   .icon-btn{font-size:12px;padding:3px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--line);
             background:transparent;color:var(--dim)}
   .icon-btn:hover{color:#fff;border-color:#35505c}
+  .icon-btn.ikon{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;padding:0;flex:none}
+  .icon-btn.ikon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
+  .icon-btn.ikon-sil{margin-left:6px}
+  .icon-btn.ikon-sil:hover{color:#ff9a9a;border-color:#7a3a3a}
+  .icon-btn[aria-expanded="true"]{color:var(--amber);border-color:#6b5226}
+  .vurgu{background:#122129;box-shadow:inset 3px 0 0 var(--amber)}
+  .zone{padding-left:6px;padding-right:2px;border-radius:4px}
+  .stil-satir{display:flex;gap:12px;padding:6px 6px 10px 36px;border-bottom:1px solid #1a2c35}
+  .stil-satir label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--dim);flex:1}
+  .stil-satir select{font-size:12.5px;padding:4px 6px;border-radius:5px;border:1px solid var(--line);background:#0e1a21;color:var(--text)}
+  .rozet{position:absolute;top:5px;right:9px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#22343d;color:#dce6e9;
+         font-size:10px;font-weight:600;line-height:17px;text-align:center;font-variant-numeric:tabular-nums}
+  .tab.active .rozet{background:#2c434e}
   .zone.off .zone-name,.zone.off .zone-meta{opacity:.42}
   #zones:not(:empty),#c-list:not(:empty),#r-list:not(:empty),#p-list:not(:empty),#m-list:not(:empty){margin-top:14px}
 
@@ -168,6 +181,8 @@
            font-family:var(--mono);font-size:12px;white-space:nowrap;letter-spacing:.01em}
   .readout b{font-family:var(--ui);font-weight:400;color:#8fa6ae;margin-right:5px}
   .readout b + span{margin-right:14px}
+  .readout #ro-olcek{padding-left:12px;border-left:1px solid #2c434e;color:#c9d6db}
+  .readout #ro-olcek:empty{display:none}
   .stage-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1}
   .empty-card{background:rgba(255,255,255,.95);border:1px solid #cad6db;border-radius:10px;padding:22px 26px;max-width:380px;
               box-shadow:0 8px 30px rgba(10,20,26,.16)}
@@ -697,6 +712,9 @@
         <label class="check">Şehirler <input type="checkbox" class="toggle" id="opt-cities" checked></label>
         <label class="check">Alan köşe numaraları <input type="checkbox" class="toggle" id="opt-nums" checked></label>
         <label class="check">Alanların içini doldur <input type="checkbox" class="toggle" id="opt-fill" checked></label>
+        <label class="fld" style="margin-top:4px">Dolgu yoğunluğu
+          <input type="range" id="opt-fill-alpha" min="4" max="50" value="16">
+        </label>
       </div>
       <div class="group">
         <h3>Katmanlar</h3>
@@ -835,7 +853,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="pick-banner" id="pick-banner" role="status"><span id="pick-text"></span><small>Esc ile bitir</small><button id="pick-done">Bitti</button></div>
     <div class="drop-hint"><span id="drop-text">Bırakın: .pafta projesi ya da koordinat listesi</span></div>
-    <div class="hud readout" id="readout"><b>Enlem</b><span>—</span><b>Boylam</b><span>—</span></div>
+    <div class="hud readout"><span id="readout"><b>Enlem</b><span>—</span><b>Boylam</b><span>—</span></span><span id="ro-olcek"></span></div>
   </main>
 </div>
 
@@ -1641,32 +1659,6 @@ function drawScaleBar(){
   bar(nm, y2, false);
   ctx.restore();
 }
-function drawScaleBarOld(){
-  const mpp = metersPerPixel();
-  const target = Math.min(220, W * 0.28);
-  const rawKm = mpp * target / 1000;
-  const pow = Math.pow(10, Math.floor(Math.log10(rawKm)));
-  let nice = pow;
-  [1,2,2.5,5,10].forEach(f => { if (pow * f <= rawKm) nice = pow * f; });
-  const px = nice * 1000 / mpp, x0 = 26, y0 = H - 34;
-  ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.strokeStyle = "#7d8f97"; ctx.lineWidth = 1;
-  ctx.fillRect(x0 - 12, y0 - 26, px + 96, 50); ctx.strokeRect(x0 - 12.5, y0 - 26.5, px + 96, 50);
-  ctx.fillStyle = "#16222a"; ctx.font = "600 11px " + FONT();
-  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-  ctx.fillText("≈ 1 : " + Math.round(mpp / 0.00026458).toLocaleString("tr-TR"), x0, y0 - 12);
-  const half = px / 2;
-  ctx.fillRect(x0, y0, half, 6);
-  ctx.fillStyle = "#fff"; ctx.fillRect(x0 + half, y0, half, 6);
-  ctx.strokeStyle = "#16222a"; ctx.strokeRect(x0 + .5, y0 + .5, px, 6);
-  ctx.fillStyle = "#16222a"; ctx.font = "11px " + FONT();
-  ctx.fillText("0", x0 - 2, y0 + 20);
-  ctx.fillText(nice >= 1 ? nice.toLocaleString("tr-TR") + " km" : (nice*1000) + " m", x0 + px - 8, y0 + 20);
-  const nm = nice / 1.852;
-  ctx.fillStyle = "#5b6f79";
-  ctx.fillText("(" + nm.toFixed(nm < 10 ? 1 : 0) + " NM)", x0 + px + 8, y0 + 5);
-  ctx.restore();
-}
 function drawCities(){
   const b = viewBounds(), span = b.lonMax - b.lonMin;
   const maxRank = span > 120 ? 1 : span > 40 ? 2 : span > 12 ? 4 : span > 4 ? 7 : 10;
@@ -1715,6 +1707,7 @@ function traceFlat(flat, close){
 /* ============ 1 · alanlar ============ */
 function drawZones(){
   const showNums = opt("opt-nums"), fill = opt("opt-fill");
+  const etiketler = [];
   ctx.save();
   for (const z of ZONES){
     if (!z.visible || !z.points.length) continue;
@@ -1722,12 +1715,18 @@ function drawZones(){
     let px0 = 1e9, px1 = -1e9, py0 = 1e9, py1 = -1e9;
     pts.forEach(([x,y]) => { px0 = Math.min(px0,x); px1 = Math.max(px1,x); py0 = Math.min(py0,y); py1 = Math.max(py1,y); });
     const roomy = Math.max(px1-px0, py1-py0) > 110;
-    ctx.beginPath();
-    pts.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
-    if (pts.length > 2) ctx.closePath();
-    if (fill && pts.length > 2){ ctx.fillStyle = hexA(z.color, FILL_A); ctx.fill(); }
+    const yol = () => { ctx.beginPath(); pts.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y)); if (pts.length > 2) ctx.closePath(); };
+    const dolgu = z.dolgu || "duz", sinir = z.sinir || "duz";
+    yol();
+    if (fill && pts.length > 2 && dolgu !== "yok"){
+      ctx.fillStyle = dolgu === "duz" ? hexA(z.color, FILL_A) : alanDeseni(z.color, dolgu, FILL_A);
+      ctx.fill();
+    }
     ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 4.5; ctx.stroke();
+    if (sinir === "kesikli") ctx.setLineDash([9, 6]);
     ctx.strokeStyle = z.color; ctx.lineWidth = 2; ctx.stroke();
+    ctx.setLineDash([]);
+    if (sinir === "tarakli" && pts.length > 2) tarakCiz(pts, z.color);
 
     ctx.font = "600 11px " + FONT();
     ctx.textBaseline = "middle";
@@ -1739,16 +1738,28 @@ function drawZones(){
         const t = z.points[i].no, w = ctx.measureText(t).width + 7;
         ctx.fillStyle = "rgba(255,255,255,.88)"; ctx.fillRect(x + 6, y - 15, w, 14);
         ctx.fillStyle = z.color; ctx.textAlign = "left"; ctx.fillText(t, x + 9, y - 8);
+        LABELS.push([x + 6, y - 15, x + 6 + w, y - 1]);
       }
     });
-    let mx = 0, my = 0;
-    pts.forEach(([x,y]) => { mx += x; my += y; });
-    mx /= pts.length; my /= pts.length;
-    ctx.font = "600 14px " + FONT();
-    ctx.textAlign = "center";
-    ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.lineWidth = 4;
-    ctx.strokeText(z.name, mx, my);
-    ctx.fillStyle = z.color; ctx.fillText(z.name, mx, my);
+    etiketler.push([z, pts]);
+  }
+  /* adlar köşelerden sonra: iç merkezde; çakışırsa yakın bir yere kayar, yer yoksa yine yazılır (ad önemli bilgi) */
+  ctx.font = "600 14px " + FONT();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const [z, pts] of etiketler){
+    const yer = alanEtiketYeri(z, pts);
+    if (!yer) continue;
+    const [x, y] = yer, w = ctx.measureText(z.name).width + 8, h = 18;
+    const aday = [[0, 0], [0, -h], [0, h], [-w * .6, 0], [w * .6, 0], [0, -2 * h], [0, 2 * h]];
+    let bx = x, by = y;
+    for (const [dx, dy] of aday){
+      const tx = x + dx, ty = y + dy;
+      if (tx - w / 2 < 4 || tx + w / 2 > W - 4 || ty - h / 2 < 4 || ty + h / 2 > H - 4) continue;
+      if (claim(tx - w / 2, ty - h / 2, w, h)){ bx = tx; by = ty; break; }
+    }
+    ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.lineWidth = 4; ctx.lineJoin = "round";
+    ctx.strokeText(z.name, bx, by);
+    ctx.fillStyle = z.color; ctx.fillText(z.name, bx, by);
   }
   ctx.restore();
 }
@@ -2428,15 +2439,34 @@ function drawTitleBlock(){
     ctx.font = "10.5px " + FONT(); ctx.fillStyle = "#5b6f79"; ctx.fillText(row[0], x + 14, ry);
     ctx.font = (i === 0 ? "600 " : "") + "12px " + FONT(); ctx.fillStyle = "#16222a"; ctx.fillText(row[1], x + 14 + r.wl + 12, ry);
   });
-  // kuzey oku: yarısı dolu ok ve K harfi
-  const ax = x + w - 30, top = y + r.head + 22, bot = y + h - 16, mid = (top + bot) / 2 + 6;
+  kuzeyOku(x + w - 30, y + r.head + 22, y + h - 16, false);
+  ctx.restore();
+}
+/* kuzey oku: yarısı dolu ok ve K harfi. zemin: künye dışında, haritanın üstünde okunsun diye ince beyaz kenar */
+function kuzeyOku(ax, top, bot, zemin){
+  ctx.save();
+  ctx.lineJoin = "round";
+  const ok = () => {
+    ctx.beginPath(); ctx.moveTo(ax, top + 6); ctx.lineTo(ax - 8, bot); ctx.lineTo(ax, bot - 7); ctx.lineTo(ax + 8, bot); ctx.closePath();
+  };
+  if (zemin){
+    ok(); ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.lineWidth = 4; ctx.stroke();
+    ctx.font = "600 12px " + FONT(); ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.lineWidth = 3.5; ctx.strokeText("K", ax, top + 1);
+  }
   ctx.fillStyle = "#16222a"; ctx.strokeStyle = "#16222a"; ctx.lineWidth = 1.1;
   ctx.beginPath(); ctx.moveTo(ax, top + 6); ctx.lineTo(ax - 8, bot); ctx.lineTo(ax, bot - 7); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(ax, top + 6); ctx.lineTo(ax + 8, bot); ctx.lineTo(ax, bot - 7); ctx.closePath();
   ctx.fillStyle = "#fff"; ctx.fill(); ctx.stroke();
-  ctx.font = "600 12px " + FONT(); ctx.fillStyle = "#16222a"; ctx.textAlign = "center";
+  ctx.font = "600 12px " + FONT(); ctx.fillStyle = "#16222a"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   ctx.fillText("K", ax, top + 1);
   ctx.restore();
+}
+/* künye gizliyken: sağ altta, bulduru haritasının solunda bağımsız kuzey oku */
+function kuzeyOkuYeri(locator){
+  const bot = locator ? locatorRect().y + locatorRect().h : H - 50;
+  const ax = locator ? locatorRect().x - 28 : W - 46;
+  return {ax, top: bot - 52, bot};
 }
 
 /* ============ bulduru haritası ============ */
@@ -2477,6 +2507,20 @@ function drawLocator(){
   }
   ctx.fillStyle = "#f1e8d4"; ctx.fill("evenodd");
   ctx.strokeStyle = "#b3aa96"; ctx.lineWidth = .6; ctx.stroke();
+  // komşu ülke sınırları
+  ctx.beginPath();
+  for (let n = 0; n < WORLD.borders.length; n++){
+    const bb = BORDER_BB[n], f = WORLD.borders[n];
+    if (bb[2] < e.lon0 || bb[0] > e.lon1 || bb[3] < e.lat0 || bb[1] > e.lat1) continue;
+    for (let i = 0; i < f.length; i += 2){ const x = X(f[i]), y = Y(f[i+1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+  }
+  ctx.strokeStyle = "rgba(120,110,92,.75)"; ctx.lineWidth = .55; ctx.stroke();
+  // ince koordinat kılavuzu: 3–6 çizgi
+  const adim = [1, 2, 5, 10, 15, 20, 30, 45, 60].find(a => (e.lon1 - e.lon0) / a <= 6) || 90;
+  ctx.beginPath();
+  for (let l = Math.ceil(e.lon0 / adim) * adim; l <= e.lon1; l += adim){ const x = Math.round(X(l)) + .5; ctx.moveTo(x, r.y); ctx.lineTo(x, r.y + r.h); }
+  for (let l = Math.ceil(e.lat0 / adim) * adim; l <= e.lat1; l += adim){ const y = Math.round(Y(l)) + .5; ctx.moveTo(r.x, y); ctx.lineTo(r.x + r.w, y); }
+  ctx.strokeStyle = "rgba(22,34,42,.16)"; ctx.lineWidth = .6; ctx.stroke();
   // görüntülenen alan
   const x0 = X(Math.max(b.lonMin, e.lon0)), x1 = X(Math.min(b.lonMax, e.lon1));
   const y0 = Y(Math.min(b.latMax, e.lat1)), y1 = Y(Math.max(b.latMin, e.lat0));
@@ -2578,7 +2622,7 @@ function draw(){
   ctx.clearRect(0,0,W,H);
   LABELS = [];
   SAT = satOn();
-  FILL_A = SAT ? .24 : .16;
+  FILL_A = dolguAlfa();
   cv.parentElement.classList.toggle("sat", SAT);
   $("btn-sat").setAttribute("aria-pressed", opt("opt-sat") ? "true" : "false");
   drawBase();
@@ -2592,6 +2636,7 @@ function draw(){
   const showLoc = opt("opt-locator") && (viewBounds().lonMax - viewBounds().lonMin) <= 140;
   if (showLoc){ const q = locatorRect(); LABELS.push([q.x - 6, q.y - 6, q.x + q.w + 6, q.y + q.h + 6]); }
   LABELS.push([22, H - 120, 330, H - 30]);                              // ölçek çubuğu
+  if (!opt("opt-title")){ const k = kuzeyOkuYeri(showLoc); LABELS.push([k.ax - 14, k.top - 14, k.ax + 14, k.bot + 4]); }
   if (opt("opt-layer-rings")) drawRingsLayer();
   if (opt("opt-layer-circles")) drawCirclesLayer();
   if (opt("opt-layer-areas")) drawZones();
@@ -2605,11 +2650,21 @@ function draw(){
   if (opt("opt-legend")) drawLegend();
   drawScaleBar();
   if (opt("opt-title")) drawTitleBlock();
-  else if (SAT) drawSatCredit();
+  else {
+    if (SAT) drawSatCredit();
+    const k = kuzeyOkuYeri(showLoc);
+    kuzeyOku(k.ax, k.top, k.bot, true);
+  }
   if (SAT && UYDU_SEVIYE && UYDU_KAYNAK && UYDU_KAYNAK.paket && UYDU_PAKET && UYDU_PAKET.atif) drawPaketAtif(UYDU_PAKET.atif);
   if (showLoc) drawLocator();
+  drawVurgu();
+  if (!(typeof BASKI_SURUYOR !== "undefined" && BASKI_SURUYOR)){
+    const o = fmtRatio(scaleRatio()), el = $("ro-olcek");
+    if (el.textContent !== o) el.textContent = o;
+  }
   drawBaskiCerceve();
   drawDuzenle();
+  rozetler();
   drawPick();
 }
 
@@ -2715,7 +2770,7 @@ $("opt-sat-alpha").addEventListener("input", draw);
 ["opt-grid","opt-nums","opt-fill","opt-cities","opt-borders","opt-adm","opt-fir","opt-legend",
  "opt-layer-areas","opt-layer-circles","opt-layer-rings","opt-layer-points",
  "opt-layer-measure","opt-title","opt-locator","p-shape","p-size","p-names","p-coords"].forEach(id => $(id).addEventListener("change", draw));
-["t-title","t-sub"].forEach(id => $(id).addEventListener("input", draw));
+["t-title","t-sub","opt-fill-alpha"].forEach(id => $(id).addEventListener("input", draw));
 $("opt-proj").addEventListener("change", e => { view.mode = e.target.value; fitAll(true); });
 
 /* ============ sekmeler ============ */
@@ -2738,9 +2793,21 @@ function swatch(color, onInput){
   sw.oninput = () => { onInput(sw.value); draw(); };
   return sw;
 }
+/* liste düğmeleri: bilinen işler ikonla (üzerine gelince adı görünür), diğerleri yazıyla */
+var LISTE_IKON = {
+  "gizle": ["Gizle", '<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z"/><circle cx="8" cy="8" r="2.1"/>'],
+  "göster": ["Göster", '<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" opacity=".55"/><path d="M2.5 13.5 13.5 2.5"/>'],
+  "odak": ["Haritada odakla", '<circle cx="8" cy="8" r="4.6"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/><path d="M8 1v2.4M8 12.6V15M1 8h2.4M12.6 8H15"/>'],
+  "sil": ["Sil", '<path d="M2.5 4.2h11M6.2 4.2V2.6h3.6v1.6M3.9 4.2l.7 9.2h6.8l.7-9.2M6.6 6.8v4.2M9.4 6.8v4.2"/>'],
+  "stil": ["Dolgu ve sınır stili", '<rect x="2.5" y="2.5" width="11" height="11" rx="1"/><path d="M2.8 9.5 9.5 2.8M5.5 13.2l7.7-7.7M9.5 13.2l3.7-3.7"/>']
+};
 function smallBtn(text, fn){
   const b = document.createElement("button");
-  b.className = "icon-btn"; b.textContent = text; b.onclick = fn;
+  const ik = LISTE_IKON[text];
+  b.className = "icon-btn" + (ik ? " ikon ikon-" + (text === "sil" ? "sil" : "x") : "");
+  if (ik){ b.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true">' + ik[1] + "</svg>"; b.title = ik[0]; b.setAttribute("aria-label", ik[0]); }
+  else b.textContent = text;
+  b.onclick = fn;
   return b;
 }
 function rowOf(sw, title, meta, off){
@@ -2762,19 +2829,38 @@ function renderZoneList(){
     const area = z.points.length > 2 ? fmtArea(sphericalArea(z.points)) : "—";
     const row = rowOf(swatch(z.color, v => z.color = v), z.name,
       z.points.length + " nokta, " + area + ", çevre " + fmtLen(perimeter(z.points)), !z.visible);
+    const stilB = smallBtn("stil", () => { z._stilAcik = !z._stilAcik; renderZoneList(); });
+    stilB.setAttribute("aria-expanded", z._stilAcik ? "true" : "false");
     row.append(
+      stilB,
       smallBtn(z.visible ? "gizle" : "göster", () => { z.visible = !z.visible; renderZoneList(); draw(); }),
       smallBtn("odak", () => {
         let a = 90, b = -90, c = 180, d = -180;
         z.points.forEach(p => { a = Math.min(a,p.lat); b = Math.max(b,p.lat); c = Math.min(c,p.lon); d = Math.max(d,p.lon); });
         focusOn(a, c, b, d);
       }));
+    vurguBagla(row, {tur: "alan", z});
     host.appendChild(row);
+    if (z._stilAcik){
+      const st = document.createElement("div");
+      st.className = "stil-satir";
+      const sec = (etiket, secenek, deger, yaz) => {
+        const l = document.createElement("label"), s = document.createElement("select");
+        s.innerHTML = Object.keys(secenek).map(k => '<option value="' + k + '">' + secenek[k] + "</option>").join("");
+        s.value = deger; s.onchange = () => { yaz(s.value); draw(); degisti(); };
+        l.append(etiket, s); return l;
+      };
+      st.append(sec("Dolgu", ALAN_DOLGULAR, z.dolgu || "duz", v => z.dolgu = v), sec("Sınır", ALAN_SINIRLAR, z.sinir || "duz", v => z.sinir = v));
+      host.appendChild(st);
+    }
   });
 }
 function build(){
   const res = parseText($("input").value);
+  // yeniden çizimde aynı adlı alanların renk, görünürlük ve stil seçimleri korunur
+  const eski = new Map(); ZONES.forEach(z => { if (!eski.has(z.name)) eski.set(z.name, z); });
   ZONES = res.zones;
+  ZONES.forEach(z => { const e = eski.get(z.name); if (e){ z.color = e.color; z.visible = e.visible; z.dolgu = e.dolgu; z.sinir = e.sinir; } });
   const n = ZONES.reduce((s,z) => s + z.points.length, 0);
   $("msg").innerHTML = ZONES.length
     ? '<span class="ok">' + ZONES.length + ' bölge, ' + n + ' nokta çizildi.</span>'
@@ -2817,9 +2903,12 @@ function circleList(){
   host.innerHTML = "";
   const seen = new Map();
   CIRCLES.forEach(c => { if (!seen.has(c.label)) seen.set(c.label, c); });
-  seen.forEach((c, label) => host.appendChild(rowOf(
-    swatch(c.color, v => CIRCLES.forEach(x => { if (x.label === label) x.color = v; })),
-    label, c.n + " merkez, çevre " + fmtLen(2 * Math.PI * R_EARTH * Math.sin(c.d / R_EARTH)))));
+  seen.forEach((c, label) => {
+    const row = rowOf(swatch(c.color, v => CIRCLES.forEach(x => { if (x.label === label) x.color = v; })),
+      label, c.n + " merkez, çevre " + fmtLen(2 * Math.PI * R_EARTH * Math.sin(c.d / R_EARTH)));
+    vurguBagla(row, {tur: "daire", label});
+    host.appendChild(row);
+  });
 }
 /* satır sonundaki yarıçap: "Merkez 1  39°55'K 32°51'D  10 NM" — yalnız o merkeze uygulanır */
 const YARICAP_RE = /[\s,;|]+(?:r\s*=\s*)?(\d+(?:[.,]\d+)?)\s*(nm|km|m|deniz mili|kilometre|metre)\.?\s*$/i;
@@ -2940,6 +3029,7 @@ function pointList(){
     row.append(
       smallBtn("odak", () => focusOn(p.lat, p.lon, p.lat, p.lon)),
       smallBtn("sil", () => { POINTS.splice(i, 1); pointList(); draw(); }));
+    vurguBagla(row, {tur: "nokta", p});
     host.appendChild(row);
   });
 }
@@ -3011,6 +3101,7 @@ function measureList(){
     const tot = document.createElement("span");
     tot.textContent = ch.pts.length >= 2 ? "Σ " + fmtDist(chainTotal(ch)) : ch.pts.length + " nokta";
     head.append(sw, title, tot);
+    vurguBagla(head, {tur: "olcum", ch});
     host.appendChild(head);
 
     ch.pts.forEach((p, i) => {
@@ -3024,6 +3115,7 @@ function measureList(){
         "<small>" + p.lat.toFixed(6) + ", " + p.lon.toFixed(6) + (p.name ? "  " + esc(p.name) : "") + "</small>";
       const del = smallBtn("sil", () => { ch.pts.splice(i, 1); measureList(); draw(); });
       row.append(no, c, del);
+      vurguBagla(row, {tur: "olcum", ch, p});
       if (i > 0){
         const r = vincenty(ch.pts[i-1].lat, ch.pts[i-1].lon, p.lat, p.lon);
         const seg = document.createElement("span");
@@ -3165,7 +3257,7 @@ window.addEventListener("resize", resize);
 resize();
 fitWorld(true);
 /* ============ uygulama: proje dosyası, masaüstü köprüsü, kısayollar ============ */
-const APP_VER = "2.2.1";
+const APP_VER = "2.3.0";
 const MASAUSTU = window.masaustu || null;          // exe sürümünde shim.js sağlar
 document.body.classList.toggle("desktop", !!MASAUSTU);
 $("ver-line").textContent = "Sürüm " + APP_VER + (MASAUSTU ? ", masaüstü" : ", tarayıcı");
@@ -3242,7 +3334,7 @@ function projeTopla(){
   return {
     uygulama: "PAFTA", surum: 1, kayit: new Date().toISOString(),
     form,
-    alanlar: ZONES.length ? ZONES.map(z => ({ad: z.name, renk: z.color, gorunur: z.visible})) : null,
+    alanlar: ZONES.length ? ZONES.map(z => ({ad: z.name, renk: z.color, gorunur: z.visible, dolgu: z.dolgu || "duz", sinir: z.sinir || "duz"})) : null,
     daireler: CIRCLES.length ? daireRenk : null,
     mesafe: RINGS.length ? RINGS.map(r => r.color) : null,
     noktalar: POINTS.map(p => ({ad: p.name, enlem: r6(p.lat), boylam: r6(p.lon), renk: p.color})),
@@ -3277,7 +3369,8 @@ function projeYukle(o){
     bagliAlanlariGuncelle();
     if (o.alanlar){
       build();
-      o.alanlar.forEach((z, i) => { if (ZONES[i]){ if (z.renk) ZONES[i].color = z.renk; ZONES[i].visible = z.gorunur !== false; } });
+      o.alanlar.forEach((z, i) => { if (ZONES[i]){ if (z.renk) ZONES[i].color = z.renk; ZONES[i].visible = z.gorunur !== false;
+        ZONES[i].dolgu = z.dolgu || "duz"; ZONES[i].sinir = z.sinir || "duz"; } });
       renderZoneList();
     }
     if (o.daireler){
@@ -4218,6 +4311,142 @@ setTimeout(async () => {                           // exe: önceki oturumun pake
     try { const b = await MASAUSTU.uyduPaketi(); if (b) paketSunucudan(b); } catch (e){}
   }
 }, 0);
+
+/* ============ alan etiketleri ve alan stilleri ============ */
+/* Etiket: poligonun içinde kenara en uzak nokta (polylabel); ekrandan taşan alanlarda görünen parçanın içinde.
+   Stil: alan başına dolgu (düz, tarama, çapraz tarama, yok) ve sınır (düz, kesikli, taraklı: ICAO kısıtlı saha).
+   Bu dosyada draw() tarafından çağrılan her şey function bildirimi ya da var'dır (modül kodundan önce de çalışır). */
+
+var ALAN_DOLGULAR = {duz: "düz", tarama: "tarama", capraz: "çapraz tarama", yok: "dolgusuz"};
+var ALAN_SINIRLAR = {duz: "düz", kesikli: "kesikli", tarakli: "taraklı (kısıtlı saha)"};
+
+/* ---- polylabel (Mapbox, sadeleştirilmiş): halka [[x,y],...] içinde kenara en uzak nokta ---- */
+function polyKenarUzak(x, y, h){
+  let ic = false, en = Infinity;
+  for (let i = 0, j = h.length - 1; i < h.length; j = i++){
+    const [ax, ay] = h[i], [bx, by] = h[j];
+    if ((ay > y) !== (by > y) && x < (bx - ax) * (y - ay) / (by - ay) + ax) ic = !ic;
+    const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L)) : 0;
+    en = Math.min(en, (x - ax - t * dx) ** 2 + (y - ay - t * dy) ** 2);
+  }
+  return (ic ? 1 : -1) * Math.sqrt(en);
+}
+function polylabelJS(h, hassas){
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  h.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  const w = x1 - x0, hh = y1 - y0;
+  if (!(Math.max(w, hh) > 0)) return [(x0 + x1) / 2, (y0 + y1) / 2, 0];
+  const boy = Math.max(Math.min(w, hh), Math.max(w, hh) / 40);      // çok ince şekillerde hücre sayısı sınırlı kalsın
+  hassas = Math.max(hassas || 0, Math.max(w, hh) / 300);
+  const hucre = (x, y, r) => { const d = polyKenarUzak(x, y, h); return {x, y, r, d, en: d + r * Math.SQRT2}; };
+  const kuyruk = [];
+  for (let x = x0; x < x1; x += boy) for (let y = y0; y < y1; y += boy) kuyruk.push(hucre(x + boy / 2, y + boy / 2, boy / 2));
+  // başlangıç: ağırlık merkezi
+  let A = 0, cx = 0, cy = 0;
+  for (let i = 0, j = h.length - 1; i < h.length; j = i++){
+    const f = h[i][0] * h[j][1] - h[j][0] * h[i][1];
+    cx += (h[i][0] + h[j][0]) * f; cy += (h[i][1] + h[j][1]) * f; A += f * 3;
+  }
+  let iyi = A ? hucre(cx / A, cy / A, 0) : hucre(h[0][0], h[0][1], 0);
+  const bb = hucre(x0 + w / 2, y0 + hh / 2, 0);
+  if (bb.d > iyi.d) iyi = bb;
+  let tur = 0;
+  while (kuyruk.length && tur++ < 1500){
+    let k = 0;
+    for (let i = 1; i < kuyruk.length; i++) if (kuyruk[i].en > kuyruk[k].en) k = i;
+    const c = kuyruk.splice(k, 1)[0];
+    if (c.d > iyi.d) iyi = c;
+    if (c.en - iyi.d <= hassas) continue;
+    const r = c.r / 2;
+    kuyruk.push(hucre(c.x - r, c.y - r, r), hucre(c.x + r, c.y - r, r), hucre(c.x - r, c.y + r, r), hucre(c.x + r, c.y + r, r));
+  }
+  return [iyi.x, iyi.y, iyi.d];
+}
+/* Sutherland–Hodgman: halkayı dikdörtgene kırp */
+function halkaKirp(h, x0, y0, x1, y1){
+  const kenar = [[p => p[0] >= x0, (a, b) => kes(a, b, 0, x0)], [p => p[0] <= x1, (a, b) => kes(a, b, 0, x1)],
+                 [p => p[1] >= y0, (a, b) => kes(a, b, 1, y0)], [p => p[1] <= y1, (a, b) => kes(a, b, 1, y1)]];
+  function kes(a, b, e, v){ const t = (v - a[e]) / (b[e] - a[e]); return [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]; }
+  let out = h;
+  for (const [ic, kesis] of kenar){
+    const gir = out; out = [];
+    if (!gir.length) break;
+    for (let i = 0; i < gir.length; i++){
+      const a = gir[i], b = gir[(i + 1) % gir.length];
+      if (ic(b)){ if (!ic(a)) out.push(kesis(a, b)); out.push(b); }
+      else if (ic(a)) out.push(kesis(a, b));
+    }
+  }
+  return out;
+}
+/* etiket yeri (ekran px). Tüm alan ekrandaysa dünya koordinatında bir kez hesaplanıp önbelleğe alınır. */
+function alanEtiketYeri(z, pts){
+  if (pts.length < 3) return pts.length ? [pts[0][0], pts[0][1] - 18, 0] : null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  pts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  const ekranda = x0 >= 0 && y0 >= 0 && x1 <= W && y1 <= H;
+  if (ekranda){
+    const anahtar = view.mode + "|" + view.phi0 + "|" + z.points.map(p => p.lat.toFixed(6) + "," + p.lon.toFixed(6)).join(";");
+    if (!z._etiket || z._etiket.anahtar !== anahtar){
+      const dunya = z.points.map(p => [wx(p.lon), wy(p.lat)]);
+      const r = polylabelJS(dunya);
+      z._etiket = {anahtar, x: r[0], y: r[1], d: r[2]};
+    }
+    const e = z._etiket;
+    return [W / 2 + (e.x - view.cx) * view.k, H / 2 - (e.y - view.cy) * view.k, e.d * view.k];
+  }
+  const kirp = halkaKirp(pts, 8, 8, W - 8, H - 8);
+  if (kirp.length < 3) return null;
+  return polylabelJS(kirp, 1);
+}
+
+/* ---- dolgu desenleri (renk + tür + saydamlık başına bir kez) ---- */
+var DESENLER = {};
+function alanDeseni(renk, tur, alfa){
+  const k = renk + tur + alfa;
+  if (DESENLER[k]) return DESENLER[k];
+  const c = document.createElement("canvas"), n = 10;
+  c.width = c.height = n;
+  const g = c.getContext("2d");
+  g.strokeStyle = hexA(renk, Math.min(1, alfa * 3.2)); g.lineWidth = 1.2; g.lineCap = "square";
+  g.beginPath();
+  g.moveTo(0, n); g.lineTo(n, 0); g.moveTo(-n / 2, n / 2); g.lineTo(n / 2, -n / 2); g.moveTo(n / 2, n * 1.5); g.lineTo(n * 1.5, n / 2);
+  if (tur === "capraz"){ g.moveTo(0, 0); g.lineTo(n, n); g.moveTo(-n / 2, n / 2); g.lineTo(n / 2, n * 1.5); g.moveTo(n / 2, -n / 2); g.lineTo(n * 1.5, n / 2); }
+  g.stroke();
+  return DESENLER[k] = ctx.createPattern(c, "repeat");
+}
+
+/* ---- taraklı sınır: kenar boyunca içe doğru kısa dişler ---- */
+function tarakCiz(pts, renk){
+  let A = 0;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) A += (pts[j][0] - pts[i][0]) * (pts[j][1] + pts[i][1]);
+  const yon = A > 0 ? 1 : -1;                                  // ekran koordinatında (y aşağı) iç tarafa dönen normal
+  const ara = 7, boy = 6;
+  ctx.beginPath();
+  let kalan = ara / 2;
+  for (let i = 0; i < pts.length; i++){
+    const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length];
+    const L = Math.hypot(bx - ax, by - ay);
+    if (!L) continue;
+    const ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy * yon, ny = ux * yon;
+    let s = kalan;
+    while (s < L){
+      const x = ax + ux * s, y = ay + uy * s;
+      ctx.moveTo(x, y); ctx.lineTo(x + nx * boy, y + ny * boy);
+      s += ara;
+    }
+    kalan = s - L;
+  }
+  ctx.strokeStyle = renk; ctx.lineWidth = 1.4; ctx.stroke();
+}
+
+/* ---- dolgu yoğunluğu (Görünüm sürgüsü) ---- */
+function dolguAlfa(){
+  const e = document.getElementById("opt-fill-alpha");
+  const v = e ? +e.value / 100 : .16;
+  return SAT ? Math.min(.9, v + .08) : v;
+}
 
 /* ============ metinden al: NOTAM / NAVTEX / düz metin ============ */
 
@@ -5413,6 +5642,7 @@ function notListe(){
         ? focusOn(Math.min(...n.pts.map(p => p.lat)), Math.min(...n.pts.map(p => p.lon)), Math.max(...n.pts.map(p => p.lat)), Math.max(...n.pts.map(p => p.lon)))
         : n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
       smallBtn("sil", () => { NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
+    vurguBagla(row, {tur: "not", n});
     host.appendChild(row);
   });
 }
@@ -5796,6 +6026,68 @@ $("btn-pdf").onclick = pdfKaydet;
 ["pdf-kagit", "pdf-yon", "pdf-cerceve"].forEach(id => $(id).addEventListener("change", draw));
 $("pdf-olcek").addEventListener("input", draw);
 document.querySelectorAll(".tab[data-pane]").forEach(t => t.addEventListener("click", draw));
+
+/* ============ panel: listeden haritaya vurgu, sekme rozetleri ============ */
+/* draw() bu dosyadaki fonksiyonları modül kodundan önce de çağırabilir: durum var ile, yardımcılar function ile. */
+var VURGU = null;            // {tur: "alan"|"daire"|"nokta"|"olcum"|"not", ...}
+
+function vurguBagla(el, nesne){
+  el.addEventListener("mouseenter", () => { VURGU = nesne; el.classList.add("vurgu"); scheduleDraw(); });
+  el.addEventListener("mouseleave", () => { if (VURGU === nesne) VURGU = null; el.classList.remove("vurgu"); scheduleDraw(); });
+}
+
+/* vurgulanan öğenin çevresine turuncu, beyaz kenarlı bir hat; baskıda çizilmez */
+function drawVurgu(){
+  const v = VURGU;
+  if (!v || (typeof BASKI_SURUYOR !== "undefined" && BASKI_SURUYOR)) return;
+  ctx.save();
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const ciz = yolKur => {
+    ctx.beginPath(); yolKur();
+    ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 7; ctx.stroke();
+    ctx.strokeStyle = "#f2a93b"; ctx.lineWidth = 3; ctx.stroke();
+  };
+  const halka = (lat, lon, r) => ciz(() => ctx.arc(sx(lon), sy(lat), r || 12, 0, 6.284));
+  const hat = (pts, kapali) => ciz(() => { pts.forEach((p, i) => i ? ctx.lineTo(sx(p.lon), sy(p.lat)) : ctx.moveTo(sx(p.lon), sy(p.lat))); if (kapali) ctx.closePath(); });
+  if (v.tur === "alan") hat(v.z.points, v.z.points.length > 2);
+  else if (v.tur === "daire") ciz(() => CIRCLES.forEach(c => { if (c.label === v.label) traceFlat(c.ring, true); }));
+  else if (v.tur === "nokta") halka(v.p.lat, v.p.lon);
+  else if (v.tur === "olcum"){
+    if (v.p) halka(v.p.lat, v.p.lon, 11);
+    else if (v.ch.pts.length > 1) ciz(() => { for (let i = 1; i < v.ch.pts.length; i++) traceFlat(gcPoints(v.ch.pts[i - 1], v.ch.pts[i]), false); });
+    else if (v.ch.pts.length) halka(v.ch.pts[0].lat, v.ch.pts[0].lon, 11);
+  } else if (v.tur === "not"){
+    const n = v.n;
+    if (n.tur === "ok") hat([n.a, n.b]);
+    else if (n.tur === "cizgi") hat(n.pts);
+    else halka(n.lat, n.lon, 9);
+  }
+  ctx.restore();
+}
+
+/* ---- sekme rozetleri: araçtaki öğe sayısı ---- */
+var ROZET_ESKI = "";
+function rozetler(){
+  if (typeof NOTLAR === "undefined" || !NOTLAR) return;
+  const merkez = new Set(CIRCLES.map(c => c.li + "|" + c.lat + "|" + c.lon)).size;
+  const say = {
+    "pane-areas": ZONES.length, "pane-circles": merkez, "pane-rings": RINGS.length, "pane-points": POINTS.length,
+    "pane-measure": MEASURE.reduce((s, ch) => s + ch.pts.length, 0), "pane-notes": NOTLAR.length
+  };
+  const anahtar = JSON.stringify(say);
+  if (anahtar === ROZET_ESKI) return;
+  ROZET_ESKI = anahtar;
+  const ad = {"pane-areas": "alan", "pane-circles": "merkez", "pane-rings": "eğri", "pane-points": "nokta", "pane-measure": "ölçüm noktası", "pane-notes": "not"};
+  Object.keys(say).forEach(id => {
+    const t = document.querySelector('.tab[data-pane="' + id + '"]');
+    if (!t) return;
+    let r = t.querySelector(".rozet");
+    if (!r){ r = document.createElement("span"); r.className = "rozet"; t.appendChild(r); }
+    r.hidden = !say[id];
+    r.textContent = say[id] > 99 ? "99+" : say[id];
+    r.title = say[id] + " " + ad[id];
+  });
+}
 
 </script>
 </body>

@@ -76,7 +76,7 @@ function projeTopla(){
   return {
     uygulama: "PAFTA", surum: 1, kayit: new Date().toISOString(),
     form,
-    alanlar: ZONES.length ? ZONES.map(z => ({ad: z.name, renk: z.color, gorunur: z.visible})) : null,
+    alanlar: ZONES.length ? ZONES.map(z => ({ad: z.name, renk: z.color, gorunur: z.visible, dolgu: z.dolgu || "duz", sinir: z.sinir || "duz"})) : null,
     daireler: CIRCLES.length ? daireRenk : null,
     mesafe: RINGS.length ? RINGS.map(r => r.color) : null,
     noktalar: POINTS.map(p => ({ad: p.name, enlem: r6(p.lat), boylam: r6(p.lon), renk: p.color})),
@@ -111,7 +111,8 @@ function projeYukle(o){
     bagliAlanlariGuncelle();
     if (o.alanlar){
       build();
-      o.alanlar.forEach((z, i) => { if (ZONES[i]){ if (z.renk) ZONES[i].color = z.renk; ZONES[i].visible = z.gorunur !== false; } });
+      o.alanlar.forEach((z, i) => { if (ZONES[i]){ if (z.renk) ZONES[i].color = z.renk; ZONES[i].visible = z.gorunur !== false;
+        ZONES[i].dolgu = z.dolgu || "duz"; ZONES[i].sinir = z.sinir || "duz"; } });
       renderZoneList();
     }
     if (o.daireler){

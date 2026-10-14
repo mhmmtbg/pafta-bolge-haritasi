@@ -166,6 +166,7 @@ function notListe(){
         ? focusOn(Math.min(...n.pts.map(p => p.lat)), Math.min(...n.pts.map(p => p.lon)), Math.max(...n.pts.map(p => p.lat)), Math.max(...n.pts.map(p => p.lon)))
         : n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
       smallBtn("sil", () => { NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
+    vurguBagla(row, {tur: "not", n});
     host.appendChild(row);
   });
 }

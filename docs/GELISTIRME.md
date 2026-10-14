@@ -45,6 +45,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `08_xlsx.js` | Bağımlılıksız `.xlsx` okuma (ZIP + saf JS inflate + XML) ve yazma (sıkıştırmasız ZIP) |
 | `10_uydu_doseme.js` | Web Mercator döşeme çizici; kaynak arayüzü `{ad, zmin, zmax, var(k), gorsel(k)}` |
 | `12_uydu_paketi.js` | `.paftauydu` uydu paketi: tarayıcıda `File.slice`, exe'de yerel sunucu |
+| `15_alan_stil.js` | Alan etiketi yeri (polylabel, ekrana kırpma), tarama desenleri, taraklı sınır, dolgu yoğunluğu |
 | `20_notam.js` | NOTAM / NAVTEX metninden alan, daire ve nokta çıkarma |
 | `22_excel_al.js` | Dosyadan al: metin ve Excel; sütun eşleştirme penceresi |
 | `24_kml_al.js` | KML / KMZ içe aktarma: stiller (StyleMap), daire tanıma, sadeleştirme, önizleme penceresi |
@@ -53,6 +54,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `35_notlar.js` | Notlar, oklar ve çizgiler |
 | `40_duzenle.js` | Haritada sürükleyerek düzenleme, geri al / yinele |
 | `45_baski.js` | Ölçekli PDF baskı (bağımlılıksız PDF yazıcı, JPEG gömülü) |
+| `50_panel.js` | Listeden haritaya vurgu, sekme rozetleri |
 
 `src/pafta.src.html` içindeki ana bölümler (`/* ============ ... ============ */` başlıklarıyla ayrılmıştır):
 
@@ -74,7 +76,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 {
   "uygulama": "PAFTA", "surum": 1, "kayit": "2026-10-02T18:40:00Z",
   "form": { "input": "Örnek alan A\t1\t42°30'00\"K ...", "r-mv": true, "r-dist": "200, 500", "opt-sat": false, "t-title": "Örnek pafta" },
-  "alanlar":  [ { "ad": "Örnek alan A", "renk": "#c8156f", "gorunur": true } ],
+  "alanlar":  [ { "ad": "Örnek alan A", "renk": "#c8156f", "gorunur": true, "dolgu": "tarama", "sinir": "tarakli" } ],
   "daireler": { "150 km": "#c8156f", "300 km": "#2f4b9a" },
   "mesafe":   [ "#b3541e", "#6a3d9a" ],
   "noktalar": [ { "ad": "Ankara", "enlem": 39.916667, "boylam": 32.85, "renk": "#b3541e" } ],

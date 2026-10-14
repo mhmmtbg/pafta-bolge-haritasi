@@ -59,17 +59,23 @@
   {
    "ad": "Örnek alan A",
    "renk": "#c8156f",
-   "gorunur": true
+   "gorunur": true,
+   "dolgu": "tarama",
+   "sinir": "tarakli"
   },
   {
    "ad": "Örnek alan B",
    "renk": "#2f4b9a",
-   "gorunur": true
+   "gorunur": true,
+   "dolgu": "duz",
+   "sinir": "duz"
   },
   {
    "ad": "Örnek alan C",
    "renk": "#0d7a68",
-   "gorunur": true
+   "gorunur": true,
+   "dolgu": "duz",
+   "sinir": "duz"
   }
  ],
  "daireler": {

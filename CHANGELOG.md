@@ -1,5 +1,24 @@
 # Değişiklik Günlüğü
 
+## v2.3.0 — 2026-10-14
+
+**Harita**
+- **Akıllı alan etiketleri:** Alan adı köşelerin ortalamasına değil, poligonun içinde kenara en uzak noktaya yazılır (L ya da hilal biçimli alanlarda da içeride kalır). Alan ekrandan taşıyorsa görünen parçanın içine yerleşir; başka bir yazıyla çakışırsa yakına kayar, yer yoksa yine de yazılır.
+- **Alan stilleri:** Her alan için **dolgu** (düz, tarama, çapraz tarama, dolgusuz) ve **sınır** (düz, kesikli, **taraklı**: ICAO kısıtlı saha gösterimi, dişler içe dönük). Alan listesindeki stil düğmesiyle seçilir; `.pafta` dosyasına kaydedilir, PNG ve PDF'e basılır.
+- **Dolgu yoğunluğu:** Görünüm bölümünde sürgü; alanlar, daireler ve mesafe bantları için.
+- **Bağımsız kuzey oku:** Künye gizliyken haritanın sağ altında, bulduru haritasının yanında sade bir kuzey oku.
+- **Bulduru haritası:** Komşu ülke sınırları ve ince koordinat kılavuzu.
+
+**Panel**
+- Listelerdeki *gizle, göster, odak, sil* düğmeleri ikon oldu (üzerine gelince adı görünür; sil düğmesi ayrık durur).
+- **Listeden haritaya vurgu:** Alan, daire, nokta, ölçüm ve not satırlarının üzerine gelince öğe haritada turuncu çerçeveyle gösterilir.
+- **Sekme rozetleri:** Araç şeridinde her araçtaki öğe sayısı.
+- Koordinat göstergesinde anlık ölçek (`1 : 2.470.000`).
+- "Bölgeleri çiz" yeniden çalıştırıldığında aynı adlı alanların rengi, görünürlüğü ve stili korunur.
+
+**Diğer**
+- Kullanılmayan eski ölçek çubuğu kodu kaldırıldı.
+
 ## v2.2.1 — 2026-10-14
 
 - **Bitişik koordinatlarda sıfırsız boylam:** `413015N, 324530E` ve `4130N, 3245E` gibi, boylamın baştaki sıfırı yazılmamış (100°'den küçük boylamlarda 4 ya da 6 basamak) koordinatlar artık bütün araçlarda okunur. Noktalarda `Tepe 1 413015N, 324530E #d62828`, `Tepe 2 413015N, 324530E` ve `413015N, 324530E` satırlarının üçü de geçerlidir. Dakikası ya da saniyesi 60'ı aşan bitişik sayılar koordinat sayılmaz.

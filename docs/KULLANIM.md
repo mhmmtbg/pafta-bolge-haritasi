@@ -21,7 +21,9 @@ Bütün araçlar aynı ayrıştırıcıyı kullanır. Tablolar Excel veya Word'd
 
 **Gösterim biçimi:** Görünüm → **Koordinat biçimi** ile listelerde, etiketlerde, imleç göstergesinde ve araçların listeye yazdığı koordinatlarda kullanılacak biçim seçilir: derece-dakika-saniye, ondalık dakika, ondalık derece, UTM ya da MGRS. CSV çıktısında UTM ve MGRS sütunları her zaman bulunur.
 
-**İmleç göstergesi:** Haritanın altındaki gösterge imlecin koordinatını seçili biçimde yazar; Türkiye içindeyse il ve ilçeyi de gösterir.
+**İmleç göstergesi:** Haritanın altındaki gösterge imlecin koordinatını seçili biçimde yazar; Türkiye içindeyse il ve ilçeyi, sağ ucunda da anlık ölçeği gösterir.
+
+**Sekme rozetleri:** Sol şeritteki araç düğmelerinin köşesindeki sayı, o araçtaki öğe sayısıdır (alan, daire merkezi, mesafe eğrisi, nokta, ölçüm noktası, not).
 
 ## Haritadan seç
 
@@ -96,7 +98,10 @@ Her satır: `bölge adı, nokta no, enlem, boylam`.
 
 - Bölge adı boş bırakılan satırlar üstteki bölgeye eklenir; boş satır yeni bir bölge başlatır (adsız bölgeler "Bölge 2", "Bölge 3" diye adlandırılır).
 - **Dosyadan al** ile `.txt`, `.csv` ya da `.xlsx` dosyası yüklenebilir; **Metinden al** NOTAM ve NAVTEX metinlerini okur.
-- Listede her bölgenin nokta sayısı, alanı ve çevresi yazar; renk kutusuna tıklayarak rengi değiştirin, **gizle** ve **odak** ile tek bölgeyle çalışın.
+- Listede her bölgenin nokta sayısı, alanı ve çevresi yazar; renk kutusuna tıklayarak rengi değiştirin, göz ikonuyla gizleyin, hedef ikonuyla haritada odaklayın. Satırın üzerine gelince alan haritada vurgulanır.
+- **Stil** (taralı kare ikonu) alanın altında iki seçim açar: **Dolgu** (düz, tarama, çapraz tarama, dolgusuz) ve **Sınır** (düz, kesikli, taraklı). Taraklı sınır ICAO paftalarındaki kısıtlı saha gösterimidir; dişler alanın içine döner. Stiller projeye kaydedilir ve baskıya çıkar.
+- Alan adı poligonun içinde kenara en uzak noktaya yazılır; başka yazıyla çakışırsa yakına kayar.
+- "Bölgeleri çiz" yeniden çalıştırıldığında aynı adlı alanların rengi, görünürlüğü ve stili korunur.
 
 #### Alan raporu
 
@@ -165,13 +170,14 @@ Alan köşeleri, noktalar, daire merkezleri, ölçüm noktaları, notlar, ok uç
 | Uydu görüntüsü | NASA Blue Marble zemini; yaklaştıkça netleşir (dünya ~7 km, bölge ~1 km, Türkiye ~500 m/piksel). Yoğunluk kaydırıcısıyla soluklaştırılabilir. Araç çubuğundaki **Uydu** düğmesi ve `Ctrl+U` aynı işi yapar. Daha yakın ölçek için **uydu paketi** (aşağıda). |
 | Koordinat biçimi | DMS, ondalık dakika, ondalık derece, UTM, MGRS |
 | Projeksiyon | Mercator (açı koruyan) ya da eş uzaklıklı silindirik |
-| Pafta künyesi | Başlık, alt satır, ölçek, projeksiyon, datum, tarih ve kuzey oku (sağ alt) |
-| Bulduru haritası | Görüntülenen alanı daha geniş bir çevre içinde gösteren küçük harita (künyenin üstünde) |
+| Pafta künyesi | Başlık, alt satır, ölçek, projeksiyon, datum, tarih ve kuzey oku (sağ alt). Künye gizliyken sağ altta bağımsız bir kuzey oku çizilir. |
+| Bulduru haritası | Görüntülenen alanı daha geniş bir çevre içinde gösteren küçük harita (künyenin üstünde); ülke sınırları ve ince kılavuzla |
 | Lejant | Tüm katmanlar, alanlar ve toplamlarla (sol üst) |
 | Koordinat kılavuzu ve çerçeve | Yakınlaşmaya göre sıklaşan kılavuz; dört kenarda dereceli çerçeve ve etiketler |
 | İl ve ilçe sınırları, adları | Türkiye'ye yaklaştıkça: yaklaşık 1:17 milyondan itibaren il sınırları, 1:10 milyondan itibaren il adları, 1:2,6 milyondan itibaren ilçe sınırları, 1:1,2 milyondan itibaren ilçe adları. Adlar sığdığı kadar yazılır; alanı büyük olan önce yer bulur. |
 | FIR sınırları ve adları, ülke sınırları, şehirler | Taban harita öğeleri. Türkiye ve çevresinde yaklaşınca kıyı ayrıntılı veriye geçer. |
 | Alanların içini doldur | Alanlar, daire bantları ve mesafe bantları için |
+| Dolgu yoğunluğu | Dolguların saydamlığı (tarama çizgileri de buna göre koyulaşır) |
 | Katmanlar | Alanlar, daireler, sınır mesafeleri, noktalar, ölçüm hatları, notlar ve oklar ayrı ayrı gizlenir |
 | Haritada sürükleyerek düzenle | Açık/kapalı |
 
