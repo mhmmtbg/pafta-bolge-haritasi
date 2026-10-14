@@ -10,7 +10,7 @@ Bütün araçlar aynı ayrıştırıcıyı kullanır. Tablolar Excel veya Word'd
 | Derece, ondalık dakika | `41°30,25'K  30°15,5'D` |
 | Boşluklu DMS (yön harfi zorunlu) | `41 30 15 K  30 15 00 D` |
 | Ondalık derece | `41.5042  30.25`, `41,5042  30,25`, `41.50420°K 30.25000°D` |
-| NOTAM (bitişik) | `4130N 03015E`, `413015N0301500E`, `4130.2N 03015.5E` |
+| NOTAM (bitişik) | `4130N 03015E`, `413015N0301500E`, `4130.2N 03015.5E`; boylamın baştaki sıfırı yazılmayabilir: `413015N, 324530E`, `4130N, 3245E` |
 | NAVTEX (derece-dakika) | `41-30.25K 030-15.50D`, `41 30.25N 030 15.50E` |
 | UTM | `36S 487182 4419444` |
 | MGRS | `36S VK 87182 19443` (2–10 basamak) |
@@ -128,7 +128,7 @@ Mesafeleri virgülle yazın ve **Eğrileri çiz** deyin. Eğriler Türkiye kara 
 
 ### Noktalar
 
-Her satır: `isim, enlem, boylam`. Satıra `#d62828` gibi bir renk kodu eklenirse o nokta o renkte çizilir. İşaret şekli, boyutu ve varsayılan rengi aynı bölümden seçilir. **Nokta adlarını göster** kapatılırsa haritada yalnız işaretler kalır (adlar listede ve projede korunur). **Etikette koordinatı da göster** ile ismin altına koordinat yazılır; adlar kapalıyken etikette yalnız koordinat görünür.
+Her satır: `isim, enlem, boylam`. Satıra `#d62828` gibi bir renk kodu eklenirse o nokta o renkte çizilir. Örnekler: `Tepe 1 413015N, 324530E #d62828`, `Tepe 2 413015N, 324530E`, `413015N, 324530E` (ad yoksa "Nokta 3" gibi adlandırılır). İşaret şekli, boyutu ve varsayılan rengi aynı bölümden seçilir. **Nokta adlarını göster** kapatılırsa haritada yalnız işaretler kalır (adlar listede ve projede korunur). **Etikette koordinatı da göster** ile ismin altına koordinat yazılır; adlar kapalıyken etikette yalnız koordinat görünür.
 
 ### Ölçüm
 

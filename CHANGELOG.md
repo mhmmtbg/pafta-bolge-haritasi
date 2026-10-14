@@ -1,5 +1,9 @@
 # Değişiklik Günlüğü
 
+## v2.2.1 — 2026-10-14
+
+- **Bitişik koordinatlarda sıfırsız boylam:** `413015N, 324530E` ve `4130N, 3245E` gibi, boylamın baştaki sıfırı yazılmamış (100°'den küçük boylamlarda 4 ya da 6 basamak) koordinatlar artık bütün araçlarda okunur. Noktalarda `Tepe 1 413015N, 324530E #d62828`, `Tepe 2 413015N, 324530E` ve `413015N, 324530E` satırlarının üçü de geçerlidir. Dakikası ya da saniyesi 60'ı aşan bitişik sayılar koordinat sayılmaz.
+
 ## v2.2.0 — 2026-10-14
 
 - **KML / KMZ'den al:** Google Earth dosyaları (`.kml`, `.kmz`) **Dosyadan al** düğmesiyle ya da haritaya sürüklenerek içe aktarılır. Poligonlar alan, noktalar nokta, çizgiler Notlar'da çizgi olur; daireye benzeyen kapalı şekiller merkez ve yarıçapıyla daire olarak tanınır. Önizlemede her öğenin nereye ekleneceği (alan, daire, nokta, not, çizgi, ölçüm hattı ya da alma) tek tek ya da türe göre topluca seçilir. Renkler KML stillerinden (StyleMap dahil) alınır; 400'den çok köşeli şekiller sadeleştirilir; klasörler ve MultiGeometry açılır.

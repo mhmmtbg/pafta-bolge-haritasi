@@ -1049,12 +1049,14 @@ const esc = s => String(s).replace(/[<&>"]/g, c => ({"<":"&lt;","&":"&amp;",">":
 const DMS_RE = /(?<![\d.,])(\d{1,3}(?:[.,]\d+)?)\s*[°º]\s*(?:(\d{1,2}(?:[.,]\d+)?)\s*['’′]\s*)?(?:(\d{1,2}(?:[.,]\d+)?)\s*(?:["”″]|''))?\s*([KGNSDBEWkgnsdbew])?/g;
 const SPACE_DMS_RE = /(\d{1,3})\s+(\d{1,2})\s+(\d{1,2}(?:[.,]\d+)?)\s*([KGNSDBEWkgnsdbew])\b/g;
 const NUM_RE = /([+-]?\d{1,3}(?:[.,]\d+)?)\s*°?(?:\s*([KGNSDBEWkgnsdbew])(?![A-Za-zÇĞİÖŞÜçğıöşü]))?/g;
-/* NOTAM: 4247N 03100E, 424750N0310000E, 4247.8N 03100.5E  (enlem 4/6, boylam 5/7 basamak + yön harfi) */
-const COMPACT_RE = /(?<![\d.,])(\d{4}|\d{6})(?:[.,](\d+))?\s?([NSKGnskg])(?![A-Za-zÇĞİÖŞÜçğıöşü])\s*[-\/,]?\s*(\d{5}|\d{7})(?:[.,](\d+))?\s?([EWDBewdb])(?![A-Za-zÇĞİÖŞÜçğıöşü])/dg;
+/* NOTAM: 4247N 03100E, 424750N0310000E, 4247.8N 03100.5E, 413015N, 324530E
+   (enlem 4/6 basamak; boylam 5/7 basamak, 100°'den küçükse baştaki sıfırsız 4/6 basamak da olur; yön harfi zorunlu) */
+const COMPACT_RE = /(?<![\d.,])(\d{4}|\d{6})(?:[.,](\d+))?\s?([NSKGnskg])(?![A-Za-zÇĞİÖŞÜçğıöşü])\s*[-\/,;]?\s*(\d{4,7})(?:[.,](\d+))?\s?([EWDBewdb])(?![A-Za-zÇĞİÖŞÜçğıöşü])/dg;
 /* NAVTEX / derece-ondalık dakika: 42-47.50K 031-00.00D, 42 47.5N 031 00.0E */
 const DMIN_RE = /(?<![\d.,])(\d{1,3})\s?[-\s]\s?(\d{1,2}(?:[.,]\d+)?)\s?([KGNSDBEWkgnsdbew])(?![A-Za-zÇĞİÖŞÜçğıöşü])/g;
 function kompaktDeger(bas, kesir, gun){
   const d = +bas.slice(0, gun), m = +bas.slice(gun, gun + 2), sn = bas.length > gun + 2 ? +bas.slice(gun + 2) : null;
+  if (m >= 60 || sn >= 60) return NaN;                                // dakika/saniye taşıyorsa bu biçim değil
   const f = kesir ? +("0." + kesir) : 0;
   return sn == null ? d + (m + f) / 60 : d + m / 60 + (sn + f) / 3600;
 }
@@ -1092,8 +1094,10 @@ function scanCoords(line){
   COMPACT_RE.lastIndex = 0;
   while ((m = COMPACT_RE.exec(line)) !== null){
     const ayrim = m.indices[4][0];                                   // boylamın başladığı yer
-    hits.push({value: kompaktDeger(m[1], m[2], 2), hemi: hemiSign(m[3]), start: m.index, end: ayrim});
-    hits.push({value: kompaktDeger(m[4], m[5], 3), hemi: hemiSign(m[6]), start: ayrim, end: m.index + m[0].length});
+    const enlem = kompaktDeger(m[1], m[2], 2), boylam = kompaktDeger(m[4], m[5], m[4].length % 2 ? 3 : 2);   // 5/7 basamak: DDD…, 4/6: DD…
+    if (!isFinite(enlem) || !isFinite(boylam)) continue;
+    hits.push({value: enlem, hemi: hemiSign(m[3]), start: m.index, end: ayrim});
+    hits.push({value: boylam, hemi: hemiSign(m[6]), start: ayrim, end: m.index + m[0].length});
   }
   if (hits.length >= 2) return hits;
 
