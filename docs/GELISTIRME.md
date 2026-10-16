@@ -55,6 +55,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `40_duzenle.js` | Haritada sürükleyerek düzenleme, geri al / yinele |
 | `45_baski.js` | Ölçekli PDF baskı (bağımlılıksız PDF yazıcı, JPEG gömülü) |
 | `50_panel.js` | Listeden haritaya vurgu, sekme rozetleri |
+| `55_menu.js` | Dosya menüsü, açık/koyu tema (tema `localStorage`'da `pafta-tema`) |
 
 `src/pafta.src.html` içindeki ana bölümler (`/* ============ ... ============ */` başlıklarıyla ayrılmıştır):
 
@@ -90,7 +91,8 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 
 - `form`, paneldeki bütün giriş alanlarının değerleridir (anahtar: öğe kimliği). Alanlar, daireler ve mesafe eğrileri açılışta bu girdilerden **yeniden hesaplanır**; dosyada yalnızca renk ve görünürlük gibi kullanıcı seçimleri saklanır.
 - `alanlar`, `daireler`, `mesafe` boşsa `null`'dır; o katman çizilmemiş demektir.
-- Noktalar, ölçüm hatları ve notlar olduğu gibi saklanır. `notlar` alanı v2.0'da eklendi; eski sürümler onu yok sayar, v2.0 notsuz dosyaları sorunsuz açar. `tur: "cizgi"` kayıtları (`tip`: `duz` | `kesikli` | `noktali`) v2.1'de eklendi; v2.0 bunları atlar, diğer notları açar.
+- Noktalar, ölçüm hatları ve notlar olduğu gibi saklanır. Çizgilerde `egri: true` eğri çizimi, `kaynak: "liste"` Notlar → Koordinatlarla çizgi listesinden (`form["n-liste"]`) üretildiğini belirtir.
+- Tarayıcı sürümü Kaydet/Aç için File System Access API'yi (`showSaveFilePicker`, `showOpenFilePicker`) kullanır; yoksa indirme ve dosya seçme kutusuna döner. `notlar` alanı v2.0'da eklendi; eski sürümler onu yok sayar, v2.0 notsuz dosyaları sorunsuz açar. `tur: "cizgi"` kayıtları (`tip`: `duz` | `kesikli` | `noktali`) v2.1'de eklendi; v2.0 bunları atlar, diğer notları açar.
 
 ### Uydu paketi (`.paftauydu`)
 

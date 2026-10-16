@@ -49,7 +49,9 @@ Alanlar bölümündeki **Metinden al** düğmesi bir pencere açar. NOTAM, NAVTE
 
 ## Dosyadan al ve Excel
 
-Alanlar, Daireler ve Noktalar bölümlerindeki **Dosyadan al** düğmesi metin (`.txt`, `.csv`) ve Excel (`.xlsx`) dosyalarını okur. Dosyayı haritaya sürükleyip bırakmak da aynı işi yapar (açık bölüme yüklenir).
+Alanlar, Daireler, Noktalar ve Notlar → Çizgi bölümlerindeki **Dosyadan al** düğmesi metin (`.txt`, `.csv`), Excel (`.xlsx`) ve Google Earth (`.kml`, `.kmz`) dosyalarını okur. Dosyayı haritaya sürükleyip bırakmak da aynı işi yapar (açık bölüme yüklenir).
+
+**Birden çok dosya** aynı anda seçilebilir ya da sürüklenebilir. Metin ve CSV dosyaları tek listede birleşir; adı olmayan bir alan ya da çizgi dosya adını alır (`saha_kuzey.txt` → "saha kuzey"). Excel ve KML dosyalarının pencereleri sırayla, biri kapanınca öteki açılır. `.pafta` dosyaları çoklu seçimde atlanır.
 
 Excel dosyası seçildiğinde **sütun eşleştirme** penceresi açılır:
 
@@ -151,6 +153,8 @@ Notlar bölümü açıkken haritaya açıklama notları, oklar ve çizgiler ekle
 
 - **Not** kipinde haritaya tıklayın; not listeye eklenir ve metin kutusu açılır. Birden çok satır yazılabilir.
 - **Ok** kipinde önce okun başlangıcına, sonra ucuna tıklayın (`Esc` yarım oku bırakır). Oka isteğe bağlı bir etiket yazılabilir; listede uzunluğu ve kerterizi görünür.
+- **Çizgi** kipinde haritaya tıklayarak köşe eklenir ya da **Koordinatlarla çizgi** listesine sıralı koordinatlar yazılır ve **Çizgileri çiz** denir. Liste Alanlar biçimindedir: her grup bir çizgi, boş satır ya da yeni ad yeni çizgi. Liste **Dosyadan al** (metin, CSV, Excel, KML; birden çok dosya) ve **Haritadan seç** ile de doldurulur. Listeden gelen çizgilerin köşeleri sürüklenince yeni koordinat listeye yazılır; **Çizgileri çiz** yeniden basıldığında liste çizgileri renk ve stilleri korunarak yenilenir, elle çizilen çizgilere dokunulmaz.
+- **Eğri:** Çizgi ayarlarındaki **Eğri** açıkken çizgi, verilen bütün noktalardan geçen yumuşak bir eğri olarak çizilir (Catmull-Rom'dan türetilen Bezier). Listede her çizginin yanındaki eğri düğmesi o çizgiyi eğri ya da köşeli yapar.
 - **Çizgi** kipinde her tıklama bir köşe ekler; çizgi düz parçalarla çizilir. Son köşeye yeniden tıklamak, çift tıklamak, `Enter` ya da **Çizgiyi bitir** çizgiyi tamamlar; `Geri` tuşu son köşeyi siler, `Esc` yarım çizgiyi bırakır. **Çizgi tipi** (düz, kesikli, noktalı) ve **kalınlık** yeni çizgilere uygulanır. Çizgiye isteğe bağlı bir etiket yazılabilir (ortasında görünür); listede köşe sayısı ve toplam uzunluğu yazar.
 - Renk ve yazı boyutu yeni eklenenlere uygulanır; listedeki renk kutusuyla tek tek değiştirilir.
 
@@ -167,6 +171,7 @@ Alan köşeleri, noktalar, daire merkezleri, ölçüm noktaları, notlar, ok uç
 
 | Ayar | Açıklama |
 |---|---|
+| Arayüz teması | Koyu ya da açık; panel, araç şeridi ve listeler için. Harita, künye ve pencereler değişmez. Bu bilgisayarda hatırlanır, projeye yazılmaz. |
 | Uydu görüntüsü | NASA Blue Marble zemini; yaklaştıkça netleşir (dünya ~7 km, bölge ~1 km, Türkiye ~500 m/piksel). Yoğunluk kaydırıcısıyla soluklaştırılabilir. Araç çubuğundaki **Uydu** düğmesi ve `Ctrl+U` aynı işi yapar. Daha yakın ölçek için **uydu paketi** (aşağıda). |
 | Koordinat biçimi | DMS, ondalık dakika, ondalık derece, UTM, MGRS |
 | Projeksiyon | Mercator (açı koruyan) ya da eş uzaklıklı silindirik |
@@ -197,13 +202,17 @@ Gömülü uydu görüntüsü bölge ölçeği içindir. Daha yakın ölçek (ör
 
 Masaüstü sürümü paketi hatırlar ve sonraki açılışlarda kendiliğinden yükler; tarayıcı sürümünde her açılışta yeniden seçilir. Paket belleğe alınmaz, döşemeler gerektikçe diskten okunur. Paket kullanılan paftalarda künyedeki "Zemin" satırı paket adını yazar ve kaynağın atıf metni ölçek çubuğunun üstüne basılır.
 
+## Dosya menüsü
+
+Harita üstündeki araç çubuğunun solundaki **Dosya** düğmesi (ya da sol üstteki PAFTA işareti) bütün dosya işlerini toplar: Yeni pafta, Aç, son açılan paftalar (masaüstü), Kaydet, Farklı kaydet, **PDF olarak kaydet** (Çıktı bölümündeki kâğıt, yön, ölçek ve çözünürlük ayarlarıyla; menüde geçerli ayar yazar), PDF ayarları, PNG, KML, GeoJSON, CSV ve açık/koyu tema. Menü `Esc` ile ya da dışarı tıklayınca kapanır, ok tuşlarıyla gezilir.
+
 ## Proje dosyası
 
-**Çıktı → Proje** bölümü:
+**Dosya** menüsü ya da **Çıktı → Proje** bölümü:
 
-- **Kaydet** (`Ctrl+S`): Masaüstü sürümünde aynı dosyaya yazar; tarayıcı sürümünde `.pafta` dosyası olarak indirir.
-- **Farklı kaydet** (`Ctrl+Shift+S`, yalnız masaüstü).
-- **Aç** (`Ctrl+O`): Bir `.pafta` dosyası açar. Dosyayı haritaya sürükleyip bırakmak da aynı işi yapar.
+- **Kaydet** (`Ctrl+S`): Açık dosyanın üzerine yazar; dosya henüz yoksa nereye kaydedileceğini sorar. Tarayıcı sürümünde de Edge ve Chrome'da böyledir; bu özelliği olmayan tarayıcılarda `.pafta` dosyası indirilir.
+- **Farklı kaydet** (`Ctrl+Shift+S`): Yeni bir dosya adı ve yeri seçtirir.
+- **Aç** (`Ctrl+O`): Bir `.pafta` dosyası açar. Dosyayı haritaya sürükleyip bırakmak da aynı işi yapar (bu durumda Kaydet yine yer sorar).
 - **Yeni** (`Ctrl+N` masaüstünde): Boş bir pafta.
 
 Bir `.pafta` dosyası tüm girdileri, renkleri, gizli/görünür durumları, ölçüm hatlarını, künye metinlerini ve son harita görünümünü saklar. Kaydedilmemiş değişiklik olduğunda dosya adının yanında turuncu bir nokta, pencere başlığında `●` görünür.

@@ -25,7 +25,10 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 - **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür. Bu ölçekte kıyı da ayrıntılı (1:10 milyon) veriye geçer.
 - **Zemin:** Harita ya da yaklaştıkça netleşen **uydu görüntüsü** (NASA Blue Marble, dosyaya gömülü; Türkiye'de ~500 m/piksel). Daha yakın ölçek için internete bağlı bir bilgisayarda hazırlanıp taşınan **uydu paketi** (Sentinel-2, 10–30 m). Dünya geneli **FIR sınırları ve adları**, ülke sınırları, şehirler. İmleç göstergesi Türkiye içinde il ve ilçeyi yazar.
 - **Haritadan seç:** Her koordinat listesinin yanında, renk seçicideki damlalık gibi bir konum seçici; haritaya tıklanan yerin koordinatı listeye eklenir.
-- **Proje dosyası (`.pafta`):** Tüm girdiler, renkler, ölçümler ve harita görünümü tek dosyada saklanır; haritaya sürükleyip bırakarak da açılır.
+- **Proje dosyası (`.pafta`):** Tüm girdiler, renkler, ölçümler, notlar ve harita görünümü tek dosyada saklanır. **Dosya** menüsünden yeni, aç, kaydet, farklı kaydet; tarayıcı sürümünde de (Edge, Chrome) dosya yerinde açılıp kaydedilir.
+- **Çoklu içe aktarma:** Birden çok metin, CSV, Excel ya da KML dosyası tek seferde.
+- **Koordinatlarla çizgi ve eğri:** Sıralı koordinat listesinden (dosyadan da) çizgiler; noktalardan geçen yumuşak eğri seçeneği.
+- **Açık ve koyu tema.**
 - **Çıktı:** **Ölçekli PDF** (A4/A3, 1:50.000 gibi sabit ölçek, sayfa çerçevesi önizlemesi), PNG (ekran, 2× ve 3× çözünürlük), KML (Google Earth), GeoJSON, CSV, Excel.
 
 ## İndirme ve çalıştırma
@@ -52,6 +55,10 @@ Masaüstü sürümüne özgü olanlar: uydu paketinin hatırlanması, son açıl
 Kısayolların tamamı uygulamada `F1` ile görünür. Ayrıntılı kullanım: **[docs/KULLANIM.md](docs/KULLANIM.md)**
 
 ## Ekran görüntüleri
+
+| Dosya menüsü | Açık tema, koordinatlarla eğri çizgi |
+|---|---|
+| ![Dosya menüsü](docs/images/ekran-menu.png) | ![Açık tema](docs/images/ekran-acik-tema.png) |
 
 | Alan raporu | NOTAM'dan alma |
 |---|---|

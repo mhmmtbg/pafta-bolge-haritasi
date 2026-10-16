@@ -1,5 +1,16 @@
 # Değişiklik Günlüğü
 
+## v2.4.0 — 2026-10-16
+
+- **Dosya menüsü:** Araç çubuğunda **Dosya** düğmesi (sol üstteki işaret de açar): Yeni pafta, Aç, son açılanlar (masaüstü), Kaydet, Farklı kaydet, PDF olarak kaydet (geçerli baskı ayarlarıyla), PDF ayarları, PNG, KML, GeoJSON, CSV ve tema.
+- **Tarayıcıda yerinde aç ve kaydet:** Edge ve Chrome'da `.pafta` dosyası Windows'un aç/kaydet penceresiyle açılır; **Kaydet** aynı dosyanın üzerine yazar, **Farklı kaydet** yeni dosya seçtirir. Bu özelliği olmayan tarayıcılarda kayıt eskisi gibi indirmedir.
+- **Çoklu dosya içe aktarma:** Dosyadan al ve sürükle-bırakta birden çok dosya seçilebilir. Metin ve CSV dosyaları tek listede birleşir (adı olmayan alan, dosya adını alır); Excel ve KML dosyalarının pencereleri sırayla açılır.
+- **Koordinatlarla çizgi:** Notlar → Çizgi kipinde sıralı koordinat listesi; **Çizgileri çiz** her grubu bir çizgi yapar. Liste Alanlar biçimindedir; **Dosyadan al** ile metin, CSV, Excel ya da KML'den doldurulur, **Haritadan seç** ile köşe eklenir. Köşeler sürüklenince yeni koordinat listeye yazılır; liste projeye kaydedilir. Excel penceresine "Çizgiler" hedefi eklendi.
+- **Eğri çizgi:** Çizgi ayarlarında **Eğri** seçeneği; çizgi verilen bütün noktalardan geçen yumuşak bir eğri (Bezier) olarak çizilir. Listedeki eğri düğmesiyle her çizgi ayrı ayrı eğri ya da köşeli yapılabilir; uzunluk eğri üzerinden hesaplanır.
+- **Açık / koyu tema:** Görünüm → **Arayüz teması** ya da Dosya menüsünden. Panel, araç şeridi ve listeler açık renge geçer; harita ve pencereler aynı kalır. Seçim bu bilgisayarda hatırlanır, projeye yazılmaz.
+- Arayüzdeki gölgeler kaldırıldı; araç çubuğu ve yakınlaştırma düğmeleri ince çerçeveli.
+- Alan adları vurgu çerçevesinin üstünde kalır.
+
 ## v2.3.0 — 2026-10-14
 
 **Harita**
