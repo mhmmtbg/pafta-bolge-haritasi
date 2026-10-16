@@ -5,10 +5,10 @@ const XL_HEDEF = {
   daire: {ta: "c-center", ciz: () => buildCircles(),  pane: "pane-circles", ad: "Daireler"}
 };
 const XL_ROLLER = [
-  {id: "ad",    ad: "Ad",           hedef: ["alan", "nokta", "daire"], re: /^(ad|adı|isim|name|bölge|bolge|alan|saha|nokta adı|merkez|title)$/i},
-  {id: "no",    ad: "Nokta no",     hedef: ["alan"],                   re: /^(no|nr|nokta|sıra|sira|köşe|kose|#|point)$/i},
-  {id: "enlem", ad: "Enlem",        hedef: ["alan", "nokta", "daire"], re: /^(enlem|lat|latitude|kuzey|koordinat|koord|konum|mgrs|utm|coordinate)|^[ny]$/i},
-  {id: "boylam",ad: "Boylam",       hedef: ["alan", "nokta", "daire"], re: /^(boylam|lon|lng|long|longitude|doğu|dogu)|^[ex]$/i},
+  {id: "ad",    ad: "Ad",           hedef: ["alan", "nokta", "daire", "cizgi"], re: /^(ad|adı|isim|name|bölge|bolge|alan|saha|nokta adı|merkez|title)$/i},
+  {id: "no",    ad: "Nokta no",     hedef: ["alan", "cizgi"],                   re: /^(no|nr|nokta|sıra|sira|köşe|kose|#|point)$/i},
+  {id: "enlem", ad: "Enlem",        hedef: ["alan", "nokta", "daire", "cizgi"], re: /^(enlem|lat|latitude|kuzey|koordinat|koord|konum|mgrs|utm|coordinate)|^[ny]$/i},
+  {id: "boylam",ad: "Boylam",       hedef: ["alan", "nokta", "daire", "cizgi"], re: /^(boylam|lon|lng|long|longitude|doğu|dogu)|^[ex]$/i},
   {id: "r",     ad: "Yarıçap",      hedef: ["daire"],                  re: /^(yarıçap|yaricap|radius|mesafe)|^r$/i},
   {id: "renk",  ad: "Renk",         hedef: ["nokta"],                  re: /^(renk|color|colour)$/i}
 ];
@@ -101,7 +101,7 @@ function xlSatirlar(){
     const ok = k && !k.hata;
     let ad = al(r, c.ad), satir;
     sayac++;
-    if (h === "alan"){
+    if (h === "alan" || h === "cizgi"){
       const no = al(r, c.no);
       satir = (ad && ad !== onceki ? ad : "") + "\t" + no + "\t" + koord;
       if (ad) onceki = ad;
@@ -169,7 +169,7 @@ function excelAc(ab, ad, hedef){
 async function dosyaYukle(f, hedef){
   const H = XL_HEDEF[hedef] || XL_HEDEF.alan;
   if (/\.xlsx$|\.xlsm$/i.test(f.name)){ excelAc(await f.arrayBuffer(), f.name, hedef); return; }
-  if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
+  if (/\.km[lz]$/i.test(f.name)){ await kmlAc(f); return; }
   if (/\.xls$/i.test(f.name)){ uyar("Eski Excel biçimi (.xls) okunamıyor.", "Dosyayı Excel'de açıp \"Farklı kaydet\" ile .xlsx ya da CSV olarak kaydedin."); return; }
   const txt = await f.text();
   sekmeAc(H.pane);
@@ -179,8 +179,54 @@ async function dosyaYukle(f, hedef){
   toast(f.name + " yüklendi");
 }
 
+/* ---- birden çok dosya: metinler tek listede birleşir, Excel ve KML pencereleri sırayla açılır ---- */
+function pencereKapaninca(id){
+  return new Promise(coz => {
+    const el = $(id);
+    if (el.hidden) return coz();
+    const g = new MutationObserver(() => { if (el.hidden){ g.disconnect(); coz(); } });
+    g.observe(el, {attributes: true, attributeFilter: ["hidden"]});
+  });
+}
+const dosyaKok = ad => ad.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").trim();
+async function dosyalariYukle(liste, hedef){
+  const dosyalar = [...liste];
+  if (!dosyalar.length) return;
+  if (dosyalar.length === 1) return dosyaYukle(dosyalar[0], hedef);
+  const H = XL_HEDEF[hedef] || XL_HEDEF.alan;
+  const metin = [], pencere = [], atlanan = [];
+  dosyalar.forEach(f => {
+    if (/\.(xlsx|xlsm|kml|kmz)$/i.test(f.name)) pencere.push(f);
+    else if (/\.(xls|pafta|paftauydu|json)$/i.test(f.name)) atlanan.push(f.name);
+    else metin.push(f);
+  });
+  if (metin.length){
+    const parcalar = [];
+    for (const f of metin){
+      let t = (await f.text()).replace(/\s+$/, "");
+      // alanlarda adsız dosya: alan adı dosya adı olur
+      if (hedef === "alan" || hedef === "cizgi"){
+        const z = parseText(t).zones;
+        if (z.length === 1 && /^Bölge \d+$/.test(z[0].name)) t = dosyaKok(f.name) + "\n" + t;
+      }
+      parcalar.push(t);
+    }
+    sekmeAc(H.pane);
+    const ta = $(H.ta);
+    ta.value = ta.value.trim() ? ta.value.replace(/\s+$/, "") + "\n\n" + parcalar.join("\n\n") : parcalar.join("\n\n");
+    ta.dispatchEvent(new Event("input", {bubbles: true}));
+    H.ciz();
+  }
+  for (const f of pencere){
+    await dosyaYukle(f, hedef);
+    await pencereKapaninca(/\.km[lz]$/i.test(f.name) ? "kml" : "xl");
+  }
+  toast(dosyalar.length - atlanan.length + " dosya yüklendi" + (atlanan.length ? "; atlandı: " + atlanan.join(", ") : ""), !!atlanan.length);
+}
+
 $("file").setAttribute("accept", ".txt,.csv,.tsv,.xlsx,.xlsm,.xls,.kml,.kmz");
-$("file").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) dosyaYukle(f, $("file").dataset.hedef || "alan"); };
+$("file").multiple = true;
+$("file").onchange = e => { const l = [...e.target.files]; e.target.value = ""; dosyalariYukle(l, $("file").dataset.hedef || "alan"); };
 document.querySelectorAll("[data-dosya]").forEach(b => b.onclick = () => { $("file").dataset.hedef = b.dataset.dosya; $("file").click(); });
 $("xl-sayfa").onchange = () => { xlSecenekler(); xlTahmin(); xlSecenekler(); xlOnizle(); };
 $("xl-baslik").onchange = () => { xlSecenekler(); xlOnizle(); };

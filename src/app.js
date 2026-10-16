@@ -37,7 +37,10 @@ function sekmeAc(id){ const t = document.querySelector('.tab[data-pane="' + id +
 
 /* ---- proje durumu ---- */
 let KIRLI = false, YUKLENIYOR = false;
-let DOSYA = {ad: null, yol: null};
+let DOSYA = {ad: null, yol: null, tut: null};        // tut: tarayıcıda dosya erişim tutamacı (Kaydet aynı dosyaya yazar)
+/* Chromium tabanlı tarayıcılar (Edge, Chrome) dosyayı yerinde açıp kaydedebilir; yoksa indirme kullanılır */
+const FS_API = !MASAUSTU && typeof window.showSaveFilePicker === "function" && typeof window.showOpenFilePicker === "function";
+const PAFTA_TURU = [{description: "PAFTA projesi", accept: {"application/json": [".pafta"]}}];
 
 function baslikYaz(){
   const ad = DOSYA.ad || "Adsız pafta";
@@ -48,12 +51,12 @@ function baslikYaz(){
 }
 function setKirli(d){ KIRLI = d; baslikYaz(); }
 function degisti(){ if (!YUKLENIYOR && !KIRLI) setKirli(true); }
-function setDosya(ad, yol){ DOSYA = {ad: ad || null, yol: yol || null}; baslikYaz(); }
+function setDosya(ad, yol, tut){ DOSYA = {ad: ad || null, yol: yol || null, tut: tut || null}; baslikYaz(); }
 
 /* panelde yapılan her değişiklik projeyi kirletir; dışa aktarım düğmeleri hariç */
 const PANEL = document.querySelector(".panel");
-PANEL.addEventListener("input", e => { if (e.target.type !== "file") degisti(); });
-PANEL.addEventListener("change", e => { if (e.target.type !== "file") degisti(); });
+PANEL.addEventListener("input", e => { if (e.target.type !== "file" && !e.target.dataset.yerel) degisti(); });
+PANEL.addEventListener("change", e => { if (e.target.type !== "file" && !e.target.dataset.yerel) degisti(); });
 PANEL.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b || !b.isConnected || b.closest("#pane-export") || b.dataset.dosya || b.closest(".paket") || b.classList.contains("pick") || b.classList.contains("mini")) return;
@@ -61,7 +64,7 @@ PANEL.addEventListener("click", e => {
 });
 
 function formKontrolleri(){
-  return [...PANEL.querySelectorAll("input[id], select[id], textarea[id]")].filter(e => e.type !== "file");
+  return [...PANEL.querySelectorAll("input[id], select[id], textarea[id]")].filter(e => e.type !== "file" && !e.dataset.yerel);   // yerel: projeye değil bu bilgisayara ait ayar
 }
 const FORM0 = {};
 formKontrolleri().forEach(e => FORM0[e.id] = e.type === "checkbox" ? e.checked : e.value);
@@ -146,7 +149,7 @@ function projeYukle(o){
   else fitAll(true);
 }
 
-function projeMetniYukle(txt, ad, yol){
+function projeMetniYukle(txt, ad, yol, tut){
   let o = null;
   try { o = JSON.parse(txt); } catch(e){}
   if (!o || o.uygulama !== "PAFTA"){
@@ -155,7 +158,7 @@ function projeMetniYukle(txt, ad, yol){
   }
   projeYukle(o);
   const k = o._dosya || {};
-  setDosya(ad || k.ad, yol || k.yol);
+  setDosya(ad || k.ad, yol || k.yol, tut);
   setKirli(false);
   return true;
 }
@@ -228,6 +231,21 @@ async function kaydet(farkli){
     sonAcilanlar();
     return true;
   }
+  if (FS_API){
+    let tut = farkli ? null : DOSYA.tut;
+    try {
+      if (!tut) tut = await window.showSaveFilePicker({suggestedName: varsayilan, types: PAFTA_TURU});
+      const w = await tut.createWritable();
+      await w.write(json); await w.close();
+    } catch (e){
+      if (e && e.name === "AbortError") return false;                       // pencere kapatıldı
+      uyar("Kaydedilemedi.", (e && e.message) || String(e));
+      return false;
+    }
+    setDosya(tut.name, null, tut); setKirli(false);
+    toast("Kaydedildi: " + tut.name);
+    return true;
+  }
   download(varsayilan, new Blob([json], {type: "application/json"}));
   setDosya(varsayilan, null); setKirli(false);
   return true;
@@ -238,6 +256,14 @@ async function ac(yol){
     const r = await MASAUSTU.ac(yol);
     if (r && projeMetniYukle(r.icerik, r.ad, r.yol)) toast("Açıldı: " + r.ad);
     sonAcilanlar();
+    return;
+  }
+  if (FS_API){
+    try {
+      const [tut] = await window.showOpenFilePicker({types: PAFTA_TURU.concat([{description: "JSON", accept: {"application/json": [".json"]}}]), excludeAcceptAllOption: false});
+      const f = await tut.getFile();
+      if (projeMetniYukle(await f.text(), f.name, null, tut)) toast("Açıldı: " + f.name);
+    } catch (e){ if (!e || e.name !== "AbortError") uyar("Açılamadı.", (e && e.message) || String(e)); }
     return;
   }
   $("proj-file").value = "";
@@ -287,7 +313,7 @@ if (MASAUSTU){
   $("btn-recent-clear").onclick = async () => { await MASAUSTU.sonTemizle(); sonAcilanlar(); };
   MASAUSTU.veriKlasoru().then(d => { $("data-dir").textContent = "Ayarlar ve kurtarma kaydı: " + d; });
 }
-if (!MASAUSTU) $("btn-proj-saveas").remove();          // tarayıcıda her kayıt bir indirmedir
+if (!MASAUSTU && !FS_API) $("btn-proj-saveas").remove();   // dosya erişimi olmayan tarayıcıda her kayıt bir indirmedir
 
 /* ---- klavye ---- */
 document.addEventListener("keydown", e => {
@@ -324,6 +350,10 @@ document.addEventListener("drop", async e => {
   const f = e.dataTransfer.files[0];
   if (!f) return;
   const aktif0 = (document.querySelector(".pane.active") || {}).id;
+  if (e.dataTransfer.files.length > 1){                                   // birden çok dosya: açık araca sırayla
+    dosyalariYukle(e.dataTransfer.files, {"pane-points": "nokta", "pane-circles": "daire", "pane-notes": "cizgi"}[aktif0] || "alan");
+    return;
+  }
   if (/\.paftauydu$/i.test(f.name)){ paketDosyadan(f); return; }
   if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
   if (/\.xlsx?$|\.xlsm$/i.test(f.name)){
@@ -407,6 +437,18 @@ const PICK_HEDEF = {
     },
     ciz: () => build(),
     ipucu: "Boş satır yeni alan başlatır."
+  },
+  "n-liste": {
+    ad: "çizgi köşesi",
+    satir(ta, k){
+      const metin = ta.value;
+      if (!metin.trim()) return "Çizgi 1\t1\t" + k;
+      if (/\n\s*\n\s*$/.test(metin)) return "Çizgi " + (parseText(metin).zones.length + 1) + "\t1\t" + k;   // boş satır: yeni çizgi
+      const z = parseText(metin).zones, son = z[z.length - 1];
+      return "\t" + ((son ? son.points.length : 0) + 1) + "\t" + k;
+    },
+    ciz: () => cizgileriCiz(),
+    ipucu: "Boş satır yeni çizgi başlatır."
   },
   "c-center": {
     ad: "daire merkezi",

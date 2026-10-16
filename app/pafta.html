@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PAFTA — koordinatlardan ölçekli harita</title>
+<script>try { if (localStorage.getItem("pafta-tema") === "acik") document.documentElement.classList.add("acik"); } catch(e){}</script>
 <style>
   :root{
     --ink:#0e1a21;          /* panel */
@@ -129,7 +130,7 @@
   .icon-btn.ikon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
   .icon-btn.ikon-sil{margin-left:6px}
   .icon-btn.ikon-sil:hover{color:#ff9a9a;border-color:#7a3a3a}
-  .icon-btn[aria-expanded="true"]{color:var(--amber);border-color:#6b5226}
+  .icon-btn[aria-expanded="true"],.icon-btn[aria-pressed="true"]{color:var(--amber);border-color:#6b5226}
   .vurgu{background:#122129;box-shadow:inset 3px 0 0 var(--amber)}
   .zone{padding-left:6px;padding-right:2px;border-radius:4px}
   .stil-satir{display:flex;gap:12px;padding:6px 6px 10px 36px;border-bottom:1px solid #1a2c35}
@@ -164,6 +165,18 @@
   canvas.tasiniyor{cursor:grabbing}
   .toolbar button:disabled{opacity:.38;cursor:default;background:transparent}
   .hud{position:absolute;z-index:2}
+  .dosya-menu{top:58px;right:18px;min-width:280px;max-height:calc(100% - 80px);overflow:auto;background:#fff;color:var(--chart-ink);
+              border:1px solid #b9c7cd;border-radius:8px;padding:5px;z-index:5}
+  .dosya-menu button{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;border:0;background:transparent;
+                     color:inherit;text-align:left;font-size:13.5px;padding:7px 10px;border-radius:5px;cursor:pointer}
+  .dosya-menu button:hover,.dosya-menu button:focus-visible{background:#e8eff2;outline:none}
+  .dosya-menu button span{display:flex;flex-direction:column;min-width:0}
+  .dosya-menu small{font-size:11.5px;color:#5b6f79;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+  .dosya-menu kbd{font-family:var(--mono);font-size:11px;color:#5b6f79;white-space:nowrap;border:0;background:none;padding:0;box-shadow:none}
+  .dosya-menu .menu-ayrac{height:1px;background:#dde5e8;margin:5px 4px}
+  .dosya-menu .menu-baslik{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#7b8e96;padding:7px 10px 3px}
+  .mark{cursor:pointer}
+
   .toolbar{top:18px;right:18px;display:flex;border-radius:8px;overflow:hidden;
            box-shadow:0 1px 2px rgba(10,20,26,.25),0 4px 14px rgba(10,20,26,.14)}
   .toolbar button,.zoom button{display:flex;align-items:center;gap:7px;border:0;cursor:pointer;
@@ -374,7 +387,7 @@
 <div class="app">
 
   <nav class="rail" aria-label="Araçlar">
-    <div class="mark" title="PAFTA">
+    <div class="mark" title="PAFTA — Dosya menüsü">
       <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="4" width="56" height="56" fill="#f4ecda"/><path d="M24.5 8v48M39.5 8v48M8 24.5h48M8 39.5h48" stroke="#cdbfa3" stroke-width=".9"/><g fill="#fff"><rect x="12" y="4" width="8" height="4"/><rect x="56" y="12" width="4" height="8"/><rect x="12" y="56" width="8" height="4"/><rect x="4" y="12" width="4" height="8"/><rect x="28" y="4" width="8" height="4"/><rect x="56" y="28" width="4" height="8"/><rect x="28" y="56" width="8" height="4"/><rect x="4" y="28" width="4" height="8"/><rect x="44" y="4" width="8" height="4"/><rect x="56" y="44" width="4" height="8"/><rect x="44" y="56" width="8" height="4"/><rect x="4" y="44" width="4" height="8"/></g><g fill="#16222a"><rect x="4" y="4" width="8" height="4"/><rect x="56" y="4" width="4" height="8"/><rect x="4" y="56" width="8" height="4"/><rect x="4" y="4" width="4" height="8"/><rect x="20" y="4" width="8" height="4"/><rect x="56" y="20" width="4" height="8"/><rect x="20" y="56" width="8" height="4"/><rect x="4" y="20" width="4" height="8"/><rect x="36" y="4" width="8" height="4"/><rect x="56" y="36" width="4" height="8"/><rect x="36" y="56" width="8" height="4"/><rect x="4" y="36" width="4" height="8"/><rect x="52" y="4" width="8" height="4"/><rect x="56" y="52" width="4" height="8"/><rect x="52" y="56" width="8" height="4"/><rect x="4" y="52" width="4" height="8"/></g><g fill="none" stroke="#16222a" stroke-width="1.1"><rect x="4" y="4" width="56" height="56"/><rect x="8" y="8" width="48" height="48"/></g><path d="M17 23 34 16 47.5 27.5 42.5 46 21.5 43.5Z" fill="rgba(196,20,106,.25)" stroke="#c4146a" stroke-width="2.8" stroke-linejoin="round"/><g fill="#fff" stroke="#c4146a" stroke-width="1.6"><circle cx="17" cy="23" r="2.5"/><circle cx="34" cy="16" r="2.5"/><circle cx="47.5" cy="27.5" r="2.5"/><circle cx="42.5" cy="46" r="2.5"/><circle cx="21.5" cy="43.5" r="2.5"/></g></svg>
     </div>
     <button class="tab active" data-pane="pane-areas" title="Koordinat listesinden kapalı bölgeler">
@@ -434,7 +447,7 @@
           <button class="btn" id="btn-notam" title="NOTAM, NAVTEX ya da düz metinden alan ve daire çıkar">Metinden al</button>
           <button class="btn quiet" id="btn-sample">Örnek</button>
           <button class="btn quiet" id="btn-clear">Temizle</button>
-          <input type="file" id="file" accept=".txt,.csv,.tsv,.xlsx,.kml,.kmz" hidden>
+          <input type="file" id="file" accept=".txt,.csv,.tsv,.xlsx,.kml,.kmz" multiple hidden>
         </div>
         <p class="hint">Tabloyu Excel veya Word'den olduğu gibi yapıştırın. Derece‑dakika‑saniye (41°30'15"K) ve ondalık derece (41.5042) okunur. Bölge adı boş satırlar üstteki bölgeye eklenir, boş satır yeni bölge başlatır.</p>
         <div class="msg" id="msg"></div>
@@ -652,6 +665,18 @@
               <option value="4">kalın</option>
             </select>
           </label>
+          <label class="check" style="grid-column:1/-1;margin-top:6px">Eğri (noktalardan geçen yumuşak çizgi) <input type="checkbox" class="toggle" id="n-egri"></label>
+        </div>
+        <div id="n-liste-kutu" hidden>
+          <div class="group-head" style="margin-top:14px"><h3>Koordinatlarla çizgi</h3><span class="head-btns"><button class="pick" data-hedef="n-liste" title="Haritaya tıklayarak köşe ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
+          <textarea id="n-liste" class="short" spellcheck="false" placeholder="Rota 1&#9;1&#9;41°00'00&quot;K&#9;29°00'00&quot;D&#10;&#9;2&#9;41°20'00&quot;K&#9;30°10'00&quot;D&#10;&#9;3&#9;41°05'00&quot;K&#9;31°30'00&quot;D"></textarea>
+          <div class="row">
+            <button class="btn primary" id="btn-n-liste">Çizgileri çiz</button>
+            <button class="btn" data-dosya="cizgi" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
+            <button class="btn quiet" id="btn-n-liste-temizle">Temizle</button>
+          </div>
+          <p class="hint">Sıralı koordinatlar Alanlar ile aynı biçimde yazılır; her grup bir çizgidir, boş satır ya da yeni ad yeni çizgi başlatır. Çizgiler yukarıdaki renk, tip, kalınlık ve eğri ayarlarıyla çizilir; köşeleri sürükleyince yeni koordinat listeye yazılır.</p>
+          <div class="msg" id="n-liste-msg"></div>
         </div>
         <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Çizgi kipinde her tıklama bir köşe ekler; son köşeye yeniden tıklamak, çift tıklamak ya da Enter çizgiyi bitirir, Geri tuşu son köşeyi siler, Esc yarım çizgiyi bırakır. Notlar, ok uçları ve çizgi köşeleri sürüklenerek taşınır.</p>
         <div class="row"><button class="btn" id="btn-n-bitir" hidden>Çizgiyi bitir</button><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
@@ -684,6 +709,12 @@
             </div>
           </div>
         </div>
+        <label class="fld">Arayüz teması
+          <select id="opt-tema" data-yerel="1">
+            <option value="koyu">Koyu</option>
+            <option value="acik">Açık</option>
+          </select>
+        </label>
         <label class="fld">Koordinat biçimi
           <select id="opt-kbicim">
             <option value="dms">Derece-dakika-saniye (39°55'30"K)</option>
@@ -835,6 +866,8 @@
       </div>
     </div>
     <div class="hud toolbar">
+      <button id="btn-dosya" title="Dosya: yeni, aç, kaydet, PDF ve diğer çıktılar" aria-haspopup="menu" aria-expanded="false" aria-controls="dosya-menu">
+        <svg viewBox="0 0 16 16"><path d="M2 4.5h4.2l1.3 1.4H14v6.6H2Z"/></svg>Dosya</button>
       <button id="btn-geri" title="Geri al (Ctrl+Z)" aria-label="Geri al" disabled>
         <svg viewBox="0 0 16 16"><path d="M5.5 3 2.5 6l3 3"/><path d="M2.8 6H10a3.5 3.5 0 0 1 0 7H6.5"/></svg></button>
       <button id="btn-ileri" title="Yinele (Ctrl+Y)" aria-label="Yinele" disabled>
@@ -846,6 +879,7 @@
       <button id="btn-sat" title="Uydu görüntüsünü aç/kapat" aria-pressed="false">
         <svg viewBox="0 0 16 16"><rect x="6" y="6" width="4" height="4" transform="rotate(45 8 8)"/><path d="M3.5 3.5 6 6M10 10l2.5 2.5M2 5l3-3M11 14l3-3"/></svg>Uydu</button>
     </div>
+    <div class="hud dosya-menu" id="dosya-menu" role="menu" aria-label="Dosya" hidden></div>
     <div class="hud zoom">
       <button id="btn-in" title="Yakınlaş" aria-label="Yakınlaş"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg></button>
       <button id="btn-out" title="Uzaklaş" aria-label="Uzaklaş"><svg viewBox="0 0 16 16"><path d="M3 8h10"/></svg></button>
@@ -932,7 +966,7 @@
     <div class="xl-ayar">
       <label class="fld" style="margin-top:0">Sayfa <select id="xl-sayfa"></select></label>
       <label class="fld" style="margin-top:0">Ekleneceği yer
-        <select id="xl-hedef"><option value="alan">Alanlar</option><option value="nokta">Noktalar</option><option value="daire">Daireler</option></select>
+        <select id="xl-hedef"><option value="alan">Alanlar</option><option value="nokta">Noktalar</option><option value="daire">Daireler</option><option value="cizgi">Çizgiler (Notlar)</option></select>
       </label>
       <label class="fld" style="margin-top:0">Ad sütunu <select id="xl-ad"></select></label>
       <label class="fld" style="margin-top:0">Nokta no sütunu <select id="xl-no"></select></label>
@@ -2799,6 +2833,7 @@ var LISTE_IKON = {
   "göster": ["Göster", '<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" opacity=".55"/><path d="M2.5 13.5 13.5 2.5"/>'],
   "odak": ["Haritada odakla", '<circle cx="8" cy="8" r="4.6"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/><path d="M8 1v2.4M8 12.6V15M1 8h2.4M12.6 8H15"/>'],
   "sil": ["Sil", '<path d="M2.5 4.2h11M6.2 4.2V2.6h3.6v1.6M3.9 4.2l.7 9.2h6.8l.7-9.2M6.6 6.8v4.2M9.4 6.8v4.2"/>'],
+  "egri": ["Eğri / köşeli", '<path d="M2 12.5C5 12.5 4.5 3.5 8 3.5s3 9 6 9"/>'],
   "stil": ["Dolgu ve sınır stili", '<rect x="2.5" y="2.5" width="11" height="11" rx="1"/><path d="M2.8 9.5 9.5 2.8M5.5 13.2l7.7-7.7M9.5 13.2l3.7-3.7"/>']
 };
 function smallBtn(text, fn){
@@ -3295,7 +3330,10 @@ function sekmeAc(id){ const t = document.querySelector('.tab[data-pane="' + id +
 
 /* ---- proje durumu ---- */
 let KIRLI = false, YUKLENIYOR = false;
-let DOSYA = {ad: null, yol: null};
+let DOSYA = {ad: null, yol: null, tut: null};        // tut: tarayıcıda dosya erişim tutamacı (Kaydet aynı dosyaya yazar)
+/* Chromium tabanlı tarayıcılar (Edge, Chrome) dosyayı yerinde açıp kaydedebilir; yoksa indirme kullanılır */
+const FS_API = !MASAUSTU && typeof window.showSaveFilePicker === "function" && typeof window.showOpenFilePicker === "function";
+const PAFTA_TURU = [{description: "PAFTA projesi", accept: {"application/json": [".pafta"]}}];
 
 function baslikYaz(){
   const ad = DOSYA.ad || "Adsız pafta";
@@ -3306,12 +3344,12 @@ function baslikYaz(){
 }
 function setKirli(d){ KIRLI = d; baslikYaz(); }
 function degisti(){ if (!YUKLENIYOR && !KIRLI) setKirli(true); }
-function setDosya(ad, yol){ DOSYA = {ad: ad || null, yol: yol || null}; baslikYaz(); }
+function setDosya(ad, yol, tut){ DOSYA = {ad: ad || null, yol: yol || null, tut: tut || null}; baslikYaz(); }
 
 /* panelde yapılan her değişiklik projeyi kirletir; dışa aktarım düğmeleri hariç */
 const PANEL = document.querySelector(".panel");
-PANEL.addEventListener("input", e => { if (e.target.type !== "file") degisti(); });
-PANEL.addEventListener("change", e => { if (e.target.type !== "file") degisti(); });
+PANEL.addEventListener("input", e => { if (e.target.type !== "file" && !e.target.dataset.yerel) degisti(); });
+PANEL.addEventListener("change", e => { if (e.target.type !== "file" && !e.target.dataset.yerel) degisti(); });
 PANEL.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b || !b.isConnected || b.closest("#pane-export") || b.dataset.dosya || b.closest(".paket") || b.classList.contains("pick") || b.classList.contains("mini")) return;
@@ -3319,7 +3357,7 @@ PANEL.addEventListener("click", e => {
 });
 
 function formKontrolleri(){
-  return [...PANEL.querySelectorAll("input[id], select[id], textarea[id]")].filter(e => e.type !== "file");
+  return [...PANEL.querySelectorAll("input[id], select[id], textarea[id]")].filter(e => e.type !== "file" && !e.dataset.yerel);   // yerel: projeye değil bu bilgisayara ait ayar
 }
 const FORM0 = {};
 formKontrolleri().forEach(e => FORM0[e.id] = e.type === "checkbox" ? e.checked : e.value);
@@ -3404,7 +3442,7 @@ function projeYukle(o){
   else fitAll(true);
 }
 
-function projeMetniYukle(txt, ad, yol){
+function projeMetniYukle(txt, ad, yol, tut){
   let o = null;
   try { o = JSON.parse(txt); } catch(e){}
   if (!o || o.uygulama !== "PAFTA"){
@@ -3413,7 +3451,7 @@ function projeMetniYukle(txt, ad, yol){
   }
   projeYukle(o);
   const k = o._dosya || {};
-  setDosya(ad || k.ad, yol || k.yol);
+  setDosya(ad || k.ad, yol || k.yol, tut);
   setKirli(false);
   return true;
 }
@@ -3486,6 +3524,21 @@ async function kaydet(farkli){
     sonAcilanlar();
     return true;
   }
+  if (FS_API){
+    let tut = farkli ? null : DOSYA.tut;
+    try {
+      if (!tut) tut = await window.showSaveFilePicker({suggestedName: varsayilan, types: PAFTA_TURU});
+      const w = await tut.createWritable();
+      await w.write(json); await w.close();
+    } catch (e){
+      if (e && e.name === "AbortError") return false;                       // pencere kapatıldı
+      uyar("Kaydedilemedi.", (e && e.message) || String(e));
+      return false;
+    }
+    setDosya(tut.name, null, tut); setKirli(false);
+    toast("Kaydedildi: " + tut.name);
+    return true;
+  }
   download(varsayilan, new Blob([json], {type: "application/json"}));
   setDosya(varsayilan, null); setKirli(false);
   return true;
@@ -3496,6 +3549,14 @@ async function ac(yol){
     const r = await MASAUSTU.ac(yol);
     if (r && projeMetniYukle(r.icerik, r.ad, r.yol)) toast("Açıldı: " + r.ad);
     sonAcilanlar();
+    return;
+  }
+  if (FS_API){
+    try {
+      const [tut] = await window.showOpenFilePicker({types: PAFTA_TURU.concat([{description: "JSON", accept: {"application/json": [".json"]}}]), excludeAcceptAllOption: false});
+      const f = await tut.getFile();
+      if (projeMetniYukle(await f.text(), f.name, null, tut)) toast("Açıldı: " + f.name);
+    } catch (e){ if (!e || e.name !== "AbortError") uyar("Açılamadı.", (e && e.message) || String(e)); }
     return;
   }
   $("proj-file").value = "";
@@ -3545,7 +3606,7 @@ if (MASAUSTU){
   $("btn-recent-clear").onclick = async () => { await MASAUSTU.sonTemizle(); sonAcilanlar(); };
   MASAUSTU.veriKlasoru().then(d => { $("data-dir").textContent = "Ayarlar ve kurtarma kaydı: " + d; });
 }
-if (!MASAUSTU) $("btn-proj-saveas").remove();          // tarayıcıda her kayıt bir indirmedir
+if (!MASAUSTU && !FS_API) $("btn-proj-saveas").remove();   // dosya erişimi olmayan tarayıcıda her kayıt bir indirmedir
 
 /* ---- klavye ---- */
 document.addEventListener("keydown", e => {
@@ -3582,6 +3643,10 @@ document.addEventListener("drop", async e => {
   const f = e.dataTransfer.files[0];
   if (!f) return;
   const aktif0 = (document.querySelector(".pane.active") || {}).id;
+  if (e.dataTransfer.files.length > 1){                                   // birden çok dosya: açık araca sırayla
+    dosyalariYukle(e.dataTransfer.files, {"pane-points": "nokta", "pane-circles": "daire", "pane-notes": "cizgi"}[aktif0] || "alan");
+    return;
+  }
   if (/\.paftauydu$/i.test(f.name)){ paketDosyadan(f); return; }
   if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
   if (/\.xlsx?$|\.xlsm$/i.test(f.name)){
@@ -3665,6 +3730,18 @@ const PICK_HEDEF = {
     },
     ciz: () => build(),
     ipucu: "Boş satır yeni alan başlatır."
+  },
+  "n-liste": {
+    ad: "çizgi köşesi",
+    satir(ta, k){
+      const metin = ta.value;
+      if (!metin.trim()) return "Çizgi 1\t1\t" + k;
+      if (/\n\s*\n\s*$/.test(metin)) return "Çizgi " + (parseText(metin).zones.length + 1) + "\t1\t" + k;   // boş satır: yeni çizgi
+      const z = parseText(metin).zones, son = z[z.length - 1];
+      return "\t" + ((son ? son.points.length : 0) + 1) + "\t" + k;
+    },
+    ciz: () => cizgileriCiz(),
+    ipucu: "Boş satır yeni çizgi başlatır."
   },
   "c-center": {
     ad: "daire merkezi",
@@ -4591,10 +4668,10 @@ const XL_HEDEF = {
   daire: {ta: "c-center", ciz: () => buildCircles(),  pane: "pane-circles", ad: "Daireler"}
 };
 const XL_ROLLER = [
-  {id: "ad",    ad: "Ad",           hedef: ["alan", "nokta", "daire"], re: /^(ad|adı|isim|name|bölge|bolge|alan|saha|nokta adı|merkez|title)$/i},
-  {id: "no",    ad: "Nokta no",     hedef: ["alan"],                   re: /^(no|nr|nokta|sıra|sira|köşe|kose|#|point)$/i},
-  {id: "enlem", ad: "Enlem",        hedef: ["alan", "nokta", "daire"], re: /^(enlem|lat|latitude|kuzey|koordinat|koord|konum|mgrs|utm|coordinate)|^[ny]$/i},
-  {id: "boylam",ad: "Boylam",       hedef: ["alan", "nokta", "daire"], re: /^(boylam|lon|lng|long|longitude|doğu|dogu)|^[ex]$/i},
+  {id: "ad",    ad: "Ad",           hedef: ["alan", "nokta", "daire", "cizgi"], re: /^(ad|adı|isim|name|bölge|bolge|alan|saha|nokta adı|merkez|title)$/i},
+  {id: "no",    ad: "Nokta no",     hedef: ["alan", "cizgi"],                   re: /^(no|nr|nokta|sıra|sira|köşe|kose|#|point)$/i},
+  {id: "enlem", ad: "Enlem",        hedef: ["alan", "nokta", "daire", "cizgi"], re: /^(enlem|lat|latitude|kuzey|koordinat|koord|konum|mgrs|utm|coordinate)|^[ny]$/i},
+  {id: "boylam",ad: "Boylam",       hedef: ["alan", "nokta", "daire", "cizgi"], re: /^(boylam|lon|lng|long|longitude|doğu|dogu)|^[ex]$/i},
   {id: "r",     ad: "Yarıçap",      hedef: ["daire"],                  re: /^(yarıçap|yaricap|radius|mesafe)|^r$/i},
   {id: "renk",  ad: "Renk",         hedef: ["nokta"],                  re: /^(renk|color|colour)$/i}
 ];
@@ -4687,7 +4764,7 @@ function xlSatirlar(){
     const ok = k && !k.hata;
     let ad = al(r, c.ad), satir;
     sayac++;
-    if (h === "alan"){
+    if (h === "alan" || h === "cizgi"){
       const no = al(r, c.no);
       satir = (ad && ad !== onceki ? ad : "") + "\t" + no + "\t" + koord;
       if (ad) onceki = ad;
@@ -4755,7 +4832,7 @@ function excelAc(ab, ad, hedef){
 async function dosyaYukle(f, hedef){
   const H = XL_HEDEF[hedef] || XL_HEDEF.alan;
   if (/\.xlsx$|\.xlsm$/i.test(f.name)){ excelAc(await f.arrayBuffer(), f.name, hedef); return; }
-  if (/\.km[lz]$/i.test(f.name)){ kmlAc(f); return; }
+  if (/\.km[lz]$/i.test(f.name)){ await kmlAc(f); return; }
   if (/\.xls$/i.test(f.name)){ uyar("Eski Excel biçimi (.xls) okunamıyor.", "Dosyayı Excel'de açıp \"Farklı kaydet\" ile .xlsx ya da CSV olarak kaydedin."); return; }
   const txt = await f.text();
   sekmeAc(H.pane);
@@ -4765,8 +4842,54 @@ async function dosyaYukle(f, hedef){
   toast(f.name + " yüklendi");
 }
 
+/* ---- birden çok dosya: metinler tek listede birleşir, Excel ve KML pencereleri sırayla açılır ---- */
+function pencereKapaninca(id){
+  return new Promise(coz => {
+    const el = $(id);
+    if (el.hidden) return coz();
+    const g = new MutationObserver(() => { if (el.hidden){ g.disconnect(); coz(); } });
+    g.observe(el, {attributes: true, attributeFilter: ["hidden"]});
+  });
+}
+const dosyaKok = ad => ad.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").trim();
+async function dosyalariYukle(liste, hedef){
+  const dosyalar = [...liste];
+  if (!dosyalar.length) return;
+  if (dosyalar.length === 1) return dosyaYukle(dosyalar[0], hedef);
+  const H = XL_HEDEF[hedef] || XL_HEDEF.alan;
+  const metin = [], pencere = [], atlanan = [];
+  dosyalar.forEach(f => {
+    if (/\.(xlsx|xlsm|kml|kmz)$/i.test(f.name)) pencere.push(f);
+    else if (/\.(xls|pafta|paftauydu|json)$/i.test(f.name)) atlanan.push(f.name);
+    else metin.push(f);
+  });
+  if (metin.length){
+    const parcalar = [];
+    for (const f of metin){
+      let t = (await f.text()).replace(/\s+$/, "");
+      // alanlarda adsız dosya: alan adı dosya adı olur
+      if (hedef === "alan" || hedef === "cizgi"){
+        const z = parseText(t).zones;
+        if (z.length === 1 && /^Bölge \d+$/.test(z[0].name)) t = dosyaKok(f.name) + "\n" + t;
+      }
+      parcalar.push(t);
+    }
+    sekmeAc(H.pane);
+    const ta = $(H.ta);
+    ta.value = ta.value.trim() ? ta.value.replace(/\s+$/, "") + "\n\n" + parcalar.join("\n\n") : parcalar.join("\n\n");
+    ta.dispatchEvent(new Event("input", {bubbles: true}));
+    H.ciz();
+  }
+  for (const f of pencere){
+    await dosyaYukle(f, hedef);
+    await pencereKapaninca(/\.km[lz]$/i.test(f.name) ? "kml" : "xl");
+  }
+  toast(dosyalar.length - atlanan.length + " dosya yüklendi" + (atlanan.length ? "; atlandı: " + atlanan.join(", ") : ""), !!atlanan.length);
+}
+
 $("file").setAttribute("accept", ".txt,.csv,.tsv,.xlsx,.xlsm,.xls,.kml,.kmz");
-$("file").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) dosyaYukle(f, $("file").dataset.hedef || "alan"); };
+$("file").multiple = true;
+$("file").onchange = e => { const l = [...e.target.files]; e.target.value = ""; dosyalariYukle(l, $("file").dataset.hedef || "alan"); };
 document.querySelectorAll("[data-dosya]").forEach(b => b.onclick = () => { $("file").dataset.hedef = b.dataset.dosya; $("file").click(); });
 $("xl-sayfa").onchange = () => { xlSecenekler(); xlTahmin(); xlSecenekler(); xlOnizle(); };
 $("xl-baslik").onchange = () => { xlSecenekler(); xlOnizle(); };
@@ -5478,7 +5601,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("rapor"
 /* Notlar sekmesi açıkken haritaya tıklamak not koyar; Ok kipinde iki tıklama bir ok çizer;
    Çizgi kipinde her tıklama bir köşe ekler. Hepsi projeye kaydedilir, sürüklenerek taşınır. */
 var NOTLAR = [];             // {tur:"not", lat, lon, metin, renk, boyut} | {tur:"ok", a:{lat,lon}, b:{lat,lon}, metin, renk}
-                             // | {tur:"cizgi", pts:[{lat,lon}], metin, renk, boyut, tip:"duz"|"kesikli"|"noktali", kalinlik}
+                             // | {tur:"cizgi", pts:[{lat,lon}], metin, renk, boyut, tip:"duz"|"kesikli"|"noktali", kalinlik,
+                             //    egri: noktalardan geçen yumuşak eğri, kaynak: "liste" ise koordinat listesinden üretilmiştir}
 var NOT_AKTIF = false, NOT_OK_BAS = null, NOT_IMLEC = null;
 var NOT_CIZGI = [];          // çizilmekte olan çizginin köşeleri
 const NOT_RENKLER = ["#16222a", "#a4123f", "#00798c", "#e08e0b", "#3c6e2a", "#6a3d9a"];
@@ -5490,6 +5614,7 @@ function notEkle(n){ NOTLAR.push(n); hideEmpty(); notListe(); draw(); degisti();
 function cizgiDugmeleri(){
   const ck = notKip() === "cizgi";
   $("n-cizgi-ayar").hidden = !ck;
+  $("n-liste-kutu").hidden = !ck;
   $("btn-n-bitir").hidden = !ck;
   $("btn-n-bitir").disabled = NOT_CIZGI.length < 2;
 }
@@ -5498,7 +5623,7 @@ function cizgiBitir(){
   NOT_CIZGI = [];
   if (pts.length >= 2)
     notEkle({tur: "cizgi", pts, metin: "", renk: $("n-renk").value, boyut: +$("n-boyut").value,
-             tip: $("n-tip").value, kalinlik: +$("n-kalinlik").value});
+             tip: $("n-tip").value, kalinlik: +$("n-kalinlik").value, egri: $("n-egri").checked});
   else draw();
   cizgiDugmeleri();
 }
@@ -5507,12 +5632,42 @@ function cizgiTireleri(tip, w){
   if (tip === "noktali") return [.1, w * 2 + 3];                 // yuvarlak uçla noktalar
   return [];
 }
-function cizgiYolu(pts){
-  ctx.beginPath();
-  pts.forEach((p, i) => i ? ctx.lineTo(sx(p.lon), sy(p.lat)) : ctx.moveTo(sx(p.lon), sy(p.lat)));
+/* eğri: Catmull-Rom'dan kübik Bezier; eğri verilen bütün noktalardan geçer. Kapalı çizgide (ilk = son) dolanır. */
+function egriKontrol(xy){
+  const n = xy.length, kapali = n > 3 && Math.hypot(xy[0][0] - xy[n-1][0], xy[0][1] - xy[n-1][1]) < 1e-9;
+  const al = i => kapali ? xy[((i % (n - 1)) + (n - 1)) % (n - 1)] : xy[Math.max(0, Math.min(n - 1, i))];
+  const out = [];
+  for (let i = 0; i < n - 1; i++){
+    const p0 = al(i - 1), p1 = xy[i], p2 = xy[i + 1], p3 = al(i + 2);
+    out.push([p1, [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6], p2]);
+  }
+  return out;
 }
-function cizgiOrtasi(pts){                                         // ekran uzunluğuna göre orta nokta
+/* eğriyi kırık çizgiyle örnekle (orta nokta, uzunluk, vurgu için) */
+function egriOrnek(xy, adim){
+  if (xy.length < 3) return xy;
+  const out = [xy[0]];
+  egriKontrol(xy).forEach(([a, b, c, d]) => {
+    for (let k = 1; k <= adim; k++){
+      const t = k / adim, u = 1 - t;
+      out.push([u*u*u*a[0] + 3*u*u*t*b[0] + 3*u*t*t*c[0] + t*t*t*d[0], u*u*u*a[1] + 3*u*u*t*b[1] + 3*u*t*t*c[1] + t*t*t*d[1]]);
+    }
+  });
+  return out;
+}
+function cizgiYolu(pts, egri){
+  ctx.beginPath();
   const xy = pts.map(p => [sx(p.lon), sy(p.lat)]);
+  if (egri && xy.length >= 3){
+    ctx.moveTo(xy[0][0], xy[0][1]);
+    egriKontrol(xy).forEach(([, b, c, d]) => ctx.bezierCurveTo(b[0], b[1], c[0], c[1], d[0], d[1]));
+    return;
+  }
+  xy.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+}
+function cizgiOrtasi(pts, egri){                                   // ekran uzunluğuna göre orta nokta
+  let xy = pts.map(p => [sx(p.lon), sy(p.lat)]);
+  if (egri) xy = egriOrnek(xy, 12);
   let top = 0;
   for (let i = 1; i < xy.length; i++) top += Math.hypot(xy[i][0] - xy[i-1][0], xy[i][1] - xy[i-1][1]);
   let kalan = top / 2;
@@ -5523,7 +5678,9 @@ function cizgiOrtasi(pts){                                         // ekran uzun
   }
   return xy[0];
 }
-function cizgiUzunluk(pts){
+function cizgiUzunluk(pts, egri){
+  if (egri && pts.length >= 3)                                     // eğri boylam/enlem düzleminde örneklenir
+    pts = egriOrnek(pts.map(p => [p.lon, p.lat]), 16).map(([lon, lat]) => ({lat, lon}));
   let d = 0;
   for (let i = 1; i < pts.length; i++) d += vincenty(pts[i-1].lat, pts[i-1].lon, pts[i].lat, pts[i].lon).d;
   return d;
@@ -5554,11 +5711,11 @@ function drawNotlar(){
     if (n.tur !== "cizgi") return;
     const w = n.kalinlik || 2.5;
     ctx.setLineDash([]); ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = w + 2.6;
-    if (n.tip !== "noktali"){ cizgiYolu(n.pts); ctx.stroke(); }  // noktalıda beyaz hale noktaları siler
+    if (n.tip !== "noktali"){ cizgiYolu(n.pts, n.egri); ctx.stroke(); }  // noktalıda beyaz hale noktaları siler
     ctx.setLineDash(cizgiTireleri(n.tip, w)); ctx.strokeStyle = n.renk; ctx.lineWidth = n.tip === "noktali" ? w * 1.4 : w;
-    cizgiYolu(n.pts); ctx.stroke();
+    cizgiYolu(n.pts, n.egri); ctx.stroke();
     ctx.setLineDash([]);
-    if (n.metin){ const m = cizgiOrtasi(n.pts); notKutusu(n.metin, m[0], m[1], n.renk, n.boyut, false); }
+    if (n.metin){ const m = cizgiOrtasi(n.pts, n.egri); notKutusu(n.metin, m[0], m[1], n.renk, n.boyut, false); }
   });
   NOTLAR.forEach(n => {
     if (n.tur === "cizgi") return;
@@ -5586,7 +5743,7 @@ function drawNotlar(){
     const w = +$("n-kalinlik").value, renk = $("n-renk").value;
     ctx.strokeStyle = renk; ctx.lineWidth = w;
     ctx.setLineDash(cizgiTireleri($("n-tip").value, w));
-    cizgiYolu(NOT_CIZGI); ctx.stroke();
+    cizgiYolu(NOT_CIZGI, $("n-egri").checked); ctx.stroke();
     if (NOT_IMLEC){
       const s = NOT_CIZGI[NOT_CIZGI.length - 1];
       ctx.setLineDash([6, 5]); ctx.lineWidth = 1.6;
@@ -5609,7 +5766,15 @@ function notTutamaclari(dene){
       dene(n.a.lat, n.a.lon, {tur: "not", ad: "Ok başı", tasi: (la, lo) => { n.a = {lat: la, lon: lo}; }, bitir: notListe});
       dene(n.b.lat, n.b.lon, {tur: "not", ad: "Ok ucu", tasi: (la, lo) => { n.b = {lat: la, lon: lo}; }, bitir: notListe});
     } else if (n.tur === "cizgi"){
-      n.pts.forEach((p, i) => dene(p.lat, p.lon, {tur: "not", ad: "Çizgi köşesi " + (i + 1), tasi: (la, lo) => { p.lat = la; p.lon = lo; }, bitir: notListe}));
+      n.pts.forEach((p, i) => dene(p.lat, p.lon, {tur: "not", ad: (n.metin || "Çizgi") + " köşesi " + (i + 1),
+        tasi: (la, lo) => { p.lat = la; p.lon = lo; },
+        bitir: () => {                                              // listeden gelen çizgide yeni koordinat satıra yazılır
+          if (n.kaynak === "liste"){
+            const ce = satirYaz("n-liste", p.li, p.cs, p.ce, p.lat, p.lon);
+            if (ce) p.ce = ce; else toast("Koordinat listesi değişmiş; yeni konum listeye yazılamadı. \"Çizgileri çiz\" ile yenileyin.", true);
+          }
+          notListe();
+        }}));
     } else dene(n.lat, n.lon, {tur: "not", ad: n.metin || "Not", tasi: (la, lo) => { n.lat = la; n.lon = lo; }, bitir: notListe});
   });
 }
@@ -5631,13 +5796,19 @@ function notListe(){
     const meta = document.createElement("span");
     meta.className = "zone-meta";
     meta.textContent = n.tur === "cizgi"
-      ? "Çizgi · " + n.pts.length + " köşe · " + fmtDist(cizgiUzunluk(n.pts))
+      ? (n.egri ? "Eğri" : "Çizgi") + " · " + n.pts.length + " köşe · " + fmtDist(cizgiUzunluk(n.pts, n.egri)) + (n.kaynak === "liste" ? " · listeden" : "")
       : n.tur === "ok"
       ? "Ok · " + fmtDist(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).d) + " · " + String(Math.round(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).az)).padStart(3, "0") + "°"
       : "Not · " + fk(n.lat, n.lon);
     const kutu = document.createElement("span");
     kutu.className = "zone-name"; kutu.append(inp, meta);
-    row.append(swatch(n.renk, v => n.renk = v), kutu,
+    row.append(swatch(n.renk, v => n.renk = v), kutu);
+    if (n.tur === "cizgi"){
+      const eb = smallBtn("egri", () => { n.egri = !n.egri; notListe(); draw(); degisti(); });
+      eb.setAttribute("aria-pressed", n.egri ? "true" : "false");
+      row.append(eb);
+    }
+    row.append(
       smallBtn("odak", () => n.tur === "cizgi"
         ? focusOn(Math.min(...n.pts.map(p => p.lat)), Math.min(...n.pts.map(p => p.lon)), Math.max(...n.pts.map(p => p.lat)), Math.max(...n.pts.map(p => p.lon)))
         : n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
@@ -5646,6 +5817,40 @@ function notListe(){
     host.appendChild(row);
   });
 }
+
+/* ---- koordinat listesinden çizgiler: her grup bir çizgi (Alanlar biçimi; boş satır yeni çizgi) ---- */
+function cizgileriCiz(){
+  const res = parseText($("n-liste").value);
+  const eski = new Map();
+  NOTLAR.forEach(n => { if (n.kaynak === "liste" && !eski.has(n.metin)) eski.set(n.metin, n); });
+  const yeni = res.zones.filter(z => z.points.length >= 2).map(z => {
+    const e = eski.get(z.name);
+    return {tur: "cizgi", kaynak: "liste", metin: z.name,
+            pts: z.points.map(p => ({lat: p.lat, lon: p.lon, li: p.li, cs: p.cs, ce: p.ce})),
+            renk: e ? e.renk : $("n-renk").value, boyut: e ? e.boyut : +$("n-boyut").value,
+            tip: e ? e.tip : $("n-tip").value, kalinlik: e ? e.kalinlik : +$("n-kalinlik").value,
+            egri: e ? e.egri : $("n-egri").checked};
+  });
+  NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste").concat(yeni);
+  const tek = res.zones.filter(z => z.points.length < 2).length;
+  $("n-liste-msg").innerHTML = yeni.length
+    ? '<span class="ok">' + yeni.length + " çizgi, " + yeni.reduce((s, n) => s + n.pts.length, 0) + " köşe çizildi.</span>" +
+      (tek ? ' <span class="warn">' + tek + " grup tek noktalı, atlandı.</span>" : "")
+    : '<span class="warn">En az iki koordinatlık bir grup gerekli.</span>';
+  if (res.errors.length) $("n-liste-msg").innerHTML += '<br><span class="warn">' + res.errors.slice(0, 6).map(esc).join("<br>") + "</span>";
+  notListe();
+  if (yeni.length){ hideEmpty(); fitAll(); } else draw();
+  degisti();
+}
+/* proje açılınca: listeden gelen çizgilere satır konumlarını yeniden bağla (sürükleyince listeye yazılabilsin) */
+function listeKonumlariBagla(){
+  const z = parseText($("n-liste").value).zones.filter(z => z.points.length >= 2), L = NOTLAR.filter(n => n.kaynak === "liste");
+  if (z.length !== L.length) return;
+  L.forEach((n, i) => { if (z[i].points.length === n.pts.length) n.pts.forEach((p, k) => { p.li = z[i].points[k].li; p.cs = z[i].points[k].cs; p.ce = z[i].points[k].ce; }); });
+}
+$("btn-n-liste").onclick = cizgileriCiz;
+$("btn-n-liste-temizle").onclick = () => { $("n-liste").value = ""; NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste"); $("n-liste-msg").textContent = ""; notListe(); draw(); degisti(); };
+XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-notes", ad: "Çizgiler"};
 
 /* ---- haritaya tıklama ---- */
 cv.addEventListener("click", e => {
@@ -5709,7 +5914,8 @@ projeTopla = function(){
   const o = projeToplaNotsuz();
   const r6 = v => Math.round(v * 1e6) / 1e6, k = p => ({enlem: r6(p.lat), boylam: r6(p.lon)});
   o.notlar = NOTLAR.map(n => n.tur === "cizgi"
-    ? {tur: "cizgi", noktalar: n.pts.map(k), metin: n.metin || "", renk: n.renk, boyut: n.boyut, tip: n.tip, kalinlik: n.kalinlik}
+    ? Object.assign({tur: "cizgi", noktalar: n.pts.map(k), metin: n.metin || "", renk: n.renk, boyut: n.boyut, tip: n.tip, kalinlik: n.kalinlik},
+                    n.egri ? {egri: true} : {}, n.kaynak ? {kaynak: n.kaynak} : {})
     : n.tur === "ok"
     ? {tur: "ok", bas: k(n.a), uc: k(n.b), metin: n.metin || "", renk: n.renk, boyut: n.boyut}
     : Object.assign({tur: "not", metin: n.metin || "", renk: n.renk, boyut: n.boyut}, k(n)));
@@ -5725,11 +5931,13 @@ projeYukle = function(o){
   NOTLAR = (o.notlar || []).filter(x => x.tur === "cizgi" ? Array.isArray(x.noktalar) && x.noktalar.filter(n).length >= 2
                                        : x.tur === "ok" ? n(x.bas) && n(x.uc) : n(x)).map(x => x.tur === "cizgi"
     ? {tur: "cizgi", pts: x.noktalar.filter(n).map(p => ({lat: +p.enlem, lon: +p.boylam})), metin: x.metin || "", renk: x.renk || NOT_RENKLER[1],
-       boyut: +x.boyut || 13, tip: TIPLER.includes(x.tip) ? x.tip : "duz", kalinlik: +x.kalinlik || 2.5}
+       boyut: +x.boyut || 13, tip: TIPLER.includes(x.tip) ? x.tip : "duz", kalinlik: +x.kalinlik || 2.5,
+       egri: !!x.egri, kaynak: x.kaynak === "liste" ? "liste" : undefined}
     : x.tur === "ok"
     ? {tur: "ok", a: {lat: +x.bas.enlem, lon: +x.bas.boylam}, b: {lat: +x.uc.enlem, lon: +x.uc.boylam}, metin: x.metin || "", renk: x.renk || NOT_RENKLER[1], boyut: +x.boyut || 13}
     : {tur: "not", lat: +x.enlem, lon: +x.boylam, metin: x.metin || "", renk: x.renk || NOT_RENKLER[1], boyut: +x.boyut || 13});
   NOT_CIZGI = []; cizgiDugmeleri();
+  listeKonumlariBagla();
   notListe();
   if (NOTLAR.length) hideEmpty();
   draw();
@@ -6059,7 +6267,7 @@ function drawVurgu(){
   } else if (v.tur === "not"){
     const n = v.n;
     if (n.tur === "ok") hat([n.a, n.b]);
-    else if (n.tur === "cizgi") hat(n.pts);
+    else if (n.tur === "cizgi") ciz(() => cizgiYolu(n.pts, n.egri));
     else halka(n.lat, n.lon, 9);
   }
   ctx.restore();
@@ -6088,6 +6296,93 @@ function rozetler(){
     r.title = say[id] + " " + ad[id];
   });
 }
+
+/* ============ Dosya menüsü ve tema ============ */
+/* Araç çubuğundaki "Dosya" düğmesi (ve sol üstteki işaret) proje ve çıktı işlerini tek yerde toplar. */
+
+function menuOgeleri(){
+  const k = MASAUSTU ? {yeni: "Ctrl+N"} : {};
+  const l = [
+    {ad: "Yeni pafta", kisa: k.yeni || "", is: () => yeni()},
+    {ad: "Aç…", kisa: "Ctrl+O", is: () => ac()},
+    {alt: "son"},
+    {ayrac: 1},
+    {ad: "Kaydet", kisa: "Ctrl+S", is: () => kaydet(false)},
+    {ad: "Farklı kaydet…", kisa: "Ctrl+Shift+S", is: () => kaydet(true), gizli: !MASAUSTU && !FS_API},
+    {ayrac: 1},
+    {ad: "PDF olarak kaydet…", ek: () => { const a = baskiAyar(); return a.ad + (a.olcek ? ", 1:" + a.olcek.toLocaleString("tr-TR") : ", ekrana sığdır"); }, is: () => pdfKaydet()},
+    {ad: "PDF ayarları", is: () => { sekmeAc("pane-export"); $("pdf-kagit").scrollIntoView({block: "center"}); $("pdf-kagit").focus(); }},
+    {ad: "Görüntü (PNG)", kisa: "Ctrl+E", is: () => $("btn-png").click()},
+    {ad: "KML", is: () => $("btn-kml").click(), grup: "Veri"},
+    {ad: "GeoJSON", is: () => $("btn-geojson").click(), grup: "Veri"},
+    {ad: "CSV", is: () => $("btn-csv").click(), grup: "Veri"},
+    {ayrac: 1},
+    {ad: () => temaAcik() ? "Koyu tema" : "Açık tema", is: () => temaDegistir(!temaAcik())}
+  ];
+  return l.filter(o => !o.gizli);
+}
+
+let MENU_ACIK = false;
+async function menuAc(){
+  const m = $("dosya-menu");
+  m.innerHTML = "";
+  for (const o of menuOgeleri()){
+    if (o.ayrac){ m.insertAdjacentHTML("beforeend", '<div class="menu-ayrac" role="separator"></div>'); continue; }
+    if (o.alt === "son"){
+      if (!MASAUSTU) continue;
+      const l = (await MASAUSTU.sonAcilanlar()) || [];
+      if (!l.length) continue;
+      m.insertAdjacentHTML("beforeend", '<div class="menu-baslik">Son açılanlar</div>');
+      l.slice(0, 6).forEach(f => {
+        const b = document.createElement("button");
+        b.setAttribute("role", "menuitem"); b.className = "son";
+        b.innerHTML = "<span>" + esc(f.ad) + "</span><small>" + esc(f.klasor) + "</small>";
+        b.title = f.yol;
+        b.onclick = () => { menuKapat(); ac(f.yol); };
+        m.appendChild(b);
+      });
+      continue;
+    }
+    if (o.grup && !m.querySelector('[data-grup="' + o.grup + '"]'))
+      m.insertAdjacentHTML("beforeend", '<div class="menu-baslik" data-grup="' + o.grup + '">' + o.grup + "</div>");
+    const b = document.createElement("button");
+    b.setAttribute("role", "menuitem");
+    const ad = typeof o.ad === "function" ? o.ad() : o.ad;
+    b.innerHTML = "<span>" + esc(ad) + (o.ek ? "<small>" + esc(o.ek()) + "</small>" : "") + "</span>" + (o.kisa ? "<kbd>" + o.kisa + "</kbd>" : "");
+    b.onclick = () => { menuKapat(); o.is(); };
+    m.appendChild(b);
+  }
+  m.hidden = false; MENU_ACIK = true;
+  $("btn-dosya").setAttribute("aria-expanded", "true");
+  const ilk = m.querySelector("button"); if (ilk) ilk.focus();
+}
+function menuKapat(){
+  if (!MENU_ACIK) return;
+  $("dosya-menu").hidden = true; MENU_ACIK = false;
+  $("btn-dosya").setAttribute("aria-expanded", "false");
+}
+$("btn-dosya").onclick = e => { e.stopPropagation(); MENU_ACIK ? menuKapat() : menuAc(); };
+document.querySelector(".mark").addEventListener("click", e => { e.stopPropagation(); MENU_ACIK ? menuKapat() : menuAc(); });
+document.addEventListener("mousedown", e => { if (MENU_ACIK && !e.target.closest("#dosya-menu, #btn-dosya, .mark")) menuKapat(); });
+document.addEventListener("keydown", e => {
+  if (!MENU_ACIK) return;
+  const l = [...$("dosya-menu").querySelectorAll("button")], i = l.indexOf(document.activeElement);
+  if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); menuKapat(); $("btn-dosya").focus(); }
+  else if (e.key === "ArrowDown"){ e.preventDefault(); l[(i + 1) % l.length].focus(); }
+  else if (e.key === "ArrowUp"){ e.preventDefault(); l[(i - 1 + l.length) % l.length].focus(); }
+}, true);
+
+/* ---- tema: arayüzün açık ya da koyu olması (harita aynı kalır); bu bilgisayarda hatırlanır ---- */
+const TEMA_KEY = "pafta-tema";
+function temaAcik(){ return document.documentElement.classList.contains("acik"); }
+function temaDegistir(acik, sessiz){
+  document.documentElement.classList.toggle("acik", !!acik);
+  try { localStorage.setItem(TEMA_KEY, acik ? "acik" : "koyu"); } catch(e){}
+  const s = $("opt-tema"); if (s) s.value = acik ? "acik" : "koyu";
+  if (!sessiz) draw();
+}
+$("opt-tema").addEventListener("change", e => temaDegistir(e.target.value === "acik"));
+(() => { let t = null; try { t = localStorage.getItem(TEMA_KEY); } catch(e){} temaDegistir(t === "acik", true); })();
 
 </script>
 </body>

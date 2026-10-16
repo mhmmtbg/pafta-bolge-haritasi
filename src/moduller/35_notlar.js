@@ -2,7 +2,8 @@
 /* Notlar sekmesi açıkken haritaya tıklamak not koyar; Ok kipinde iki tıklama bir ok çizer;
    Çizgi kipinde her tıklama bir köşe ekler. Hepsi projeye kaydedilir, sürüklenerek taşınır. */
 var NOTLAR = [];             // {tur:"not", lat, lon, metin, renk, boyut} | {tur:"ok", a:{lat,lon}, b:{lat,lon}, metin, renk}
-                             // | {tur:"cizgi", pts:[{lat,lon}], metin, renk, boyut, tip:"duz"|"kesikli"|"noktali", kalinlik}
+                             // | {tur:"cizgi", pts:[{lat,lon}], metin, renk, boyut, tip:"duz"|"kesikli"|"noktali", kalinlik,
+                             //    egri: noktalardan geçen yumuşak eğri, kaynak: "liste" ise koordinat listesinden üretilmiştir}
 var NOT_AKTIF = false, NOT_OK_BAS = null, NOT_IMLEC = null;
 var NOT_CIZGI = [];          // çizilmekte olan çizginin köşeleri
 const NOT_RENKLER = ["#16222a", "#a4123f", "#00798c", "#e08e0b", "#3c6e2a", "#6a3d9a"];
@@ -14,6 +15,7 @@ function notEkle(n){ NOTLAR.push(n); hideEmpty(); notListe(); draw(); degisti();
 function cizgiDugmeleri(){
   const ck = notKip() === "cizgi";
   $("n-cizgi-ayar").hidden = !ck;
+  $("n-liste-kutu").hidden = !ck;
   $("btn-n-bitir").hidden = !ck;
   $("btn-n-bitir").disabled = NOT_CIZGI.length < 2;
 }
@@ -22,7 +24,7 @@ function cizgiBitir(){
   NOT_CIZGI = [];
   if (pts.length >= 2)
     notEkle({tur: "cizgi", pts, metin: "", renk: $("n-renk").value, boyut: +$("n-boyut").value,
-             tip: $("n-tip").value, kalinlik: +$("n-kalinlik").value});
+             tip: $("n-tip").value, kalinlik: +$("n-kalinlik").value, egri: $("n-egri").checked});
   else draw();
   cizgiDugmeleri();
 }
@@ -31,12 +33,42 @@ function cizgiTireleri(tip, w){
   if (tip === "noktali") return [.1, w * 2 + 3];                 // yuvarlak uçla noktalar
   return [];
 }
-function cizgiYolu(pts){
-  ctx.beginPath();
-  pts.forEach((p, i) => i ? ctx.lineTo(sx(p.lon), sy(p.lat)) : ctx.moveTo(sx(p.lon), sy(p.lat)));
+/* eğri: Catmull-Rom'dan kübik Bezier; eğri verilen bütün noktalardan geçer. Kapalı çizgide (ilk = son) dolanır. */
+function egriKontrol(xy){
+  const n = xy.length, kapali = n > 3 && Math.hypot(xy[0][0] - xy[n-1][0], xy[0][1] - xy[n-1][1]) < 1e-9;
+  const al = i => kapali ? xy[((i % (n - 1)) + (n - 1)) % (n - 1)] : xy[Math.max(0, Math.min(n - 1, i))];
+  const out = [];
+  for (let i = 0; i < n - 1; i++){
+    const p0 = al(i - 1), p1 = xy[i], p2 = xy[i + 1], p3 = al(i + 2);
+    out.push([p1, [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6], p2]);
+  }
+  return out;
 }
-function cizgiOrtasi(pts){                                         // ekran uzunluğuna göre orta nokta
+/* eğriyi kırık çizgiyle örnekle (orta nokta, uzunluk, vurgu için) */
+function egriOrnek(xy, adim){
+  if (xy.length < 3) return xy;
+  const out = [xy[0]];
+  egriKontrol(xy).forEach(([a, b, c, d]) => {
+    for (let k = 1; k <= adim; k++){
+      const t = k / adim, u = 1 - t;
+      out.push([u*u*u*a[0] + 3*u*u*t*b[0] + 3*u*t*t*c[0] + t*t*t*d[0], u*u*u*a[1] + 3*u*u*t*b[1] + 3*u*t*t*c[1] + t*t*t*d[1]]);
+    }
+  });
+  return out;
+}
+function cizgiYolu(pts, egri){
+  ctx.beginPath();
   const xy = pts.map(p => [sx(p.lon), sy(p.lat)]);
+  if (egri && xy.length >= 3){
+    ctx.moveTo(xy[0][0], xy[0][1]);
+    egriKontrol(xy).forEach(([, b, c, d]) => ctx.bezierCurveTo(b[0], b[1], c[0], c[1], d[0], d[1]));
+    return;
+  }
+  xy.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+}
+function cizgiOrtasi(pts, egri){                                   // ekran uzunluğuna göre orta nokta
+  let xy = pts.map(p => [sx(p.lon), sy(p.lat)]);
+  if (egri) xy = egriOrnek(xy, 12);
   let top = 0;
   for (let i = 1; i < xy.length; i++) top += Math.hypot(xy[i][0] - xy[i-1][0], xy[i][1] - xy[i-1][1]);
   let kalan = top / 2;
@@ -47,7 +79,9 @@ function cizgiOrtasi(pts){                                         // ekran uzun
   }
   return xy[0];
 }
-function cizgiUzunluk(pts){
+function cizgiUzunluk(pts, egri){
+  if (egri && pts.length >= 3)                                     // eğri boylam/enlem düzleminde örneklenir
+    pts = egriOrnek(pts.map(p => [p.lon, p.lat]), 16).map(([lon, lat]) => ({lat, lon}));
   let d = 0;
   for (let i = 1; i < pts.length; i++) d += vincenty(pts[i-1].lat, pts[i-1].lon, pts[i].lat, pts[i].lon).d;
   return d;
@@ -78,11 +112,11 @@ function drawNotlar(){
     if (n.tur !== "cizgi") return;
     const w = n.kalinlik || 2.5;
     ctx.setLineDash([]); ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = w + 2.6;
-    if (n.tip !== "noktali"){ cizgiYolu(n.pts); ctx.stroke(); }  // noktalıda beyaz hale noktaları siler
+    if (n.tip !== "noktali"){ cizgiYolu(n.pts, n.egri); ctx.stroke(); }  // noktalıda beyaz hale noktaları siler
     ctx.setLineDash(cizgiTireleri(n.tip, w)); ctx.strokeStyle = n.renk; ctx.lineWidth = n.tip === "noktali" ? w * 1.4 : w;
-    cizgiYolu(n.pts); ctx.stroke();
+    cizgiYolu(n.pts, n.egri); ctx.stroke();
     ctx.setLineDash([]);
-    if (n.metin){ const m = cizgiOrtasi(n.pts); notKutusu(n.metin, m[0], m[1], n.renk, n.boyut, false); }
+    if (n.metin){ const m = cizgiOrtasi(n.pts, n.egri); notKutusu(n.metin, m[0], m[1], n.renk, n.boyut, false); }
   });
   NOTLAR.forEach(n => {
     if (n.tur === "cizgi") return;
@@ -110,7 +144,7 @@ function drawNotlar(){
     const w = +$("n-kalinlik").value, renk = $("n-renk").value;
     ctx.strokeStyle = renk; ctx.lineWidth = w;
     ctx.setLineDash(cizgiTireleri($("n-tip").value, w));
-    cizgiYolu(NOT_CIZGI); ctx.stroke();
+    cizgiYolu(NOT_CIZGI, $("n-egri").checked); ctx.stroke();
     if (NOT_IMLEC){
       const s = NOT_CIZGI[NOT_CIZGI.length - 1];
       ctx.setLineDash([6, 5]); ctx.lineWidth = 1.6;
@@ -133,7 +167,15 @@ function notTutamaclari(dene){
       dene(n.a.lat, n.a.lon, {tur: "not", ad: "Ok başı", tasi: (la, lo) => { n.a = {lat: la, lon: lo}; }, bitir: notListe});
       dene(n.b.lat, n.b.lon, {tur: "not", ad: "Ok ucu", tasi: (la, lo) => { n.b = {lat: la, lon: lo}; }, bitir: notListe});
     } else if (n.tur === "cizgi"){
-      n.pts.forEach((p, i) => dene(p.lat, p.lon, {tur: "not", ad: "Çizgi köşesi " + (i + 1), tasi: (la, lo) => { p.lat = la; p.lon = lo; }, bitir: notListe}));
+      n.pts.forEach((p, i) => dene(p.lat, p.lon, {tur: "not", ad: (n.metin || "Çizgi") + " köşesi " + (i + 1),
+        tasi: (la, lo) => { p.lat = la; p.lon = lo; },
+        bitir: () => {                                              // listeden gelen çizgide yeni koordinat satıra yazılır
+          if (n.kaynak === "liste"){
+            const ce = satirYaz("n-liste", p.li, p.cs, p.ce, p.lat, p.lon);
+            if (ce) p.ce = ce; else toast("Koordinat listesi değişmiş; yeni konum listeye yazılamadı. \"Çizgileri çiz\" ile yenileyin.", true);
+          }
+          notListe();
+        }}));
     } else dene(n.lat, n.lon, {tur: "not", ad: n.metin || "Not", tasi: (la, lo) => { n.lat = la; n.lon = lo; }, bitir: notListe});
   });
 }
@@ -155,13 +197,19 @@ function notListe(){
     const meta = document.createElement("span");
     meta.className = "zone-meta";
     meta.textContent = n.tur === "cizgi"
-      ? "Çizgi · " + n.pts.length + " köşe · " + fmtDist(cizgiUzunluk(n.pts))
+      ? (n.egri ? "Eğri" : "Çizgi") + " · " + n.pts.length + " köşe · " + fmtDist(cizgiUzunluk(n.pts, n.egri)) + (n.kaynak === "liste" ? " · listeden" : "")
       : n.tur === "ok"
       ? "Ok · " + fmtDist(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).d) + " · " + String(Math.round(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).az)).padStart(3, "0") + "°"
       : "Not · " + fk(n.lat, n.lon);
     const kutu = document.createElement("span");
     kutu.className = "zone-name"; kutu.append(inp, meta);
-    row.append(swatch(n.renk, v => n.renk = v), kutu,
+    row.append(swatch(n.renk, v => n.renk = v), kutu);
+    if (n.tur === "cizgi"){
+      const eb = smallBtn("egri", () => { n.egri = !n.egri; notListe(); draw(); degisti(); });
+      eb.setAttribute("aria-pressed", n.egri ? "true" : "false");
+      row.append(eb);
+    }
+    row.append(
       smallBtn("odak", () => n.tur === "cizgi"
         ? focusOn(Math.min(...n.pts.map(p => p.lat)), Math.min(...n.pts.map(p => p.lon)), Math.max(...n.pts.map(p => p.lat)), Math.max(...n.pts.map(p => p.lon)))
         : n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
@@ -170,6 +218,40 @@ function notListe(){
     host.appendChild(row);
   });
 }
+
+/* ---- koordinat listesinden çizgiler: her grup bir çizgi (Alanlar biçimi; boş satır yeni çizgi) ---- */
+function cizgileriCiz(){
+  const res = parseText($("n-liste").value);
+  const eski = new Map();
+  NOTLAR.forEach(n => { if (n.kaynak === "liste" && !eski.has(n.metin)) eski.set(n.metin, n); });
+  const yeni = res.zones.filter(z => z.points.length >= 2).map(z => {
+    const e = eski.get(z.name);
+    return {tur: "cizgi", kaynak: "liste", metin: z.name,
+            pts: z.points.map(p => ({lat: p.lat, lon: p.lon, li: p.li, cs: p.cs, ce: p.ce})),
+            renk: e ? e.renk : $("n-renk").value, boyut: e ? e.boyut : +$("n-boyut").value,
+            tip: e ? e.tip : $("n-tip").value, kalinlik: e ? e.kalinlik : +$("n-kalinlik").value,
+            egri: e ? e.egri : $("n-egri").checked};
+  });
+  NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste").concat(yeni);
+  const tek = res.zones.filter(z => z.points.length < 2).length;
+  $("n-liste-msg").innerHTML = yeni.length
+    ? '<span class="ok">' + yeni.length + " çizgi, " + yeni.reduce((s, n) => s + n.pts.length, 0) + " köşe çizildi.</span>" +
+      (tek ? ' <span class="warn">' + tek + " grup tek noktalı, atlandı.</span>" : "")
+    : '<span class="warn">En az iki koordinatlık bir grup gerekli.</span>';
+  if (res.errors.length) $("n-liste-msg").innerHTML += '<br><span class="warn">' + res.errors.slice(0, 6).map(esc).join("<br>") + "</span>";
+  notListe();
+  if (yeni.length){ hideEmpty(); fitAll(); } else draw();
+  degisti();
+}
+/* proje açılınca: listeden gelen çizgilere satır konumlarını yeniden bağla (sürükleyince listeye yazılabilsin) */
+function listeKonumlariBagla(){
+  const z = parseText($("n-liste").value).zones.filter(z => z.points.length >= 2), L = NOTLAR.filter(n => n.kaynak === "liste");
+  if (z.length !== L.length) return;
+  L.forEach((n, i) => { if (z[i].points.length === n.pts.length) n.pts.forEach((p, k) => { p.li = z[i].points[k].li; p.cs = z[i].points[k].cs; p.ce = z[i].points[k].ce; }); });
+}
+$("btn-n-liste").onclick = cizgileriCiz;
+$("btn-n-liste-temizle").onclick = () => { $("n-liste").value = ""; NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste"); $("n-liste-msg").textContent = ""; notListe(); draw(); degisti(); };
+XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-notes", ad: "Çizgiler"};
 
 /* ---- haritaya tıklama ---- */
 cv.addEventListener("click", e => {
@@ -233,7 +315,8 @@ projeTopla = function(){
   const o = projeToplaNotsuz();
   const r6 = v => Math.round(v * 1e6) / 1e6, k = p => ({enlem: r6(p.lat), boylam: r6(p.lon)});
   o.notlar = NOTLAR.map(n => n.tur === "cizgi"
-    ? {tur: "cizgi", noktalar: n.pts.map(k), metin: n.metin || "", renk: n.renk, boyut: n.boyut, tip: n.tip, kalinlik: n.kalinlik}
+    ? Object.assign({tur: "cizgi", noktalar: n.pts.map(k), metin: n.metin || "", renk: n.renk, boyut: n.boyut, tip: n.tip, kalinlik: n.kalinlik},
+                    n.egri ? {egri: true} : {}, n.kaynak ? {kaynak: n.kaynak} : {})
     : n.tur === "ok"
     ? {tur: "ok", bas: k(n.a), uc: k(n.b), metin: n.metin || "", renk: n.renk, boyut: n.boyut}
     : Object.assign({tur: "not", metin: n.metin || "", renk: n.renk, boyut: n.boyut}, k(n)));
@@ -249,11 +332,13 @@ projeYukle = function(o){
   NOTLAR = (o.notlar || []).filter(x => x.tur === "cizgi" ? Array.isArray(x.noktalar) && x.noktalar.filter(n).length >= 2
                                        : x.tur === "ok" ? n(x.bas) && n(x.uc) : n(x)).map(x => x.tur === "cizgi"
     ? {tur: "cizgi", pts: x.noktalar.filter(n).map(p => ({lat: +p.enlem, lon: +p.boylam})), metin: x.metin || "", renk: x.renk || NOT_RENKLER[1],
-       boyut: +x.boyut || 13, tip: TIPLER.includes(x.tip) ? x.tip : "duz", kalinlik: +x.kalinlik || 2.5}
+       boyut: +x.boyut || 13, tip: TIPLER.includes(x.tip) ? x.tip : "duz", kalinlik: +x.kalinlik || 2.5,
+       egri: !!x.egri, kaynak: x.kaynak === "liste" ? "liste" : undefined}
     : x.tur === "ok"
     ? {tur: "ok", a: {lat: +x.bas.enlem, lon: +x.bas.boylam}, b: {lat: +x.uc.enlem, lon: +x.uc.boylam}, metin: x.metin || "", renk: x.renk || NOT_RENKLER[1], boyut: +x.boyut || 13}
     : {tur: "not", lat: +x.enlem, lon: +x.boylam, metin: x.metin || "", renk: x.renk || NOT_RENKLER[1], boyut: +x.boyut || 13});
   NOT_CIZGI = []; cizgiDugmeleri();
+  listeKonumlariBagla();
   notListe();
   if (NOTLAR.length) hideEmpty();
   draw();

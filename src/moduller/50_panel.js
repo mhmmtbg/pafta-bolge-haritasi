@@ -30,7 +30,7 @@ function drawVurgu(){
   } else if (v.tur === "not"){
     const n = v.n;
     if (n.tur === "ok") hat([n.a, n.b]);
-    else if (n.tur === "cizgi") hat(n.pts);
+    else if (n.tur === "cizgi") ciz(() => cizgiYolu(n.pts, n.egri));
     else halka(n.lat, n.lon, 9);
   }
   ctx.restore();
