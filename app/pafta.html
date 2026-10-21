@@ -164,6 +164,9 @@
   .kaydir.sanal .zone-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .liste-ara{width:100%;margin:12px 0 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--ink-2);color:var(--text);font:inherit;font-size:13px;box-sizing:border-box}
   .liste-ara:focus{outline:2px solid var(--magenta);outline-offset:-1px}
+  .zone.secili{background:#16303b;outline:1px solid var(--amber);outline-offset:-1px}
+  html.acik .zone.secili{background:#e6eef1}
+  .dis-sonuc{margin-top:8px}
   .liste-say{margin:6px 0 0;font-size:11.5px;color:var(--dim)}
   #zones:not(:empty),#c-list:not(:empty),#r-list:not(:empty),#p-list:not(:empty),#m-list:not(:empty){margin-top:14px}
 
@@ -612,6 +615,7 @@
         </div>
         <p class="hint">Satıra #d62828 gibi bir renk kodu eklerseniz o nokta o renkte çizilir.</p>
         <div class="msg" id="p-msg"></div>
+        <div class="msg dis-sonuc" id="p-dis-sonuc" hidden></div>
         <div id="p-ust" hidden>
           <input type="search" id="p-ara" data-yerel="1" class="liste-ara" placeholder="Noktalarda ara (ad ya da koordinat)" spellcheck="false" autocomplete="off" aria-label="Noktalarda ara">
           <div class="liste-say" id="p-say" aria-live="polite"></div>
@@ -643,6 +647,8 @@
         </div>
         <label class="check" style="margin-top:8px">Nokta adlarını göster <input type="checkbox" class="toggle" id="p-names" checked></label>
         <label class="check">Etikette koordinatı da göster <input type="checkbox" class="toggle" id="p-coords"></label>
+        <label class="check">Alanların dışındaki noktaları vurgula <input type="checkbox" class="toggle" id="p-dis"></label>
+        <label class="check" id="p-dis-daire-satir" hidden>Daireleri de alan say <input type="checkbox" class="toggle" id="p-dis-daire"></label>
       </div>
     </div>
 
@@ -2287,23 +2293,20 @@ function drawPointsLayer(){
   PT_EKRAN = vis;
   if (!vis.length) return;
   ctx.save();
-  // çok sıkışık görünümde aynı pikselde üst üste binen işaretler tek çizilir (görüntü aynı, iş çok daha az)
+  // sıkışık görünümde bir işaretin altında kalacak kadar yakın olanlar çizilmez: kalanlar eskisi gibi kendi renginde, beyaz halkalı görünür
   let ciz = vis;
-  if (vis.length > 2500){
-    const hs = Math.max(1.5, s * .5), g = new Set();
+  if (vis.length > 1500){
+    const hs = Math.max(2, s * 1.3), g = new Set();
     ciz = vis.filter(v => { const k = Math.floor(v[0] / hs) * 100003 + Math.floor(v[1] / hs); if (g.has(k)) return false; g.add(k); return true; });
   }
-  // önce işaretler (renk başına tek yol), sonra etiketler (etiket işaretin altında kalmasın)
-  const gruplar = new Map();
-  for (const v of ciz){ const c = v[2].color; const l = gruplar.get(c); if (l) l.push(v); else gruplar.set(c, [v]); }
   ctx.lineJoin = "round";
-  gruplar.forEach((l, c) => {
-    ctx.beginPath(); for (const v of l) markerEkle(shape, v[0], v[1], s);
-    ctx.fillStyle = c; ctx.fill();
+  for (const v of ciz){
+    markerPath(shape, v[0], v[1], s);
+    ctx.fillStyle = v[2].color; ctx.fill();
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.8; ctx.stroke();
-    ctx.beginPath(); for (const v of l) markerEkle(shape, v[0], v[1], s + 1.4);
+    markerPath(shape, v[0], v[1], s + 1.4);
     ctx.strokeStyle = "rgba(22,34,42,.55)"; ctx.lineWidth = .8; ctx.stroke();
-  });
+  }
   if (!withNames && !withCoords){ ctx.restore(); return; }        // etiketler kapalı: yalnız işaretler
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   const f1 = "600 12.5px " + FONT(), f2 = "10.5px " + FONT();
@@ -2852,6 +2855,7 @@ function draw(){
   if (opt("opt-layer-measure")) drawMeasureLayer();
   if (opt("opt-layer-notes")) drawNotlar();
   drawVurgu();                                                           // vurgu adlardan önce: adları kapatmasın
+  drawNoktaVurgu();
   drawAlanAdlari();
   if (sev) drawAdmLabels(sev);
   if (opt("opt-fir")) drawFIR("labels");
@@ -3248,6 +3252,7 @@ function noktaSuz(){
 }
 function pointList(){
   const host = $("p-list"), n = POINTS.length;
+  if (NOKTA_SEC && POINTS.indexOf(NOKTA_SEC) < 0) NOKTA_SEC = null;
   $("p-ust").hidden = !n;
   host.classList.toggle("sanal", n > 0);
   if (!n){ host.textContent = ""; host.style.removeProperty("--ic"); PL.bas = PL.son = -1; PL.idx = null; return; }
@@ -3275,6 +3280,16 @@ function noktaPencere(){
     const p = POINTS[dizi ? dizi[i] : i];
     const row = rowOf(swatch(p.color, v => p.color = v), p.name, fk(p.lat, p.lon));
     row.style.top = i * NOKTA_SATIR + "px";
+    if (p === NOKTA_SEC) row.classList.add("secili");
+    row.addEventListener("click", e => {                      // satır seçilir: haritada turuncu halkayla gösterilir; yeniden tıklayınca kalkar
+      if (e.target.closest("button, input")) return;
+      NOKTA_SEC = NOKTA_SEC === p ? null : p;
+      if (NOKTA_SEC){
+        const X = sx(p.lon), Y = sy(p.lat);
+        if (X < 30 || X > W - 30 || Y < 30 || Y > H - 30){ view.cx = wx(p.lon); view.cy = wy(p.lat); }   // ekran dışındaysa haritayı ona kaydır
+      }
+      PL.bas = PL.son = -1; noktaPencere(); draw();
+    });
     row.append(
       smallBtn("odak", () => focusOn(p.lat, p.lon, p.lat, p.lon)),
       smallBtn("sil", () => { const k = POINTS.indexOf(p); if (k >= 0) POINTS.splice(k, 1); pointList(); draw(); }));
@@ -3546,7 +3561,7 @@ window.addEventListener("resize", resize);
 resize();
 fitWorld(true);
 /* ============ uygulama: proje dosyası, masaüstü köprüsü, kısayollar ============ */
-const APP_VER = "2.5.0";
+const APP_VER = "2.6.0";
 const MASAUSTU = window.masaustu || null;          // exe sürümünde shim.js sağlar
 document.body.classList.toggle("desktop", !!MASAUSTU);
 $("ver-line").textContent = "Sürüm " + APP_VER + (MASAUSTU ? ", masaüstü" : ", tarayıcı");
@@ -6550,6 +6565,102 @@ function rozetler(){
     r.title = say[id] + " " + ad[id];
   });
 }
+
+/* ============ noktalar: listeden seçilen noktayı vurgulama, alanların dışında kalan noktalar ============ */
+/* draw() bu dosyadaki fonksiyonları modül kodundan önce de çağırabilir: durum var ile, yardımcılar function ile. */
+var NOKTA_SEC = null;                       // listeden seçilen nokta (POINTS öğesi)
+var DIS = {sig: "", dis: null, n: 0, disSay: 0, alanSay: 0, metin: ""};
+
+function disAcik(){ const e = document.getElementById("p-dis"); return !!(e && e.checked); }
+
+/* Noktaların alanların dışında olup olmadığı: ekrandaki çizgiyle aynı geometri için izdüşüm koordinatında (wx, wy) çokgen içi sınaması.
+   Sonuç; alanların, dairelerin, noktaların ve görünüm kipinin değişmediği sürece önbellekten gelir. */
+function disHesapla(){
+  if (!disAcik() || typeof POINTS === "undefined" || !POINTS.length) return null;
+  const dairede = document.getElementById("p-dis-daire").checked;
+  const alanlar = opt("opt-layer-areas") ? ZONES.filter(z => z.visible && z.points.length > 2) : [];
+  const daireler = dairede && opt("opt-layer-circles") ? CIRCLES : [];
+  let a = 0, k = 0;
+  for (const z of alanlar) for (const p of z.points){ a += p.lat * (k % 13 + 1) + p.lon * (k % 7 + 1); k++; }
+  for (const c of daireler){ a += c.lat * 3 + c.lon * 5 + c.d; k++; }
+  let b = 0;
+  for (let i = 0; i < POINTS.length; i++) b += POINTS[i].lat * (i % 11 + 1) + POINTS[i].lon * (i % 5 + 1);
+  const sig = [view.mode, view.phi0, alanlar.length, daireler.length, k, a.toFixed(6), POINTS.length, b.toFixed(6)].join("|");
+  if (DIS.sig === sig) return DIS;
+  const polys = [];
+  const ekle = (xy) => {
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (let i = 0; i < xy.length; i += 2){ if (xy[i] < x0) x0 = xy[i]; if (xy[i] > x1) x1 = xy[i]; if (xy[i+1] < y0) y0 = xy[i+1]; if (xy[i+1] > y1) y1 = xy[i+1]; }
+    polys.push({xy, x0, x1, y0, y1});
+  };
+  for (const z of alanlar){ const xy = []; z.points.forEach(p => xy.push(wx(p.lon), wy(p.lat))); ekle(xy); }
+  for (const c of daireler){ const xy = []; for (let i = 0; i < c.ring.length; i += 2) xy.push(wx(c.ring[i]), wy(c.ring[i+1])); ekle(xy); }
+  const dis = new Set();
+  let ic = 0;
+  for (const p of POINTS){
+    const x = wx(p.lon), y = wy(p.lat);
+    let icinde = false;
+    for (const q of polys){
+      if (x < q.x0 || x > q.x1 || y < q.y0 || y > q.y1) continue;
+      const v = q.xy; let c = false;
+      for (let i = 0, j = v.length - 2; i < v.length; j = i, i += 2)
+        if ((v[i+1] > y) !== (v[j+1] > y) && x < (v[j] - v[i]) * (y - v[i+1]) / (v[j+1] - v[i+1]) + v[i]) c = !c;
+      if (c){ icinde = true; break; }
+    }
+    if (icinde) ic++; else dis.add(p);
+  }
+  const n = POINTS.length, f = v => v.toLocaleString("tr-TR");
+  const yuz = v => "%" + (100 * v / n).toLocaleString("tr-TR", {minimumFractionDigits: 1, maximumFractionDigits: 1});
+  DIS = {sig, dis: polys.length ? dis : null, n, disSay: n - ic, alanSay: polys.length,
+    metin: polys.length
+      ? '<b>' + f(n - ic) + '</b> / ' + f(n) + ' nokta ' + (daireler.length ? "alan ve dairelerin" : "alanların") + ' dışında (' + yuz(n - ic) + '); ' + f(ic) + ' nokta içinde (' + yuz(ic) + ').'
+      : '<span class="warn">Çizili alan yok; dışarıda sayılacak bir şey yok.</span>'};
+  return DIS;
+}
+function disSonucYaz(){
+  const el = document.getElementById("p-dis-sonuc");
+  if (!el) return;
+  const d = disAcik() ? DIS : null;
+  const m = d && d.metin ? d.metin : "";
+  if (el.dataset.m !== m){ el.dataset.m = m; el.innerHTML = m; }
+  el.hidden = !m;
+  const r = document.getElementById("p-dis-daire-satir"); if (r) r.hidden = !disAcik();
+}
+
+/* dışarıdaki noktalar kırmızı halkayla, listeden seçilen nokta turuncu halkayla; baskıda çizilmez */
+function drawNoktaVurgu(){
+  if (typeof BASKI_SURUYOR !== "undefined" && BASKI_SURUYOR) return;
+  const d = disHesapla();
+  disSonucYaz();
+  const sec = NOKTA_SEC && typeof POINTS !== "undefined" ? NOKTA_SEC : null;
+  if (!(d && d.dis && d.dis.size) && !sec) return;
+  ctx.save();
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if (d && d.dis && d.dis.size && PT_EKRAN){
+    const r = (parseFloat($("p-size").value) || 6) + 4, g = new Set(), kal = [];
+    for (const v of PT_EKRAN){
+      if (!d.dis.has(v[2])) continue;
+      const k = Math.floor(v[0] / 5) * 100003 + Math.floor(v[1] / 5);           // sıkışıkta piksel başına bir halka
+      if (g.has(k)) continue; g.add(k); kal.push(v);
+    }
+    if (kal.length){
+      ctx.beginPath(); for (const v of kal){ ctx.moveTo(v[0] + r, v[1]); ctx.arc(v[0], v[1], r, 0, 6.284); }
+      ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 4; ctx.stroke();
+      ctx.strokeStyle = "#d7263d"; ctx.lineWidth = 2; ctx.stroke();
+    }
+  }
+  if (sec){
+    const X = sx(sec.lon), Y = sy(sec.lat);
+    ctx.beginPath(); ctx.arc(X, Y, 13, 0, 6.284);
+    ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 7; ctx.stroke();
+    ctx.strokeStyle = "#f2a93b"; ctx.lineWidth = 3; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+$("p-dis").addEventListener("change", () => { disSonucYaz(); scheduleDraw(); });
+$("p-dis-daire").addEventListener("change", () => scheduleDraw());
+disSonucYaz();
 
 /* ============ Dosya menüsü ve tema ============ */
 /* Araç çubuğundaki "Dosya" düğmesi (ve sol üstteki işaret) proje ve çıktı işlerini tek yerde toplar. */

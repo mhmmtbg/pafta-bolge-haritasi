@@ -25,6 +25,10 @@ Bütün araçlar aynı ayrıştırıcıyı kullanır. Tablolar Excel veya Word'd
 
 **Çok sayıda nokta:** Noktalar ve Ölçüm sekmelerinde liste kendi kutusunda kaydırılır; başlık, girdi alanı ve işaret ayarları yerinde kalır. Liste yalnız görünen satırları oluşturduğu için on binlerce nokta da akıcıdır. Noktalar sekmesindeki **arama kutusu** adı ya da koordinatı yazılana göre listeyi süzer. Haritada çok sıkışık görünümde bazı nokta adları yazılmaz; yaklaştıkça görünür. Lejant en çok 12 alan ve 8 ölçüm hattı sayar, fazlasını "+ N daha" diye özetler.
 
+**Nokta seçimi:** Nokta listesinde bir satıra tıklamak o noktayı haritada turuncu halkayla gösterir; yeniden tıklamak kaldırır.
+
+**Alan dışındaki noktalar:** Noktalar → İşaret → *Alanların dışındaki noktaları vurgula* açıkken çizili alanların hiçbirinin içinde kalmayan noktalar kırmızı halkayla işaretlenir. Nokta listesinin üstünde toplam nokta sayısı, dışarıda kalan ve içeride kalan nokta sayıları ile yüzdeleri yazılır. Alanların içi ekrandaki çizgilere göre (çokgenin köşelerini birleştiren doğrular) hesaplanır; gizli alanlar sayılmaz. *Daireleri de alan say* ile daireler de içeri sayılır.
+
 **Sekme rozetleri:** Sol şeritteki araç düğmelerinin köşesindeki sayı, o araçtaki öğe sayısıdır (alan, daire merkezi, mesafe eğrisi, nokta, ölçüm noktası, not).
 
 ## Haritadan seç

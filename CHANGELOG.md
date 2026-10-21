@@ -1,5 +1,11 @@
 # Değişiklik Günlüğü
 
+## v2.6.0 — 2026-10-21
+
+- **Noktalar eskisi gibi kendi renginde çizilir:** Sıkışık görünümde noktalar renk gruplarına ayrılıp üst üste basılmıyor; her nokta kendi rengiyle, beyaz halkalıdır. Çok sıkışıkta bir noktanın altında kalacak kadar yakın olanlar çizilmez.
+- **Listeden seçilen nokta haritada vurgulanır:** Nokta listesinde bir satıra tıklamak o noktayı haritada turuncu halkayla işaretler (ekran dışındaysa harita ona kayar); aynı satıra yeniden tıklamak seçimi kaldırır. Baskıda çıkmaz.
+- **Alanların dışındaki noktalar:** Noktalar → İşaret bölümünde **Alanların dışındaki noktaları vurgula**. Açıkken dışarıda kalan noktalar kırmızı halkayla işaretlenir ve listenin üstünde toplam nokta, dışarıdaki ve içerideki sayı yüzdeleriyle yazılır (ör. *3 / 7 nokta alanların dışında (%42,9); 4 nokta içinde (%57,1)*). **Daireleri de alan say** seçeneği daireleri de içeri sayar. Gizlenmiş alanlar ve kapalı Alanlar katmanı sayılmaz; sonuç alanlar ya da noktalar değişince kendiliğinden güncellenir. Seçim projeye kaydedilir.
+
 ## v2.5.0 — 2026-10-21
 
 **Çok sayıda veriyle hız** (26.000 nokta + 300 alan + 3.000 köşeli ölçüm hattıyla denendi; tam görünümde bir kare 830 ms → ~70 ms, yakın görünümde 290 ms → ~40 ms; yalnız 26.000 noktayla 700 ms → ~40 ms)
