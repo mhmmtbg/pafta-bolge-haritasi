@@ -72,6 +72,13 @@
                background:rgba(14,26,33,.92);color:#e8f0f3;border-radius:10px;padding:8px 8px 8px 14px;font-size:13px;
                white-space:nowrap}
   .pick-banner.on{display:flex}
+  #secim-cubuk{position:absolute;top:66px;left:50%;transform:translateX(-50%);z-index:4;display:none;align-items:center;gap:12px;
+               background:rgba(14,26,33,.92);color:#e8f0f3;border-radius:10px;padding:8px 8px 8px 14px;font-size:13px;white-space:nowrap}
+  #secim-cubuk.on{display:flex}
+  #secim-cubuk::before{content:"";width:8px;height:8px;border-radius:50%;background:#3b8de0}
+  #secim-cubuk small{color:#8fa6ae;font-size:12px}
+  #secim-cubuk button{border:0;border-radius:6px;background:#3b8de0;color:#fff;font-weight:600;font-size:12.5px;padding:5px 11px;cursor:pointer}
+  #secim-cubuk button.sade{background:transparent;color:#c9d6db;border:1px solid #2c434e}
   .pick-banner::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--amber)}
   .pick-banner small{color:#8fa6ae;font-size:12px}
   .pick-banner button{border:0;border-radius:6px;background:var(--amber);color:var(--koyu);font-weight:600;font-size:12.5px;padding:5px 11px;cursor:pointer}
@@ -164,8 +171,8 @@
   .kaydir.sanal .zone-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .liste-ara{width:100%;margin:12px 0 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--ink-2);color:var(--text);font:inherit;font-size:13px;box-sizing:border-box}
   .liste-ara:focus{outline:2px solid var(--magenta);outline-offset:-1px}
-  .zone.secili{background:#16303b;outline:1px solid var(--amber);outline-offset:-1px}
-  html.acik .zone.secili{background:#e6eef1}
+  .zone.secili,.chain-head.secili,.mpt.secili{background:#16303b;outline:1px solid #3b8de0;outline-offset:-1px}
+  html.acik .zone.secili,html.acik .chain-head.secili,html.acik .mpt.secili{background:#dcebf7}
   .dis-sonuc{margin-top:8px}
   .liste-say{margin:6px 0 0;font-size:11.5px;color:var(--dim)}
   #zones:not(:empty),#c-list:not(:empty),#r-list:not(:empty),#p-list:not(:empty),#m-list:not(:empty){margin-top:14px}
@@ -809,6 +816,7 @@
         <label class="check">Ülke sınırları <input type="checkbox" class="toggle" id="opt-borders" checked></label>
         <label class="check">İl ve ilçe sınırları, adları <input type="checkbox" class="toggle" id="opt-adm" checked></label>
         <label class="check">Şehirler <input type="checkbox" class="toggle" id="opt-cities" checked></label>
+        <label class="check">Alan adlarını göster <input type="checkbox" class="toggle" id="opt-alan-adlari" checked></label>
         <label class="check">Alan köşe numaraları <input type="checkbox" class="toggle" id="opt-nums" checked></label>
         <label class="check">Alanların içini doldur <input type="checkbox" class="toggle" id="opt-fill" checked></label>
         <label class="fld" style="margin-top:4px">Dolgu yoğunluğu
@@ -953,6 +961,7 @@
       <button id="btn-out" title="Uzaklaş" aria-label="Uzaklaş"><svg viewBox="0 0 16 16"><path d="M3 8h10"/></svg></button>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div id="secim-cubuk" role="status"><span id="secim-metin"></span><small>Delete siler · Esc kaldırır</small><button id="secim-sil">Sil</button><button class="sade" id="secim-kaldir" title="Seçimi kaldır" aria-label="Seçimi kaldır">×</button></div>
     <div class="pick-banner" id="pick-banner" role="status"><span id="pick-text"></span><small>Esc ile bitir</small><button id="pick-done">Bitti</button></div>
     <div class="drop-hint"><span id="drop-text">Bırakın: .pafta projesi ya da koordinat listesi</span></div>
     <div class="hud readout"><span id="readout"><b>Enlem</b><span>—</span><b>Boylam</b><span>—</span></span><span id="ro-olcek"></span></div>
@@ -1102,6 +1111,9 @@
         <dt>Tekerlek, sürükle</dt><dd>Yakınlaş, haritayı kaydır</dd>
         <dt><kbd>Esc</kbd></dt><dd>Ölçümde yeni hat başlat; haritadan seçimi bitir</dd>
         <dt><kbd>Geri</kbd></dt><dd>Ölçümde son noktayı sil</dd>
+        <dt>Tıkla · <kbd>Ctrl</kbd>/<kbd>Shift</kbd> tıkla</dt><dd>Haritada nokta, alan, daire, ölçüm, not seç; Ctrl ya da Shift ile seçime ekle / çıkar</dd>
+        <dt><kbd>Shift</kbd> sürükle · <kbd>Ctrl</kbd> <kbd>A</kbd></dt><dd>Dikdörtgenle seç · hepsini seç</dd>
+        <dt><kbd>Delete</kbd></dt><dd>Seçili öğeleri sil (Ctrl+Z geri alır)</dd>
         <dt>Sürükle (köşe, nokta, not)</dt><dd>Haritada taşı; koordinat listeye yazılır</dd>
         <dt><kbd>F1</kbd></dt><dd>Bu pencere</dd>
       </dl>
@@ -1887,7 +1899,7 @@ function drawZones(){
 var ALAN_ADLARI = [];
 function drawAlanAdlari(){
   const etiketler = ALAN_ADLARI; ALAN_ADLARI = [];
-  if (!etiketler.length) return;
+  if (!etiketler.length || !opt("opt-alan-adlari")) return;
   ctx.save();
   ctx.font = "600 14px " + FONT();
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -2856,6 +2868,7 @@ function draw(){
   if (opt("opt-layer-notes")) drawNotlar();
   drawVurgu();                                                           // vurgu adlardan önce: adları kapatmasın
   drawNoktaVurgu();
+  drawSecim();
   drawAlanAdlari();
   if (sev) drawAdmLabels(sev);
   if (opt("opt-fir")) drawFIR("labels");
@@ -2982,7 +2995,7 @@ function toggleSat(){ $("opt-sat").checked = !$("opt-sat").checked; $("opt-sat")
 $("btn-sat").onclick = toggleSat;
 $("opt-sat").addEventListener("change", e => { $("sat-box").hidden = !e.target.checked; draw(); });
 $("opt-sat-alpha").addEventListener("input", draw);
-["opt-grid","opt-nums","opt-fill","opt-cities","opt-borders","opt-adm","opt-fir","opt-legend",
+["opt-grid","opt-nums","opt-alan-adlari","opt-fill","opt-cities","opt-borders","opt-adm","opt-fir","opt-legend",
  "opt-layer-areas","opt-layer-circles","opt-layer-rings","opt-layer-points",
  "opt-layer-measure","opt-title","opt-locator","p-shape","p-size","p-names","p-coords"].forEach(id => $(id).addEventListener("change", draw));
 ["t-title","t-sub","opt-fill-alpha"].forEach(id => $(id).addEventListener("input", draw));
@@ -3056,6 +3069,7 @@ function renderZoneList(){
         focusOn(a, c, b, d);
       }));
     vurguBagla(row, {tur: "alan", z});
+    secimBagla(row, [secD("alan", z)]);
     host.appendChild(row);
     if (z._stilAcik){
       const st = document.createElement("div");
@@ -3123,6 +3137,7 @@ function circleList(){
     const row = rowOf(swatch(c.color, v => CIRCLES.forEach(x => { if (x.label === label) x.color = v; })),
       label, c.n + " merkez, çevre " + fmtLen(2 * Math.PI * R_EARTH * Math.sin(c.d / R_EARTH)));
     vurguBagla(row, {tur: "daire", label});
+    secimBagla(row, CIRCLES.filter(x => x.label === label).map(x => secD("daire", x)));
     host.appendChild(row);
   });
 }
@@ -3192,7 +3207,7 @@ function ringList(){
   const host = $("r-list");
   host.innerHTML = "";
   const from = RING_LABEL === "Mavi Vatan sınırı" ? "Mavi Vatan sınırından" : "TR kara sınırından";
-  RINGS.forEach(lv => host.appendChild(rowOf(swatch(lv.color, v => lv.color = v), lv.label, from)));
+  RINGS.forEach(lv => { const row = rowOf(swatch(lv.color, v => lv.color = v), lv.label, from); secimBagla(row, [secD("egri", lv)]); host.appendChild(row); });
 }
 function buildRings(sync){
   const msg = $("r-msg"), unit = $("r-unit").value;
@@ -3252,7 +3267,6 @@ function noktaSuz(){
 }
 function pointList(){
   const host = $("p-list"), n = POINTS.length;
-  if (NOKTA_SEC && POINTS.indexOf(NOKTA_SEC) < 0) NOKTA_SEC = null;
   $("p-ust").hidden = !n;
   host.classList.toggle("sanal", n > 0);
   if (!n){ host.textContent = ""; host.style.removeProperty("--ic"); PL.bas = PL.son = -1; PL.idx = null; return; }
@@ -3280,16 +3294,7 @@ function noktaPencere(){
     const p = POINTS[dizi ? dizi[i] : i];
     const row = rowOf(swatch(p.color, v => p.color = v), p.name, fk(p.lat, p.lon));
     row.style.top = i * NOKTA_SATIR + "px";
-    if (p === NOKTA_SEC) row.classList.add("secili");
-    row.addEventListener("click", e => {                      // satır seçilir: haritada turuncu halkayla gösterilir; yeniden tıklayınca kalkar
-      if (e.target.closest("button, input")) return;
-      NOKTA_SEC = NOKTA_SEC === p ? null : p;
-      if (NOKTA_SEC){
-        const X = sx(p.lon), Y = sy(p.lat);
-        if (X < 30 || X > W - 30 || Y < 30 || Y > H - 30){ view.cx = wx(p.lon); view.cy = wy(p.lat); }   // ekran dışındaysa haritayı ona kaydır
-      }
-      PL.bas = PL.son = -1; noktaPencere(); draw();
-    });
+    secimBagla(row, [secD("nokta", p)], true);
     row.append(
       smallBtn("odak", () => focusOn(p.lat, p.lon, p.lat, p.lon)),
       smallBtn("sil", () => { const k = POINTS.indexOf(p); if (k >= 0) POINTS.splice(k, 1); pointList(); draw(); }));
@@ -3388,6 +3393,7 @@ function olcumSatir(it, top){
     tot.textContent = ch.pts.length >= 2 ? "Σ " + fmtDist(chainTotal(ch)) : ch.pts.length + " nokta";
     head.append(sw, title, tot);
     vurguBagla(head, {tur: "olcum", ch});
+    secimBagla(head, [secD("olcumHat", ch)]);
     head.style.top = top + "px";
     return head;
   }
@@ -3402,6 +3408,7 @@ function olcumSatir(it, top){
   const del = smallBtn("sil", () => { const k = ch.pts.indexOf(p); if (k >= 0) ch.pts.splice(k, 1); measureList(); draw(); });
   row.append(no, c, del);
   vurguBagla(row, {tur: "olcum", ch, p});
+  secimBagla(row, [secD("olcumNokta", p, {ch})], true);
   if (i > 0){
     const r = segBilgi(ch.pts[i-1], p).r;
     const seg = document.createElement("span");

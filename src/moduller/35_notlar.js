@@ -215,6 +215,7 @@ function notListe(){
         : n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
       smallBtn("sil", () => { NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
     vurguBagla(row, {tur: "not", n});
+    secimBagla(row, [secD("not", n)]);
     host.appendChild(row);
   });
 }

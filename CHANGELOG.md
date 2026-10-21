@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## v2.7.0 — 2026-10-21
+
+- **Haritada seçim:** Nokta, alan (köşesi, kenarı ya da içi), daire, mesafe eğrisi, ölçüm noktası ve hattı, not, ok ve çizgiler tıklanarak seçilir. `Ctrl` / `Shift` ile tıklamak seçime ekler ya da çıkarır; boşluğa tıklamak seçimi kaldırır. **Shift + sürükle** dikdörtgenle, **Ctrl+A** hepsini seçer. Seçilenler haritada mavi halkayla işaretlenir; üstte kaç öğenin seçili olduğunu gösteren bir çubuk çıkar. Ölçüm ve Not araçları açıkken tıklama o araçların işini yapar; seçim için başka bir sekme açın.
+- **Listelerde işaretleme:** Seçili öğelerin listedeki satırı (alan, daire, eğri, nokta, ölçüm, not) vurgulanır; listedeki bir satıra tıklamak da o öğeyi seçer (ekran dışındaysa harita ona kayar). Nokta listesi sanal olduğu için 26.000 noktada da çalışır.
+- **Delete ile silme:** Seçili öğeler silinir; alan, nokta, daire merkezi ve listeden gelen çizgilerin koordinat listesindeki satırları da çıkarılır (elle değiştirilmiş satırlara dokunulmaz, kaç satırın atlandığı bildirilir), böylece listeyi yeniden çizince geri gelmezler. Ctrl+Z geri alır. Kısmen silinen bir dairenin (merkez ve yarıçap çifti) merkez satırı, merkezin hiç dairesi kalmayana kadar listede durur. Silinen mesafe eğrileri Sınır mesafesi ayarlarından yeniden çizilebilir.
+- **Alan adlarını gizleme:** Görünüm → **Alan adlarını göster**.
+
 ## v2.6.0 — 2026-10-21
 
 - **Noktalar eskisi gibi kendi renginde çizilir:** Sıkışık görünümde noktalar renk gruplarına ayrılıp üst üste basılmıyor; her nokta kendi rengiyle, beyaz halkalıdır. Çok sıkışıkta bir noktanın altında kalacak kadar yakın olanlar çizilmez.

@@ -7,21 +7,25 @@ function vurguBagla(el, nesne){
   el.addEventListener("mouseleave", () => { if (VURGU === nesne) VURGU = null; el.classList.remove("vurgu"); scheduleDraw(); });
 }
 
-/* vurgulanan öğenin çevresine turuncu, beyaz kenarlı bir hat; baskıda çizilmez */
-function drawVurgu(){
-  const v = VURGU;
+/* öğenin çevresine, beyaz kenarlı bir hat (hover: turuncu, seçim: mavi); baskıda çizilmez */
+function vurguCiz(v, renk){
   if (!v || (typeof BASKI_SURUYOR !== "undefined" && BASKI_SURUYOR)) return;
+  renk = renk || "#f2a93b";
   ctx.save();
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   const ciz = yolKur => {
     ctx.beginPath(); yolKur();
     ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 7; ctx.stroke();
-    ctx.strokeStyle = "#f2a93b"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.strokeStyle = renk; ctx.lineWidth = 3; ctx.stroke();
   };
   const halka = (lat, lon, r) => ciz(() => ctx.arc(sx(lon), sy(lat), r || 12, 0, 6.284));
   const hat = (pts, kapali) => ciz(() => { pts.forEach((p, i) => i ? ctx.lineTo(sx(p.lon), sy(p.lat)) : ctx.moveTo(sx(p.lon), sy(p.lat))); if (kapali) ctx.closePath(); });
   if (v.tur === "alan") hat(v.z.points, v.z.points.length > 2);
-  else if (v.tur === "daire") ciz(() => CIRCLES.forEach(c => { if (c.label === v.label) traceFlat(c.ring, true); }));
+  else if (v.tur === "daire"){
+    if (v.c) ciz(() => traceFlat(v.c.ring, true));
+    else ciz(() => CIRCLES.forEach(c => { if (c.label === v.label) traceFlat(c.ring, true); }));
+  }
+  else if (v.tur === "egri") ciz(() => v.lv.lines.forEach(l => traceFlat(l, false)));
   else if (v.tur === "nokta") halka(v.p.lat, v.p.lon);
   else if (v.tur === "olcum"){
     if (v.p) halka(v.p.lat, v.p.lon, 11);
@@ -35,6 +39,7 @@ function drawVurgu(){
   }
   ctx.restore();
 }
+function drawVurgu(){ vurguCiz(VURGU); }
 
 /* ---- sekme rozetleri: araçtaki öğe sayısı ---- */
 var ROZET_ESKI = "";

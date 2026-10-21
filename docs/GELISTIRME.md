@@ -56,6 +56,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `45_baski.js` | Ölçekli PDF baskı (bağımlılıksız PDF yazıcı, JPEG gömülü) |
 | `50_panel.js` | Listeden haritaya vurgu, sekme rozetleri |
 | `52_nokta_secim.js` | Listeden seçilen nokta, alanların dışındaki noktalar (`disHesapla`: izdüşüm koordinatında çokgen içi sınaması, sonuç alanlar/noktalar/görünüm imzasıyla önbellekte) ve bunların haritada vurgusu |
+| `56_secim.js` | Seçim (`SEC`: öğe nesnesi → {tur, o}): tıklama ile bulma (`secimBul`, çizgilerde `isPointInStroke`), Shift+sürükle kutusu, listelerle bağ (`secimBagla`, `row._sec`), `Delete` ile silme (`secimSil`; `satirlariSil` metin satırını doğrulayıp çıkarır ve kalan nesnelerin `li` numaralarını kaydırır) |
 | `55_menu.js` | Dosya menüsü, açık/koyu tema (tema `localStorage`'da `pafta-tema`) |
 
 `src/pafta.src.html` içindeki ana bölümler (`/* ============ ... ============ */` başlıklarıyla ayrılmıştır):

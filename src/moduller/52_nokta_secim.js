@@ -1,6 +1,5 @@
-/* ============ noktalar: listeden seçilen noktayı vurgulama, alanların dışında kalan noktalar ============ */
+/* ============ noktalar: alanların dışında kalan noktalar ============ */
 /* draw() bu dosyadaki fonksiyonları modül kodundan önce de çağırabilir: durum var ile, yardımcılar function ile. */
-var NOKTA_SEC = null;                       // listeden seçilen nokta (POINTS öğesi)
 var DIS = {sig: "", dis: null, n: 0, disSay: 0, alanSay: 0, metin: ""};
 
 function disAcik(){ const e = document.getElementById("p-dis"); return !!(e && e.checked); }
@@ -59,13 +58,12 @@ function disSonucYaz(){
   const r = document.getElementById("p-dis-daire-satir"); if (r) r.hidden = !disAcik();
 }
 
-/* dışarıdaki noktalar kırmızı halkayla, listeden seçilen nokta turuncu halkayla; baskıda çizilmez */
+/* dışarıdaki noktalar kırmızı halkayla; baskıda çizilmez */
 function drawNoktaVurgu(){
   if (typeof BASKI_SURUYOR !== "undefined" && BASKI_SURUYOR) return;
   const d = disHesapla();
   disSonucYaz();
-  const sec = NOKTA_SEC && typeof POINTS !== "undefined" ? NOKTA_SEC : null;
-  if (!(d && d.dis && d.dis.size) && !sec) return;
+  if (!(d && d.dis && d.dis.size)) return;
   ctx.save();
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   if (d && d.dis && d.dis.size && PT_EKRAN){
@@ -80,12 +78,6 @@ function drawNoktaVurgu(){
       ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 4; ctx.stroke();
       ctx.strokeStyle = "#d7263d"; ctx.lineWidth = 2; ctx.stroke();
     }
-  }
-  if (sec){
-    const X = sx(sec.lon), Y = sy(sec.lat);
-    ctx.beginPath(); ctx.arc(X, Y, 13, 0, 6.284);
-    ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 7; ctx.stroke();
-    ctx.strokeStyle = "#f2a93b"; ctx.lineWidth = 3; ctx.stroke();
   }
   ctx.restore();
 }

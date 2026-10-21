@@ -171,6 +171,16 @@ Alan köşeleri, noktalar, daire merkezleri, ölçüm noktaları, notlar, ok uç
 - Liste çizimden sonra elle değiştirildiyse taşıma geri alınır ve önce yeniden çizmeniz istenir.
 - Görünüm → **Haritada sürükleyerek düzenle** ile kapatılabilir.
 
+## Seçme ve silme
+
+Ölçüm ve Not araçları açık değilken haritada tıklamak tıklanan öğeyi seçer: **nokta**, **alan** (köşesine, kenarına ya da içine), **daire** (halkasına), **mesafe eğrisi**, **ölçüm noktası** ya da **hattı**, **not**, **ok** ve **çizgi**. En üstteki öğe önceliklidir (nokta, ölçüm noktası, not, alan köşesi, çizgiler, alan içi). `Ctrl` ya da `Shift` ile tıklamak seçime ekler veya çıkarır, boşluğa tıklamak seçimi kaldırır. `Shift` ile sürükleyerek çizilen dikdörtgen, tamamı içinde kalan öğeleri seçer; `Ctrl+A` görünen katmanlardaki her şeyi seçer. Haritadan seçilen nokta, Noktalar sekmesi açıksa listede de görünür kalır.
+
+Seçili öğeler haritada mavi halkayla, listelerde mavi çerçeveli satırla işaretlenir; listedeki bir satıra tıklamak da onu seçer. Haritanın üstündeki çubuk seçili öğe sayısını ve türlerini gösterir.
+
+`Delete` (ya da çubuktaki **Sil**) seçili öğeleri siler. Alanlar, noktalar, daire merkezleri ve listeden gelen çizgiler için koordinat listesindeki satırlar da çıkarılır; böylece listeyi yeniden çizince geri gelmezler. Listede elle değiştirilmiş satırlar silinmez ve kaç satırın atlandığı bildirilir. `Ctrl+Z` silmeyi geri alır. Seçimi `Esc` kaldırır.
+
+Görünüm → **Alan adlarını göster** ile alan adları haritada gizlenebilir.
+
 **Geri al / yinele:** `Ctrl+Z` / `Ctrl+Y` (ya da `Ctrl+Shift+Z`) ve araç çubuğundaki oklar paftanın tüm durumunu (listeler, renkler, ölçümler, notlar) geri alır; harita görünümü yerinde kalır. Bir metin kutusunun içindeyken bu tuşlar o kutunun kendi geri almasını yapar. Son 60 adım tutulur; proje açınca ya da yeni pafta başlatınca geçmiş sıfırlanır.
 
 ## Görünüm
@@ -272,5 +282,8 @@ Dosya adları künye başlığından türetilir (`Karadeniz Test Bölgeleri` →
 | `Ctrl+U` | Uydu görüntüsü |
 | `Ctrl++` / `Ctrl+−` | Yakınlaş / uzaklaş |
 | Tekerlek, sürükleme | Yakınlaş, kaydır |
+| Tıklama, `Ctrl`/`Shift` + tıklama | Haritada öğe seç; seçime ekle / çıkar |
+| `Shift` + sürükleme, `Ctrl+A` | Dikdörtgenle seç; hepsini seç |
+| `Delete` | Seçili öğeleri sil (listedeki satırlarıyla; `Ctrl+Z` geri alır) |
 | `Esc` / `Geri` | Ölçümde yeni hat / son noktayı sil; haritadan seçimi bitir; yarım oku bırak; pencereleri kapat |
 | `F1` | Kısayollar ve veri kaynakları |
