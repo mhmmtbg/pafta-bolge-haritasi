@@ -68,7 +68,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | kılavuz, çerçeve, ölçek | Dereceli çerçeve, km ve NM çift ölçek çubuğu |
 | 1 · alanlar / 2 · daireler | Küresel alan ve çevre; jeodezik halkalar |
 | 3 · sınırdan mesafe | Eş uzaklıklı azimutal projeksiyonda ızgara, birleşim maskesi, tam Öklid mesafe dönüşümü (Felzenszwalb), marching squares, kapalı eğrilere birleştirme |
-| 4 · noktalar / 5 · ölçüm | İşaretler, etiket çakışma kontrolü; Vincenty ters problemi, büyük daire yayı |
+| 4 · noktalar / 5 · ölçüm | İşaretler (renk başına tek yol, sıkışıkta piksel başına bir işaret), ızgara dizinli etiket çakışma denetimi (`claim`; `LABELS`'a doğrudan eklenen kutular sonraki `claim`'de dizine alınır); Vincenty ters problemi, büyük daire yayı. Ölçüm parçaları `segBilgi(a, b)` ile (büyük daire noktaları, mesafe, kerteriz, orta nokta, kutu) iki ucu değişene kadar `WeakMap`'te önbelleklenir, `segDisinda` ekran dışı parçaları eler |
 | lejant, künye, bulduru | Pafta öğeleri |
 
 ### Proje dosyası (`.pafta`)
@@ -167,6 +167,10 @@ python mavi_vatan.py   # data/mavivatan.json (numpy, scipy, matplotlib, scikit-i
 `dunya.py`, `turkiye.py`, `kara_detay.py`, `il_ilce.py` ve `mavi_vatan.py` güncel kaynaklardan birebir aynı dosyaları üretir. VATSpy verisi VATSIM ağı için sık güncellenir ve gerçek ICAO yapısından ayrışabilir (ör. Çin FIR'ları); `fir.py` çıktısını kullanmadan önce Türkiye ve çevresindeki FIR'ları karşılaştırın.
 
 Uydu görüntüsü NASA Blue Marble Next Generation'ın 5400×2700 eşdikdörtgen sürümüdür (`basemap-data` Python paketindeki `bmng.jpg`). Yaklaşınca üstüne çizilen döşemeler (`uydu_doseme.json`) NASA GIBS Blue Marble Shaded Relief & Bathymetry katmanının [FreeTiler](https://github.com/freetiler/nasa-bluemarble) aynasından alınır: z6–z7 bölge kutusu (17,5°–52°D, 28°–48,5°K), z8 Türkiye.
+
+### Büyük listeler
+
+`pointList` ve `measureList` sanal listedir: kaydırma kutusunda (`.kaydir.sanal`) tek bir `.ic` yüksekliği `satır sayısı × sabit satır yüksekliği` verilir, yalnız görünen satırlar `top` ile yerleştirilir (`noktaPencere`, `olcumPencere`). Satır yükseklikleri CSS'te sabittir (`NOKTA_SATIR`, `OLC_BASLIK`, `OLC_SATIR`; CSS'teki değerlerle aynı tutulmalı). Satırlar kaydırınca yeniden kurulduğu için `mouseleave` gelmez; pencere yenilenirken listeden gelen vurgu temizlenir. Sekmenin yerleşimi flex sütunudur: liste `flex: 1 1 0` ile kalan yüksekliği alır, `--ic` değişkeni (içerik yüksekliği) küçük listelerin kutuyu şişirmesini önler. Alanlar, daireler, eğriler ve notlar listeleri sanal değildir, yalnız `.kaydir` ile sınırlıdır.
 
 ## Testler
 

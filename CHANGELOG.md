@@ -1,5 +1,21 @@
 # Değişiklik Günlüğü
 
+## v2.5.0 — 2026-10-21
+
+**Çok sayıda veriyle hız** (26.000 nokta + 300 alan + 3.000 köşeli ölçüm hattıyla denendi; tam görünümde bir kare 830 ms → ~70 ms, yakın görünümde 290 ms → ~40 ms; yalnız 26.000 noktayla 700 ms → ~40 ms)
+- **Nokta çizimi:** Aynı renkteki noktalar tek yolda çizilir; ekranda üst üste binen işaretler (çok sıkışık görünümde) tek çizilir. Nokta adlarının genişliği önbelleğe alınır. Etiketler için boş yer bulunamayan sıkışık görünümde adlar atlanır (az nokta varken ad yine de yazılır).
+- **Etiket çakışma denetimi** ızgara dizinli oldu; binlerce etiket artık karesel iş çıkarmıyor.
+- **Ölçüm hatları:** Her parçanın büyük daire noktaları, mesafesi ve kerterizi bir kez hesaplanıp önbelleğe alınır (nokta sürüklenene kadar); ekran dışındaki parçalar çizilmez, ekranda 22 pikselden kısa kalan parçalara mesafe etiketi konmaz, birbirine çok yakın köşe numaraları atlanır.
+- Şehir adlarının nokta üstüne binmemesi, imleç yapışması ve sürükleme tutamacı aramaları hızlandı.
+- **Lejant** en çok 12 alan ve 8 ölçüm hattı yazar; fazlası "+ 288 alan daha" satırıyla özetlenir (yüzlerce alanda lejant ekrana sığmıyordu).
+
+**Panel**
+- **Nokta listesi kendi kutusunda kaydırılır ve sanaldır:** yalnız görünen satırlar oluşturulur, 26.000 noktada sekme değiştirmek ve listeyi kaydırmak akıcıdır. Başlık, girdi alanı ve işaret seçenekleri yerinde kalır; liste kalan yüksekliği doldurur.
+- **Nokta araması:** listenin üstündeki kutu ad ya da koordinata göre süzer.
+- **Ölçüm listesi** de aynı şekilde sanal ve kaydırılabilir; yeni nokta eklenince liste sonuna kayar.
+- Alan, daire, mesafe eğrisi ve not listeleri uzayınca kendi kutularında kaydırılır.
+- İşaret ayarları (şekil, boyut, renk) tek satıra toplandı; nokta girdi alanı küçüldü.
+
 ## v2.4.0 — 2026-10-16
 
 - **Dosya menüsü:** Araç çubuğunda **Dosya** düğmesi (sol üstteki işaret de açar): Yeni pafta, Aç, son açılanlar (masaüstü), Kaydet, Farklı kaydet, PDF olarak kaydet (geçerli baskı ayarlarıyla), PDF ayarları, PNG, KML, GeoJSON, CSV ve tema.

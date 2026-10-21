@@ -141,6 +141,30 @@
          font-size:10px;font-weight:600;line-height:17px;text-align:center;font-variant-numeric:tabular-nums}
   .tab.active .rozet{background:#2c434e}
   .zone.off .zone-name,.zone.off .zone-meta{opacity:.42}
+  /* uzun listeler kendi kutusunda kaydırılır: alttaki seçenekler yerinde kalır */
+  .kaydir{max-height:min(46vh,380px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:6px;padding:0 4px;scrollbar-width:thin}
+  .kaydir:empty{border:0;padding:0}
+  .kaydir.sanal{position:relative}
+  /* Noktalar ve Ölçüm sekmeleri: başlık, girdi ve seçenekler yerinde durur; liste kalan yüksekliği doldurup içinde kaydırılır */
+  #pane-points.active,#pane-measure.active{display:flex;flex-direction:column;height:100%}
+  #pane-points > .group:first-of-type,#pane-measure > .group:first-of-type{display:flex;flex-direction:column;flex:1 1 auto}
+  #pane-points > .group:first-of-type > *,#pane-measure > .group:first-of-type > *{flex:none}
+  #pane-points > .group:first-of-type > #p-list,#pane-measure > .group:first-of-type > #m-list{flex:1 1 0;min-height:min(150px,var(--ic,150px));max-height:min(var(--ic,560px),560px)}
+  #pane-points > .group:last-of-type,#pane-measure > .group:last-of-type{flex:none}
+  #m-list:empty{display:none}
+  #m-list.sanal .chain-head{position:absolute;left:0;right:0;height:44px;margin:0;box-sizing:border-box;padding:0}
+  #m-list.sanal .mpt{position:absolute;left:0;right:0;height:88px;box-sizing:border-box;padding:6px 0;overflow:hidden}
+  #p-list:empty{display:none}
+  #p-input{height:104px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 64px;gap:0 10px}
+  .grid3 label.fld input[type=color]{width:100%}
+  #pane-points > .group:last-of-type{flex:none}
+  .kaydir.sanal .ic{position:relative;width:100%}
+  .kaydir.sanal .zone{position:absolute;left:0;right:0;height:50px;box-sizing:border-box;padding-top:0;padding-bottom:0}
+  .kaydir.sanal .zone-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .liste-ara{width:100%;margin:12px 0 0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--ink-2);color:var(--text);font:inherit;font-size:13px;box-sizing:border-box}
+  .liste-ara:focus{outline:2px solid var(--magenta);outline-offset:-1px}
+  .liste-say{margin:6px 0 0;font-size:11.5px;color:var(--dim)}
   #zones:not(:empty),#c-list:not(:empty),#r-list:not(:empty),#p-list:not(:empty),#m-list:not(:empty){margin-top:14px}
 
   /* ölçüm listesi */
@@ -405,6 +429,8 @@
     .tab{flex:1 0 64px}
     .tab.active::before{left:8px;right:8px;top:auto;bottom:0;width:auto;height:3px;border-radius:3px 3px 0 0}
     .panel{width:100%;flex:none}
+    #pane-points.active,#pane-measure.active{height:auto}
+    #pane-points > .group:first-of-type > #p-list,#pane-measure > .group:first-of-type > #m-list{flex:0 0 auto}
     .stage{height:72vh;flex:none}
   }
 </style>
@@ -483,7 +509,7 @@
         </div>
         <p class="hint">Tabloyu Excel veya Word'den olduğu gibi yapıştırın. Derece‑dakika‑saniye (41°30'15"K) ve ondalık derece (41.5042) okunur. Bölge adı boş satırlar üstteki bölgeye eklenir, boş satır yeni bölge başlatır.</p>
         <div class="msg" id="msg"></div>
-        <div id="zones"></div>
+        <div id="zones" class="kaydir"></div>
         <div class="row" id="rapor-row" hidden><button class="btn" id="btn-rapor" title="FIR, il/ilçe, Türkiye'ye uzaklık, Mavi Vatan ve alanlar arası mesafe">Alan raporu</button></div>
       </div>
     </div>
@@ -516,7 +542,7 @@
         </div>
         <p class="hint">Her satır bir merkez; yarıçapların hepsi her merkeze uygulanır ve her yarıçap kendi rengini alır. Bir merkeze yalnız kendi yarıçapını vermek için satırın sonuna yazın: <code>Merkez 2  41°K 29°D  10 NM</code>.</p>
         <div class="msg" id="c-msg"></div>
-        <div id="c-list"></div>
+        <div id="c-list" class="kaydir"></div>
       </div>
     </div>
 
@@ -565,7 +591,7 @@
         </div>
         <p class="hint">Eğriler NE 1:10m sınırından, eş uzaklıklı azimutal projeksiyonda kurulan mesafe alanından üretilir; çözünürlük her çizimden sonra yazılır.</p>
         <div class="msg" id="r-msg"></div>
-        <div id="r-list"></div>
+        <div id="r-list" class="kaydir"></div>
       </div>
     </div>
 
@@ -586,11 +612,15 @@
         </div>
         <p class="hint">Satıra #d62828 gibi bir renk kodu eklerseniz o nokta o renkte çizilir.</p>
         <div class="msg" id="p-msg"></div>
-        <div id="p-list"></div>
+        <div id="p-ust" hidden>
+          <input type="search" id="p-ara" data-yerel="1" class="liste-ara" placeholder="Noktalarda ara (ad ya da koordinat)" spellcheck="false" autocomplete="off" aria-label="Noktalarda ara">
+          <div class="liste-say" id="p-say" aria-live="polite"></div>
+        </div>
+        <div id="p-list" class="kaydir"></div>
       </div>
       <div class="group">
         <h3>İşaret</h3>
-        <div class="grid2">
+        <div class="grid3">
           <label class="fld" style="margin-top:0">Şekil
             <select id="p-shape">
               <option value="circle">daire</option>
@@ -607,10 +637,10 @@
               <option value="9">büyük</option>
             </select>
           </label>
+          <label class="fld" style="margin-top:0">Renk
+            <input type="color" id="p-color" value="#b3541e">
+          </label>
         </div>
-        <label class="fld">Varsayılan renk
-          <input type="color" id="p-color" value="#b3541e">
-        </label>
         <label class="check" style="margin-top:8px">Nokta adlarını göster <input type="checkbox" class="toggle" id="p-names" checked></label>
         <label class="check">Etikette koordinatı da göster <input type="checkbox" class="toggle" id="p-coords"></label>
       </div>
@@ -635,7 +665,7 @@
         </label>
         <div class="row" style="margin-top:8px"><button class="btn" id="btn-m-add">Noktayı ekle</button></div>
         <div class="msg" id="m-msg"></div>
-        <div id="m-list"></div>
+        <div id="m-list" class="kaydir"></div>
       </div>
       <div class="group">
         <h3>Gösterim</h3>
@@ -713,7 +743,7 @@
         <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Çizgi kipinde her tıklama bir köşe ekler; son köşeye yeniden tıklamak, çift tıklamak ya da Enter çizgiyi bitirir, Geri tuşu son köşeyi siler, Esc yarım çizgiyi bırakır. Notlar, ok uçları ve çizgi köşeleri sürüklenerek taşınır.</p>
         <div class="row"><button class="btn" id="btn-n-bitir" hidden>Çizgiyi bitir</button><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
         <div class="msg" id="n-msg"></div>
-        <div id="n-list"></div>
+        <div id="n-list" class="kaydir"></div>
       </div>
     </div>
 
@@ -1385,10 +1415,37 @@ function fitWorld(instant){ fitBounds(-72, -180, 78, 180, 0.06, instant); }
 
 /* ============ etiket çakışma kontrolü ============ */
 let LABELS = [];
+/* Çakışma denetimi ızgara dizinli: çok sayıda etiket (binlerce nokta) olsa da her sorgu yalnız komşu hücrelere bakar.
+   Başka yerlerden LABELS.push(...) ile eklenen kutular bir sonraki claim'de dizine alınır. */
+var LIZ = {kaynak: null, say: 0, hucre: new Map()};
+const LIZ_H = 48;
+const lizC = v => { const c = v !== v ? 0 : Math.floor(v / LIZ_H); return c < -6 ? -6 : c > 240 ? 240 : c; };     // taşan/sonsuz kutular kenar hücrede toplanır
+function lizEkle(b, i){
+  const x0 = lizC(b[0]), x1 = lizC(b[2]), y0 = lizC(b[1]), y1 = lizC(b[3]);
+  for (let cx = x0; cx <= x1; cx++) for (let cy = y0; cy <= y1; cy++){
+    const k = cx * 100003 + cy;
+    const l = LIZ.hucre.get(k);
+    if (l) l.push(i); else LIZ.hucre.set(k, [i]);
+  }
+}
+function lizGuncelle(){
+  if (LIZ.kaynak !== LABELS || LIZ.say > LABELS.length){ LIZ.kaynak = LABELS; LIZ.say = 0; LIZ.hucre = new Map(); }
+  for (; LIZ.say < LABELS.length; LIZ.say++) lizEkle(LABELS[LIZ.say], LIZ.say);
+}
 function claim(x, y, w, h){
-  for (const b of LABELS)
-    if (x < b[2] && x + w > b[0] && y < b[3] && y + h > b[1]) return false;
-  LABELS.push([x, y, x + w, y + h]);
+  lizGuncelle();
+  const x1 = x + w, y1 = y + h;
+  const cx0 = lizC(x), cx1 = lizC(x1), cy0 = lizC(y), cy1 = lizC(y1);
+  for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++){
+    const l = LIZ.hucre.get(cx * 100003 + cy);
+    if (!l) continue;
+    for (let j = 0; j < l.length; j++){
+      const b = LABELS[l[j]];
+      if (x < b[2] && x1 > b[0] && y < b[3] && y1 > b[1]) return false;
+    }
+  }
+  LABELS.push([x, y, x1, y1]);
+  LIZ.say = LABELS.length; lizEkle(LABELS[LABELS.length - 1], LABELS.length - 1);
   return true;
 }
 
@@ -1733,13 +1790,21 @@ function drawCities(){
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
   let drawn = 0;
   // kullanıcının işaretlediği bir nokta aynı yerdeyse şehir adı tekrar yazılmaz
-  const user = opt("opt-layer-points") ? POINTS.map(p => [sx(p.lon), sy(p.lat)]) : [];
+  const ug = new Map();
+  if (opt("opt-layer-points") && PT_EKRAN) for (const v of PT_EKRAN){ const k = Math.floor(v[0] / 14) * 100003 + Math.floor(v[1] / 14); const l = ug.get(k); if (l) l.push(v); else ug.set(k, [v]); }
+  const kullaniciVar = (X, Y) => {
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){
+      const l = ug.get((Math.floor(X / 14) + a) * 100003 + Math.floor(Y / 14) + b);
+      if (l) for (const u of l) if (Math.abs(u[0] - X) < 14 && Math.abs(u[1] - Y) < 14) return true;
+    }
+    return false;
+  };
   for (const c of WORLD.cities){
     if (c[3] > maxRank) continue;
     if (c[1] < b.latMin || c[1] > b.latMax || c[0] < b.lonMin || c[0] > b.lonMax) continue;
     if (drawn++ > 160) break;
     const X = sx(c[0]), Y = sy(c[1]);
-    if (user.some(u => Math.abs(u[0] - X) < 14 && Math.abs(u[1] - Y) < 14)) continue;
+    if (ug.size && kullaniciVar(X, Y)) continue;
     const cw = ctx.measureText(c[2]).width;
     if (!claim(X + 4, Y - 8, cw + 6, 16)) continue;
     ctx.fillStyle = SAT ? "#fff" : "#4a5d66";
@@ -2185,8 +2250,7 @@ function drawRingsLayer(){
 }
 
 /* ============ 4 · noktalar ============ */
-function markerPath(shape, X, Y, s){
-  ctx.beginPath();
+function markerEkle(shape, X, Y, s){                 // yolu sıfırlamadan ekler (birçok işaret tek yolda)
   switch (shape){
     case "triangle": ctx.moveTo(X, Y - s*1.25); ctx.lineTo(X + s*1.1, Y + s*.8); ctx.lineTo(X - s*1.1, Y + s*.8); ctx.closePath(); break;
     case "square":   ctx.rect(X - s*.9, Y - s*.9, s*1.8, s*1.8); break;
@@ -2196,47 +2260,79 @@ function markerPath(shape, X, Y, s){
       ctx.lineTo(X + s*1.2, Y - s*.35); ctx.lineTo(X + s*1.2, Y + s*.35); ctx.lineTo(X + s*.35, Y + s*.35);
       ctx.lineTo(X + s*.35, Y + s*1.2); ctx.lineTo(X - s*.35, Y + s*1.2); ctx.lineTo(X - s*.35, Y + s*.35);
       ctx.lineTo(X - s*1.2, Y + s*.35); ctx.lineTo(X - s*1.2, Y - s*.35); ctx.lineTo(X - s*.35, Y - s*.35); ctx.closePath(); break;
-    default: ctx.arc(X, Y, s, 0, 6.284);
+    default: ctx.moveTo(X + s, Y); ctx.arc(X, Y, s, 0, 6.284);
   }
 }
+function markerPath(shape, X, Y, s){ ctx.beginPath(); markerEkle(shape, X, Y, s); }
 
+/* Bu karede görünen noktaların ekran konumları ([X, Y, nokta]); şehir adlarının nokta üstüne binmemesi için de kullanılır. */
+var PT_EKRAN = null;
+const PT_ADLAR = new Map();            // ad -> genişlik (yazı tipi değişirse sıfırlanır)
+let PT_ADLAR_FONT = "";
 function drawPointsLayer(){
   if (!POINTS.length) return;
   const shape = $("p-shape").value, s = parseFloat($("p-size").value), withCoords = opt("p-coords"), withNames = opt("p-names");
-  const b = viewBounds();
-  ctx.save();
-  // önce işaretler, sonra etiketler (etiket işaretin altında kalmasın)
-  const vis = POINTS.filter(p => p.lon >= b.lonMin - 1 && p.lon <= b.lonMax + 1 && p.lat >= b.latMin - 1 && p.lat <= b.latMax + 1);
-  for (const p of vis){
+  // görünen noktalar: ekran piksel kutusunda (kenarda yarım işaret görünsün diye pay bırakılır)
+  const vis = [], pay = s + 16;
+  const lo = lonAt(-pay), hi = lonAt(W + pay);
+  const l0 = Math.min(lo, hi), l1 = Math.max(lo, hi);
+  const t0 = Math.min(latAt(H + pay), latAt(-pay)), t1 = Math.max(latAt(H + pay), latAt(-pay));
+  for (let i = 0; i < POINTS.length; i++){
+    const p = POINTS[i];
+    if (p.lon < l0 || p.lon > l1 || p.lat < t0 || p.lat > t1) continue;
     const X = sx(p.lon), Y = sy(p.lat);
-    markerPath(shape, X, Y, s);
-    ctx.fillStyle = p.color; ctx.fill();
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.8; ctx.stroke();
-    markerPath(shape, X, Y, s + 1.4);
-    ctx.strokeStyle = "rgba(22,34,42,.55)"; ctx.lineWidth = .8; ctx.stroke();
+    if (X < -pay || X > W + pay || Y < -pay || Y > H + pay) continue;
+    vis.push([X, Y, p]);
   }
+  PT_EKRAN = vis;
+  if (!vis.length) return;
+  ctx.save();
+  // çok sıkışık görünümde aynı pikselde üst üste binen işaretler tek çizilir (görüntü aynı, iş çok daha az)
+  let ciz = vis;
+  if (vis.length > 2500){
+    const hs = Math.max(1.5, s * .5), g = new Set();
+    ciz = vis.filter(v => { const k = Math.floor(v[0] / hs) * 100003 + Math.floor(v[1] / hs); if (g.has(k)) return false; g.add(k); return true; });
+  }
+  // önce işaretler (renk başına tek yol), sonra etiketler (etiket işaretin altında kalmasın)
+  const gruplar = new Map();
+  for (const v of ciz){ const c = v[2].color; const l = gruplar.get(c); if (l) l.push(v); else gruplar.set(c, [v]); }
+  ctx.lineJoin = "round";
+  gruplar.forEach((l, c) => {
+    ctx.beginPath(); for (const v of l) markerEkle(shape, v[0], v[1], s);
+    ctx.fillStyle = c; ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.8; ctx.stroke();
+    ctx.beginPath(); for (const v of l) markerEkle(shape, v[0], v[1], s + 1.4);
+    ctx.strokeStyle = "rgba(22,34,42,.55)"; ctx.lineWidth = .8; ctx.stroke();
+  });
   if (!withNames && !withCoords){ ctx.restore(); return; }        // etiketler kapalı: yalnız işaretler
   ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  for (const p of vis){
-    const X = sx(p.lon), Y = sy(p.lat);
+  const f1 = "600 12.5px " + FONT(), f2 = "10.5px " + FONT();
+  if (PT_ADLAR_FONT !== f1){ PT_ADLAR.clear(); PT_ADLAR_FONT = f1; }
+  if (PT_ADLAR.size > 60000) PT_ADLAR.clear();
+  const sik = vis.length > 400;           // sıkışık: boş yer bulunamayan etiket atlanır; seyrek: isim yine de üste yazılır
+  let yok = 0;
+  for (const v of vis){
+    if (sik && yok > 3000) break;         // ekran etiketle doldu: kalanını denemenin anlamı yok
+    const X = v[0], Y = v[1], p = v[2];
     const name = withNames ? p.name : fk(p.lat, p.lon);             // ad kapalıysa satırda yalnız koordinat
     const sub = withNames && withCoords ? fk(p.lat, p.lon) : "";
-    ctx.font = "600 12.5px " + FONT();
-    const w1 = ctx.measureText(name).width;
-    ctx.font = "10.5px " + FONT();
-    const w2 = sub ? ctx.measureText(sub).width : 0;
+    let w1 = withNames ? PT_ADLAR.get(name) : undefined;
+    if (w1 === undefined){ ctx.font = f1; w1 = ctx.measureText(name).width; if (withNames) PT_ADLAR.set(name, w1); }
+    let w2 = 0;
+    if (sub){ ctx.font = f2; w2 = ctx.measureText(sub).width; }
     const w = Math.max(w1, w2) + 8, h = sub ? 30 : 17;
-    // tercih sırası: üst, alt, sağ; hiçbiri boş değilse yine üste yaz — isim her zaman görünür
+    // tercih sırası: üst, alt, sağ
     const slots = [[X, Y - s - 5 - h], [X, Y + s + 5], [X + s + 6 + w/2, Y - h/2]];
-    let slot = slots[0];
+    let slot = null;
     for (const c of slots) if (claim(c[0] - w/2, c[1], w, h)){ slot = c; break; }
+    if (!slot){ if (sik){ yok++; continue; } slot = slots[0]; }
     const top = slot[1];
     ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 4; ctx.lineJoin = "round";
-    ctx.font = "600 12.5px " + FONT();
+    ctx.font = f1;
     ctx.strokeText(name, slot[0], top + 13);
     ctx.fillStyle = "#16222a"; ctx.fillText(name, slot[0], top + 13);
     if (sub){
-      ctx.font = "10.5px " + FONT();
+      ctx.font = f2;
       ctx.strokeText(sub, slot[0], top + 26);
       ctx.fillStyle = "#3b4d56"; ctx.fillText(sub, slot[0], top + 26);
     }
@@ -2306,6 +2402,23 @@ function gcPoints(a, b){
   return out;
 }
 function gcMid(a, b){ const g = gcPoints(a, b), k = (g.length / 2) | 0; const i = k - (k % 2); return [g[i], g[i+1]]; }
+/* Ölçüm parçası bilgisi (büyük daire noktaları, mesafe, kerteriz, orta nokta, kutu): iki uç noktası değişmedikçe bir kez hesaplanır. */
+const SEG_ONBELLEK = new WeakMap();
+function segBilgi(a, b){
+  let c = SEG_ONBELLEK.get(b);
+  if (c && c.la === a.lat && c.lo === a.lon && c.lb === b.lat && c.ob === b.lon) return c;
+  const g = gcPoints(a, b), k = (g.length / 2) | 0, i = k - (k % 2);
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (let j = 0; j < g.length; j += 2){ if (g[j] < x0) x0 = g[j]; if (g[j] > x1) x1 = g[j]; if (g[j+1] < y0) y0 = g[j+1]; if (g[j+1] > y1) y1 = g[j+1]; }
+  c = {la: a.lat, lo: a.lon, lb: b.lat, ob: b.lon, g, r: vincenty(a.lat, a.lon, b.lat, b.lon), mid: [g[i], g[i+1]], x0, x1, y0, y1};
+  SEG_ONBELLEK.set(b, c);
+  return c;
+}
+/* parçanın kutusu ekranın (pay kadar genişletilmiş) dışında mı */
+function segDisinda(c, pay){
+  const xa = sx(c.x0), xb = sx(c.x1), ya = sy(c.y1), yb = sy(c.y0);
+  return Math.max(xa, xb) < -pay || Math.min(xa, xb) > W + pay || Math.max(ya, yb) < -pay || Math.min(ya, yb) > H + pay;
+}
 
 function fmtDist(m){
   const u = $("m-unit").value;
@@ -2315,7 +2428,7 @@ function fmtDist(m){
   return u === "km" ? km : u === "nm" ? nm : km + " / " + nm;
 }
 const fmtAz = az => String(Math.round(az) % 360).padStart(3, "0") + "°";
-const chainTotal = ch => { let t = 0; for (let i = 1; i < ch.pts.length; i++) t += vincenty(ch.pts[i-1].lat, ch.pts[i-1].lon, ch.pts[i].lat, ch.pts[i].lon).d; return t; };
+const chainTotal = ch => { let t = 0; for (let i = 1; i < ch.pts.length; i++) t += segBilgi(ch.pts[i-1], ch.pts[i]).r.d; return t; };
 
 /* etiket kutusu: tercih edilen konum dolu ise hattın iki yanına kaydır; son çare yine yaz */
 function tagBox(lines, X, Y, color, nx, ny, own){
@@ -2345,16 +2458,25 @@ function drawMeasureLayer(){
   MEASURE.forEach((ch, ci) => {
     const P = ch.pts;
     if (!P.length) return;
+    const seg = [];                                              // ekranda görünen parçalar (i, bilgi)
     ctx.beginPath();
-    for (let i = 1; i < P.length; i++) traceFlat(gcPoints(P[i-1], P[i]), false);
+    for (let i = 1; i < P.length; i++){
+      const c = segBilgi(P[i-1], P[i]);
+      if (segDisinda(c, 30)) continue;
+      seg.push(i, c); traceFlat(c.g, false);
+    }
     ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 5.5; ctx.stroke();
     ctx.strokeStyle = ch.color; ctx.lineWidth = 2.4; ctx.stroke();
 
-    // köşe noktaları: renkli daire içinde sıra numarası
+    // köşe noktaları: renkli daire içinde sıra numarası (sık görünümde birbirine çok yakın olanlar atlanır)
     ctx.font = "700 10.5px " + FONT();
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    let sonX = -1e9, sonY = -1e9;
     P.forEach((p, i) => {
       const X = sx(p.lon), Y = sy(p.lat);
+      if (X < -12 || X > W + 12 || Y < -12 || Y > H + 12) return;
+      if (i > 0 && i < P.length - 1 && Math.abs(X - sonX) < 7 && Math.abs(Y - sonY) < 7) return;
+      sonX = X; sonY = Y;
       ctx.beginPath(); ctx.arc(X, Y, 8.5, 0, 6.284);
       ctx.fillStyle = ch.color; ctx.fill();
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
@@ -2362,12 +2484,12 @@ function drawMeasureLayer(){
       LABELS.push([X - 10, Y - 10, X + 10, Y + 10]);
     });
 
-    // her parçanın ortasına mesafe (+ kerteriz)
-    for (let i = 1; i < P.length; i++){
-      const r = vincenty(P[i-1].lat, P[i-1].lon, P[i].lat, P[i].lon);
-      const m = gcMid(P[i-1], P[i]);
-      const X = sx(m[0]), Y = sy(m[1]);
+    // her parçanın ortasına mesafe (+ kerteriz); ekranda çok kısa kalan parçalara etiket konmaz
+    for (let q = 0; q < seg.length; q += 2){
+      const i = seg[q], c = seg[q + 1], r = c.r;
+      const X = sx(c.mid[0]), Y = sy(c.mid[1]);
       const dx = sx(P[i].lon) - sx(P[i-1].lon), dy = sy(P[i].lat) - sy(P[i-1].lat), L = Math.hypot(dx, dy) || 1;
+      if (L < 22) continue;
       tagBox([fmtDist(r.d), showAz ? "kerteriz " + fmtAz(r.az) : null].filter(Boolean), X, Y, ch.color, -dy/L, dx/L);
     }
     // hat sonunda toplam
@@ -2406,11 +2528,15 @@ function drawMeasureLayer(){
 }
 
 /* ============ lejant ============ */
+var LEJANT_ALAN = 12, LEJANT_HAT = 8;
 function legendRows(){
   const rows = [];
-  if (opt("opt-layer-areas"))
-    ZONES.filter(z => z.visible).forEach(z => rows.push({kind: "area", color: z.color, t: z.name,
+  if (opt("opt-layer-areas")){
+    const gor = ZONES.filter(z => z.visible);                    // yüzlerce alan lejanda sığmaz: ilk 12'si yazılır, kalanı özetlenir
+    gor.slice(0, LEJANT_ALAN).forEach(z => rows.push({kind: "area", color: z.color, t: z.name,
       v: z.points.length > 2 ? fmtArea(sphericalArea(z.points)) : z.points.length + " nokta"}));
+    if (gor.length > LEJANT_ALAN) rows.push({kind: "more", color: "#16222a", t: "+ " + (gor.length - LEJANT_ALAN) + " alan daha", v: ""});
+  }
   if (opt("opt-layer-circles")){
     const seen = new Set();
     CIRCLES.forEach(c => { if (!seen.has(c.label)){ seen.add(c.label); rows.push({kind: "circle", color: c.color, t: "Yarıçap", v: c.label}); } });
@@ -2423,7 +2549,15 @@ function legendRows(){
     seen.forEach((n, c) => rows.push({kind: "marker", color: c, t: seen.size === 1 ? "Noktalar" : "Nokta grubu", v: n + " adet"}));
   }
   if (opt("opt-layer-measure"))
-    MEASURE.forEach((ch, i) => { if (ch.pts.length >= 2) rows.push({kind: "line", color: ch.color, t: "Ölçüm hattı " + (i+1), v: "Σ " + fmtDist(chainTotal(ch))}); });
+    {
+      let say = 0, atla = 0;
+      MEASURE.forEach((ch, i) => {
+        if (ch.pts.length < 2) return;
+        if (++say > LEJANT_HAT){ atla++; return; }
+        rows.push({kind: "line", color: ch.color, t: "Ölçüm hattı " + (i+1), v: "Σ " + fmtDist(chainTotal(ch))});
+      });
+      if (atla) rows.push({kind: "more", color: "#16222a", t: "+ " + atla + " hat daha", v: ""});
+    }
   return rows;
 }
 function legendRect(rows){
@@ -2461,7 +2595,7 @@ function drawLegend(){
     } else if (r.kind === "circle"){
       ctx.beginPath(); ctx.arc(gx + 8, cy, 6, 0, 6.284);
       ctx.fillStyle = hexA(r.color, .2); ctx.fill(); ctx.strokeStyle = r.color; ctx.stroke();
-    } else {
+    } else if (r.kind !== "more"){
       ctx.fillStyle = hexA(r.color, .22); ctx.fillRect(gx, cy - 6, 16, 12);
       ctx.strokeStyle = r.color; ctx.strokeRect(gx + 1, cy - 5, 14, 10);
     }
@@ -2694,7 +2828,7 @@ function drawAdmLabels(sev){
 function draw(){
   if (!W || !H) return;
   ctx.clearRect(0,0,W,H);
-  LABELS = [];
+  LABELS = []; PT_EKRAN = null;
   SAT = satOn();
   FILL_A = dolguAlfa();
   cv.parentElement.classList.toggle("sat", SAT);
@@ -2779,7 +2913,9 @@ const scheduleDraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf =
 function snapAt(x, y){
   let best = null, bd = 10;
   const tryP = (lat, lon, name) => {
-    const d = Math.hypot(sx(lon) - x, sy(lat) - y);
+    const dx = sx(lon) - x;
+    if (dx >= bd || dx <= -bd) return;
+    const d = Math.hypot(dx, sy(lat) - y);
     if (d < bd){ bd = d; best = {lat, lon, name}; }
   };
   if (opt("opt-layer-points")) POINTS.forEach(p => tryP(p.lat, p.lon, p.name));
@@ -3097,18 +3233,58 @@ $("btn-rings").onclick = () => buildRings();
 $("btn-rings-clear").onclick = () => { RINGS = []; RING_SRC = null; RING_REF = null; ringList(); $("r-msg").textContent = ""; draw(); };
 
 /* ============ 4 · noktalar ============ */
+/* Nokta listesi sanal: yalnız görünen ~12 satır DOM'da durur; on binlerce nokta da akıcı kaydırılır. */
+const NOKTA_SATIR = 50;
+var PL = {idx: [], bas: -1, son: -1, raf: 0, ara: 0};
+function noktaSuz(){
+  const q = $("p-ara").value.trim().toLocaleLowerCase("tr"), tum = POINTS;
+  if (!q) return PL.idx = null;                                  // süzgeç yok: tüm noktalar sırayla
+  const sayi = /\d/.test(q), idx = [];
+  for (let i = 0; i < tum.length; i++){
+    const p = tum[i];
+    if (p.name.toLocaleLowerCase("tr").includes(q) || (sayi && fk(p.lat, p.lon).toLocaleLowerCase("tr").includes(q))) idx.push(i);
+  }
+  return PL.idx = idx;
+}
 function pointList(){
-  const host = $("p-list");
-  host.innerHTML = "";
-  POINTS.forEach((p, i) => {
+  const host = $("p-list"), n = POINTS.length;
+  $("p-ust").hidden = !n;
+  host.classList.toggle("sanal", n > 0);
+  if (!n){ host.textContent = ""; host.style.removeProperty("--ic"); PL.bas = PL.son = -1; PL.idx = null; return; }
+  noktaSuz();
+  const m = PL.idx ? PL.idx.length : n;
+  $("p-say").textContent = PL.idx ? m.toLocaleString("tr-TR") + " / " + n.toLocaleString("tr-TR") + " nokta eşleşti" : n.toLocaleString("tr-TR") + " nokta";
+  if (!host.firstChild){ const ic = document.createElement("div"); ic.className = "ic"; host.appendChild(ic); }
+  host.firstChild.style.height = m * NOKTA_SATIR + "px";
+  host.style.setProperty("--ic", (m * NOKTA_SATIR + 2) + "px");
+  PL.bas = PL.son = -1;
+  noktaPencere();
+}
+function noktaPencere(){
+  const host = $("p-list"), ic = host.firstChild;
+  if (!ic) return;
+  const dizi = PL.idx, m = dizi ? dizi.length : POINTS.length;
+  const gor = host.clientHeight || 380;
+  const bas = Math.max(0, Math.floor(host.scrollTop / NOKTA_SATIR) - 3), son = Math.min(m, Math.ceil((host.scrollTop + gor) / NOKTA_SATIR) + 3);
+  if (bas === PL.bas && son === PL.son) return;
+  PL.bas = bas; PL.son = son;
+  if (typeof VURGU !== "undefined" && VURGU && VURGU.tur === "nokta"){ VURGU = null; scheduleDraw(); }   // satır yeniden kurulunca mouseleave gelmez
+  ic.textContent = "";
+  const f = document.createDocumentFragment();
+  for (let i = bas; i < son; i++){
+    const p = POINTS[dizi ? dizi[i] : i];
     const row = rowOf(swatch(p.color, v => p.color = v), p.name, fk(p.lat, p.lon));
+    row.style.top = i * NOKTA_SATIR + "px";
     row.append(
       smallBtn("odak", () => focusOn(p.lat, p.lon, p.lat, p.lon)),
-      smallBtn("sil", () => { POINTS.splice(i, 1); pointList(); draw(); }));
+      smallBtn("sil", () => { const k = POINTS.indexOf(p); if (k >= 0) POINTS.splice(k, 1); pointList(); draw(); }));
     vurguBagla(row, {tur: "nokta", p});
-    host.appendChild(row);
-  });
+    f.appendChild(row);
+  }
+  ic.appendChild(f);
 }
+$("p-list").addEventListener("scroll", () => { if (!PL.raf) PL.raf = requestAnimationFrame(() => { PL.raf = 0; noktaPencere(); }); });
+$("p-ara").addEventListener("input", () => { clearTimeout(PL.ara); PL.ara = setTimeout(() => { $("p-list").scrollTop = 0; pointList(); }, 160); });
 function buildPoints(){
   const res = parsePoints($("p-input").value), def = $("p-color").value;
   POINTS = res.pts.map(p => ({name: p.name, lat: p.lat, lon: p.lon, color: p.color || def, li: p.li, cs: p.cs, ce: p.ce}));
@@ -3162,13 +3338,32 @@ function undoMeasure(){
   MEASURE[MEASURE.length - 1].pts.pop();
   measureList(); draw(); degisti();
 }
+/* Ölçüm listesi de sanal: uzun yollar (yüzlerce nokta) akıcı kaydırılır; yalnız görünen satırlar DOM'da durur. */
+const OLC_BASLIK = 44, OLC_SATIR = 88;
+var ML = {items: [], ofs: [], bas: -1, son: -1, raf: 0, n: 0};
 function measureList(){
   const host = $("m-list");
-  host.innerHTML = "";
   const nPts = MEASURE.reduce((s, ch) => s + ch.pts.length, 0);
   $("m-msg").innerHTML = nPts ? "" : '<span class="warn">Henüz nokta yok — haritaya tıklayın.</span>';
+  const items = [], ofs = [];
+  let y = 0;
   MEASURE.forEach((ch, ci) => {
     if (!ch.pts.length && ci < MEASURE.length - 1) return;
+    items.push({ch, ci}); ofs.push(y); y += OLC_BASLIK;
+    ch.pts.forEach((p, i) => { items.push({ch, ci, p, i}); ofs.push(y); y += OLC_SATIR; });
+  });
+  ML.items = items; ML.ofs = ofs; ML.bas = ML.son = -1;
+  host.classList.add("sanal");
+  if (!host.firstChild){ const ic = document.createElement("div"); ic.className = "ic"; host.appendChild(ic); }
+  host.firstChild.style.height = y + "px";
+  if (y) host.style.setProperty("--ic", (y + 2) + "px"); else host.style.removeProperty("--ic");
+  const yeniNokta = nPts > ML.n; ML.n = nPts;
+  olcumPencere();
+  if (yeniNokta && MEASURE_ACTIVE) host.scrollTop = host.scrollHeight;        // eklenen son nokta görünsün
+}
+function olcumSatir(it, top){
+  const {ch, ci, p, i} = it;
+  if (!p){
     const head = document.createElement("div");
     head.className = "chain-head";
     const sw = swatch(ch.color, v => { ch.color = v; if (ci === MEASURE.length - 1) $("m-color").value = v; });
@@ -3178,31 +3373,49 @@ function measureList(){
     tot.textContent = ch.pts.length >= 2 ? "Σ " + fmtDist(chainTotal(ch)) : ch.pts.length + " nokta";
     head.append(sw, title, tot);
     vurguBagla(head, {tur: "olcum", ch});
-    host.appendChild(head);
-
-    ch.pts.forEach((p, i) => {
-      const row = document.createElement("div");
-      row.className = "mpt";
-      const no = document.createElement("span");
-      no.className = "no"; no.style.background = ch.color; no.textContent = i + 1;
-      const c = document.createElement("span");
-      c.className = "c";
-      c.innerHTML = esc(fk(p.lat, p.lon)) +
-        "<small>" + p.lat.toFixed(6) + ", " + p.lon.toFixed(6) + (p.name ? "  " + esc(p.name) : "") + "</small>";
-      const del = smallBtn("sil", () => { ch.pts.splice(i, 1); measureList(); draw(); });
-      row.append(no, c, del);
-      vurguBagla(row, {tur: "olcum", ch, p});
-      if (i > 0){
-        const r = vincenty(ch.pts[i-1].lat, ch.pts[i-1].lon, p.lat, p.lon);
-        const seg = document.createElement("span");
-        seg.className = "seg";
-        seg.textContent = i + "→" + (i+1) + "  " + fmtDist(r.d) + ", kerteriz " + fmtAz(r.az);
-        row.appendChild(seg);
-      }
-      host.appendChild(row);
-    });
-  });
+    head.style.top = top + "px";
+    return head;
+  }
+  const row = document.createElement("div");
+  row.className = "mpt";
+  const no = document.createElement("span");
+  no.className = "no"; no.style.background = ch.color; no.textContent = i + 1;
+  const c = document.createElement("span");
+  c.className = "c";
+  c.innerHTML = esc(fk(p.lat, p.lon)) +
+    "<small>" + p.lat.toFixed(6) + ", " + p.lon.toFixed(6) + (p.name ? "  " + esc(p.name) : "") + "</small>";
+  const del = smallBtn("sil", () => { const k = ch.pts.indexOf(p); if (k >= 0) ch.pts.splice(k, 1); measureList(); draw(); });
+  row.append(no, c, del);
+  vurguBagla(row, {tur: "olcum", ch, p});
+  if (i > 0){
+    const r = segBilgi(ch.pts[i-1], p).r;
+    const seg = document.createElement("span");
+    seg.className = "seg";
+    seg.textContent = i + "→" + (i+1) + "  " + fmtDist(r.d) + ", kerteriz " + fmtAz(r.az);
+    row.appendChild(seg);
+  }
+  row.style.top = top + "px";
+  return row;
 }
+function olcumPencere(){
+  const host = $("m-list"), ic = host.firstChild;
+  if (!ic) return;
+  const ofs = ML.ofs, n = ofs.length, gor = host.clientHeight || 400, ust = host.scrollTop;
+  // ofs artan: ust'u kapsayan ilk satırı ikili aramayla bul
+  let lo = 0, hi = n;
+  while (lo < hi){ const m = (lo + hi) >> 1; if (ofs[m] + OLC_SATIR <= ust) lo = m + 1; else hi = m; }
+  const bas = Math.max(0, lo - 3);
+  let son = lo; while (son < n && ofs[son] < ust + gor) son++;
+  son = Math.min(n, son + 3);
+  if (bas === ML.bas && son === ML.son) return;
+  ML.bas = bas; ML.son = son;
+  if (typeof VURGU !== "undefined" && VURGU && VURGU.tur === "olcum"){ VURGU = null; scheduleDraw(); }
+  ic.textContent = "";
+  const f = document.createDocumentFragment();
+  for (let i = bas; i < son; i++) f.appendChild(olcumSatir(ML.items[i], ofs[i]));
+  ic.appendChild(f);
+}
+$("m-list").addEventListener("scroll", () => { if (!ML.raf) ML.raf = requestAnimationFrame(() => { ML.raf = 0; olcumPencere(); }); });
 $("btn-m-new").onclick = newChain;
 $("btn-m-undo").onclick = undoMeasure;
 $("btn-m-clear").onclick = () => {
@@ -3333,7 +3546,7 @@ window.addEventListener("resize", resize);
 resize();
 fitWorld(true);
 /* ============ uygulama: proje dosyası, masaüstü köprüsü, kısayollar ============ */
-const APP_VER = "2.4.0";
+const APP_VER = "2.5.0";
 const MASAUSTU = window.masaustu || null;          // exe sürümünde shim.js sağlar
 document.body.classList.toggle("desktop", !!MASAUSTU);
 $("ver-line").textContent = "Sürüm " + APP_VER + (MASAUSTU ? ", masaüstü" : ", tarayıcı");
@@ -5995,7 +6208,7 @@ function duzenleAcik(){ return $("opt-duzenle").checked && !PICK; }
 
 function tutamacBul(x, y){
   let en = null, bd = 9;
-  const dene = (lat, lon, t) => { const d = Math.hypot(sx(lon) - x, sy(lat) - y); if (d < bd){ bd = d; en = Object.assign(t, {lat, lon}); } };
+  const dene = (lat, lon, t) => { const dx = sx(lon) - x; if (dx >= bd || dx <= -bd) return; const d = Math.hypot(dx, sy(lat) - y); if (d < bd){ bd = d; en = Object.assign(t, {lat, lon}); } };
   if (opt("opt-layer-areas")) ZONES.forEach(z => { if (z.visible) z.points.forEach((p, i) => dene(p.lat, p.lon, {tur: "alan", z, p, ad: z.name + " / " + p.no})); });
   if (opt("opt-layer-circles")){ const g = new Set(); CIRCLES.forEach(c => { if (!g.has(c.li)){ g.add(c.li); dene(c.lat, c.lon, {tur: "daire", c, ad: c.name + " (merkez)"}); } }); }
   if (opt("opt-layer-points")) POINTS.forEach(p => dene(p.lat, p.lon, {tur: "nokta", p, ad: p.name}));
@@ -6303,7 +6516,7 @@ function drawVurgu(){
   else if (v.tur === "nokta") halka(v.p.lat, v.p.lon);
   else if (v.tur === "olcum"){
     if (v.p) halka(v.p.lat, v.p.lon, 11);
-    else if (v.ch.pts.length > 1) ciz(() => { for (let i = 1; i < v.ch.pts.length; i++) traceFlat(gcPoints(v.ch.pts[i - 1], v.ch.pts[i]), false); });
+    else if (v.ch.pts.length > 1) ciz(() => { for (let i = 1; i < v.ch.pts.length; i++) traceFlat(segBilgi(v.ch.pts[i - 1], v.ch.pts[i]).g, false); });
     else if (v.ch.pts.length) halka(v.ch.pts[0].lat, v.ch.pts[0].lon, 11);
   } else if (v.tur === "not"){
     const n = v.n;

@@ -25,7 +25,7 @@ function drawVurgu(){
   else if (v.tur === "nokta") halka(v.p.lat, v.p.lon);
   else if (v.tur === "olcum"){
     if (v.p) halka(v.p.lat, v.p.lon, 11);
-    else if (v.ch.pts.length > 1) ciz(() => { for (let i = 1; i < v.ch.pts.length; i++) traceFlat(gcPoints(v.ch.pts[i - 1], v.ch.pts[i]), false); });
+    else if (v.ch.pts.length > 1) ciz(() => { for (let i = 1; i < v.ch.pts.length; i++) traceFlat(segBilgi(v.ch.pts[i - 1], v.ch.pts[i]).g, false); });
     else if (v.ch.pts.length) halka(v.ch.pts[0].lat, v.ch.pts[0].lon, 11);
   } else if (v.tur === "not"){
     const n = v.n;

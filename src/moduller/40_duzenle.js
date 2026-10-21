@@ -7,7 +7,7 @@ function duzenleAcik(){ return $("opt-duzenle").checked && !PICK; }
 
 function tutamacBul(x, y){
   let en = null, bd = 9;
-  const dene = (lat, lon, t) => { const d = Math.hypot(sx(lon) - x, sy(lat) - y); if (d < bd){ bd = d; en = Object.assign(t, {lat, lon}); } };
+  const dene = (lat, lon, t) => { const dx = sx(lon) - x; if (dx >= bd || dx <= -bd) return; const d = Math.hypot(dx, sy(lat) - y); if (d < bd){ bd = d; en = Object.assign(t, {lat, lon}); } };
   if (opt("opt-layer-areas")) ZONES.forEach(z => { if (z.visible) z.points.forEach((p, i) => dene(p.lat, p.lon, {tur: "alan", z, p, ad: z.name + " / " + p.no})); });
   if (opt("opt-layer-circles")){ const g = new Set(); CIRCLES.forEach(c => { if (!g.has(c.li)){ g.add(c.li); dene(c.lat, c.lon, {tur: "daire", c, ad: c.name + " (merkez)"}); } }); }
   if (opt("opt-layer-points")) POINTS.forEach(p => dene(p.lat, p.lon, {tur: "nokta", p, ad: p.name}));

@@ -23,6 +23,8 @@ Bütün araçlar aynı ayrıştırıcıyı kullanır. Tablolar Excel veya Word'd
 
 **İmleç göstergesi:** Haritanın altındaki gösterge imlecin koordinatını seçili biçimde yazar; Türkiye içindeyse il ve ilçeyi, sağ ucunda da anlık ölçeği gösterir.
 
+**Çok sayıda nokta:** Noktalar ve Ölçüm sekmelerinde liste kendi kutusunda kaydırılır; başlık, girdi alanı ve işaret ayarları yerinde kalır. Liste yalnız görünen satırları oluşturduğu için on binlerce nokta da akıcıdır. Noktalar sekmesindeki **arama kutusu** adı ya da koordinatı yazılana göre listeyi süzer. Haritada çok sıkışık görünümde bazı nokta adları yazılmaz; yaklaştıkça görünür. Lejant en çok 12 alan ve 8 ölçüm hattı sayar, fazlasını "+ N daha" diye özetler.
+
 **Sekme rozetleri:** Sol şeritteki araç düğmelerinin köşesindeki sayı, o araçtaki öğe sayısıdır (alan, daire merkezi, mesafe eğrisi, nokta, ölçüm noktası, not).
 
 ## Haritadan seç
