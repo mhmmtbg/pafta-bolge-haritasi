@@ -32,7 +32,7 @@ $("modal-x").onclick = helpClose;
 $("modal").addEventListener("mousedown", e => { if (e.target === $("modal")) helpClose(); });
 
 /* ---- sekme geçişi ---- */
-const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-notes","pane-view","pane-export"];
+const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-notes","pane-lines","pane-view","pane-export"];
 function sekmeAc(id){ const t = document.querySelector('.tab[data-pane="' + id + '"]'); if (t) t.click(); }
 
 /* ---- proje durumu ---- */
@@ -332,7 +332,7 @@ document.addEventListener("keydown", e => {
     "+": () => zoomBy(1.5), "=": () => zoomBy(1.5), "-": () => zoomBy(1/1.5)
   };
   if (MASAUSTU) map.n = () => yeni();
-  if (/^[1-8]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
+  if (/^[1-9]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
   if (map[k]){ e.preventDefault(); e.stopPropagation(); map[k](); }
 }, true);
 
@@ -351,7 +351,7 @@ document.addEventListener("drop", async e => {
   if (!f) return;
   const aktif0 = (document.querySelector(".pane.active") || {}).id;
   if (e.dataTransfer.files.length > 1){                                   // birden çok dosya: açık araca sırayla
-    dosyalariYukle(e.dataTransfer.files, {"pane-points": "nokta", "pane-circles": "daire", "pane-notes": "cizgi"}[aktif0] || "alan");
+    dosyalariYukle(e.dataTransfer.files, {"pane-points": "nokta", "pane-circles": "daire", "pane-lines": "cizgi"}[aktif0] || "alan");
     return;
   }
   if (/\.paftauydu$/i.test(f.name)){ paketDosyadan(f); return; }

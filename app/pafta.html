@@ -109,6 +109,7 @@
   .msg:empty{display:none}
   .msg .ok{color:#8fd0a6}
   .msg .warn{color:#ffcd6b}
+  .grup-renk{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
   .busy{opacity:.55;pointer-events:none}
 
   /* anahtar düğmeler */
@@ -174,6 +175,11 @@
   .zone.secili,.chain-head.secili,.mpt.secili{background:#16303b;outline:1px solid #3b8de0;outline-offset:-1px}
   html.acik .zone.secili,html.acik .chain-head.secili,html.acik .mpt.secili{background:#dcebf7}
   .dis-sonuc{margin-top:8px}
+  .dis-liste{max-height:132px;overflow-y:auto;scrollbar-width:thin;margin-top:4px}
+  .dis-satir{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+  .dis-satir span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dis-satir span:last-child{white-space:nowrap;color:var(--text)}
+  .dis-ozet{border-top:1px solid var(--line);margin-top:4px;padding-top:3px}
   .liste-say{margin:6px 0 0;font-size:11.5px;color:var(--dim)}
   #zones:not(:empty),#c-list:not(:empty),#r-list:not(:empty),#p-list:not(:empty),#m-list:not(:empty){margin-top:14px}
 
@@ -478,9 +484,13 @@
       <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M11 6.2 5.5 20.5M13 6.2l5.5 14.3"/><path d="M7.4 15.5a7.5 7.5 0 0 0 9.2 0"/></svg>
       Ölçüm
     </button>
-    <button class="tab" data-pane="pane-notes" title="Haritaya not, ok ve çizgi ekle">
+    <button class="tab" data-pane="pane-notes" title="Haritaya not ve ok ekle">
       <svg viewBox="0 0 24 24"><path d="M4 5h12v8H9l-3.5 3v-3H4Z"/><path d="M13 19.5 20 12.5M20 12.5h-4.2M20 12.5v4.2"/></svg>
       Notlar
+    </button>
+    <button class="tab" data-pane="pane-lines" title="Haritaya tıklayarak ya da koordinat listesinden çizgi çiz">
+      <svg viewBox="0 0 24 24"><path d="M3.5 18.5 9 9.5l5 6 6.5-11"/><circle cx="3.5" cy="18.5" r="1.4"/><circle cx="9" cy="9.5" r="1.4"/><circle cx="14" cy="15.5" r="1.4"/><circle cx="20.5" cy="4.5" r="1.4"/></svg>
+      Çizgiler
     </button>
     <div class="spacer"></div>
     <div class="sep"></div>
@@ -656,6 +666,9 @@
         <label class="check">Etikette koordinatı da göster <input type="checkbox" class="toggle" id="p-coords"></label>
         <label class="check">Alanların dışındaki noktaları vurgula <input type="checkbox" class="toggle" id="p-dis"></label>
         <label class="check" id="p-dis-daire-satir" hidden>Daireleri de alan say <input type="checkbox" class="toggle" id="p-dis-daire"></label>
+        <label class="fld" id="p-dis-hedef-satir" hidden>Haritada vurgulanan
+          <select id="p-dis-hedef" data-yerel="1"></select>
+        </label>
       </div>
     </div>
 
@@ -704,14 +717,13 @@
     <div class="pane" id="pane-notes">
       <header class="pane-head">
         <h2>Notlar</h2>
-        <p>Haritaya açıklama notları, oklar ve çizgiler ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
+        <p>Haritaya açıklama notları ve oklar ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
       </header>
       <div class="group">
         <div class="mode-on">Not modu açık</div>
         <div class="seg" role="radiogroup" aria-label="Eklenecek öğe">
           <label><input type="radio" name="n-kip" value="not" checked><span>Not</span></label>
           <label><input type="radio" name="n-kip" value="ok"><span>Ok</span></label>
-          <label><input type="radio" name="n-kip" value="cizgi"><span>Çizgi</span></label>
         </div>
         <div class="grid2" style="margin-top:12px">
           <label class="fld" style="margin-top:0">Renk
@@ -725,7 +737,25 @@
             </select>
           </label>
         </div>
-        <div class="grid2" id="n-cizgi-ayar" style="margin-top:10px" hidden>
+        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Notlar ve ok uçları sürüklenerek taşınır. Çizgiler için soldaki <b>Çizgiler</b> sekmesini kullanın.</p>
+        <div class="row"><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
+        <div class="msg" id="n-msg"></div>
+        <div id="n-list" class="kaydir"></div>
+      </div>
+    </div>
+
+    <!-- ÇİZGİLER -->
+    <div class="pane" id="pane-lines">
+      <header class="pane-head">
+        <h2>Çizgiler</h2>
+        <p>Haritaya tıklayarak ya da sıralı koordinatlardan düz veya eğri çizgiler çizer; paftayla birlikte basılır ve projeye kaydedilir.</p>
+      </header>
+      <div class="group">
+        <div class="mode-on">Çizgi modu açık</div>
+        <div class="grid2">
+          <label class="fld" style="margin-top:0">Renk
+            <input type="color" id="l-renk" value="#a4123f">
+          </label>
           <label class="fld" style="margin-top:0">Çizgi tipi
             <select id="n-tip">
               <option value="duz" selected>düz</option>
@@ -733,30 +763,39 @@
               <option value="noktali">noktalı</option>
             </select>
           </label>
-          <label class="fld" style="margin-top:0">Kalınlık
+          <label class="fld">Kalınlık
             <select id="n-kalinlik">
               <option value="1.5">ince</option>
               <option value="2.5" selected>orta</option>
               <option value="4">kalın</option>
             </select>
           </label>
-          <label class="check" style="grid-column:1/-1;margin-top:6px">Eğri (noktalardan geçen yumuşak çizgi) <input type="checkbox" class="toggle" id="n-egri"></label>
+          <label class="fld">Etiket boyutu
+            <select id="l-boyut">
+              <option value="11">küçük</option>
+              <option value="13" selected>orta</option>
+              <option value="16">büyük</option>
+            </select>
+          </label>
         </div>
-        <div id="n-liste-kutu" hidden>
-          <div class="group-head" style="margin-top:14px"><h3>Koordinatlarla çizgi</h3><span class="head-btns"><button class="pick" data-hedef="n-liste" title="Haritaya tıklayarak köşe ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
-          <textarea id="n-liste" class="short" spellcheck="false" placeholder="Rota 1&#9;1&#9;41°00'00&quot;K&#9;29°00'00&quot;D&#10;&#9;2&#9;41°20'00&quot;K&#9;30°10'00&quot;D&#10;&#9;3&#9;41°05'00&quot;K&#9;31°30'00&quot;D"></textarea>
-          <div class="row">
-            <button class="btn primary" id="btn-n-liste">Çizgileri çiz</button>
-            <button class="btn" data-dosya="cizgi" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
-            <button class="btn quiet" id="btn-n-liste-temizle">Temizle</button>
-          </div>
-          <p class="hint">Sıralı koordinatlar Alanlar ile aynı biçimde yazılır; her grup bir çizgidir, boş satır ya da yeni ad yeni çizgi başlatır. Çizgiler yukarıdaki renk, tip, kalınlık ve eğri ayarlarıyla çizilir; köşeleri sürükleyince yeni koordinat listeye yazılır.</p>
-          <div class="msg" id="n-liste-msg"></div>
+        <label class="check" style="margin-top:10px">Eğri (noktalardan geçen yumuşak çizgi) <input type="checkbox" class="toggle" id="n-egri"></label>
+        <p class="hint">Haritaya her tıklama bir köşe ekler; son köşeye yeniden tıklamak, çift tıklamak ya da Enter çizgiyi bitirir, Geri tuşu son köşeyi siler, Esc yarım çizgiyi bırakır. Köşeler sürüklenerek taşınır.</p>
+        <div class="row"><button class="btn" id="btn-n-bitir" disabled>Çizgiyi bitir</button><button class="btn quiet" id="btn-l-clear">Hepsini sil</button></div>
+      </div>
+      <div class="group" id="n-liste-kutu">
+        <div class="group-head"><h3>Koordinatlarla çizgi</h3><span class="head-btns"><button class="pick" data-hedef="n-liste" title="Haritaya tıklayarak köşe ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
+        <textarea id="n-liste" class="short" spellcheck="false" placeholder="Rota 1&#9;1&#9;41°00'00&quot;K&#9;29°00'00&quot;D&#10;&#9;2&#9;41°20'00&quot;K&#9;30°10'00&quot;D&#10;&#9;3&#9;41°05'00&quot;K&#9;31°30'00&quot;D"></textarea>
+        <div class="row">
+          <button class="btn primary" id="btn-n-liste">Çizgileri çiz</button>
+          <button class="btn" data-dosya="cizgi" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
+          <button class="btn quiet" id="btn-n-liste-temizle">Temizle</button>
         </div>
-        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Çizgi kipinde her tıklama bir köşe ekler; son köşeye yeniden tıklamak, çift tıklamak ya da Enter çizgiyi bitirir, Geri tuşu son köşeyi siler, Esc yarım çizgiyi bırakır. Notlar, ok uçları ve çizgi köşeleri sürüklenerek taşınır.</p>
-        <div class="row"><button class="btn" id="btn-n-bitir" hidden>Çizgiyi bitir</button><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
-        <div class="msg" id="n-msg"></div>
-        <div id="n-list" class="kaydir"></div>
+        <p class="hint">Sıralı koordinatlar Alanlar ile aynı biçimde yazılır; her grup bir çizgidir, boş satır ya da yeni ad yeni çizgi başlatır. Çizgiler yukarıdaki renk, tip, kalınlık ve eğri ayarlarıyla çizilir; köşeleri sürükleyince yeni koordinat listeye yazılır.</p>
+        <div class="msg" id="n-liste-msg"></div>
+      </div>
+      <div class="group">
+        <div class="msg" id="l-msg"></div>
+        <div id="l-list" class="kaydir"></div>
       </div>
     </div>
 
@@ -1103,7 +1142,7 @@
         <dt><kbd>Ctrl</kbd> <kbd>O</kbd></dt><dd>Proje aç</dd>
         <dt class="desk-only"><kbd>Ctrl</kbd> <kbd>N</kbd></dt><dd class="desk-only">Yeni pafta</dd>
         <dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>Haritayı PNG olarak kaydet</dd>
-        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>8</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Notlar, Görünüm, Çıktı</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>9</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Notlar, Çizgiler, Görünüm, Çıktı</dd>
         <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>Geri al, yinele</dd>
         <dt><kbd>Ctrl</kbd> <kbd>0</kbd></dt><dd>Çizime sığdır</dd>
         <dt><kbd>Ctrl</kbd> <kbd>U</kbd></dt><dd>Uydu görüntüsünü aç/kapat</dd>
@@ -2559,9 +2598,20 @@ function legendRows(){
   if (opt("opt-layer-rings"))
     RINGS.forEach(lv => rows.push({kind: "band", color: lv.color, t: RING_LABEL === "Mavi Vatan sınırı" ? "Mavi Vatan'dan" : "TR sınırından", v: lv.label}));
   if (opt("opt-layer-points") && POINTS.length){
+    // renk başına bir satır; o renkteki noktaların adı ortak bir kökle başlıyorsa ("as1 #12", "as1 #13") satır o adı alır
     const seen = new Map();
-    POINTS.forEach(p => seen.set(p.color, (seen.get(p.color) || 0) + 1));
-    seen.forEach((n, c) => rows.push({kind: "marker", color: c, t: seen.size === 1 ? "Noktalar" : "Nokta grubu", v: n + " adet"}));
+    for (const p of POINTS){
+      const g = seen.get(p.color);
+      if (!g){ seen.set(p.color, {n: 1, kok: p.name.replace(/\s*#\d+$/, "")}); continue; }
+      g.n++;
+      if (g.kok && !(p.name === g.kok || p.name.startsWith(g.kok + " #"))) g.kok = "";
+    }
+    let i = 0;
+    seen.forEach((g, c) => {
+      if (++i > LEJANT_ALAN) return;
+      rows.push({kind: "marker", color: c, t: g.kok && (seen.size > 1 || g.n > 1) ? g.kok : seen.size === 1 ? "Noktalar" : "Nokta grubu", v: g.n.toLocaleString("tr-TR") + " adet"});
+    });
+    if (seen.size > LEJANT_ALAN) rows.push({kind: "more", color: "#16222a", t: "+ " + (seen.size - LEJANT_ALAN) + " nokta grubu daha", v: ""});
   }
   if (opt("opt-layer-measure"))
     {
@@ -3568,7 +3618,7 @@ window.addEventListener("resize", resize);
 resize();
 fitWorld(true);
 /* ============ uygulama: proje dosyası, masaüstü köprüsü, kısayollar ============ */
-const APP_VER = "2.7.0";
+const APP_VER = "2.8.0";
 const MASAUSTU = window.masaustu || null;          // exe sürümünde shim.js sağlar
 document.body.classList.toggle("desktop", !!MASAUSTU);
 $("ver-line").textContent = "Sürüm " + APP_VER + (MASAUSTU ? ", masaüstü" : ", tarayıcı");
@@ -3601,7 +3651,7 @@ $("modal-x").onclick = helpClose;
 $("modal").addEventListener("mousedown", e => { if (e.target === $("modal")) helpClose(); });
 
 /* ---- sekme geçişi ---- */
-const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-notes","pane-view","pane-export"];
+const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-notes","pane-lines","pane-view","pane-export"];
 function sekmeAc(id){ const t = document.querySelector('.tab[data-pane="' + id + '"]'); if (t) t.click(); }
 
 /* ---- proje durumu ---- */
@@ -3901,7 +3951,7 @@ document.addEventListener("keydown", e => {
     "+": () => zoomBy(1.5), "=": () => zoomBy(1.5), "-": () => zoomBy(1/1.5)
   };
   if (MASAUSTU) map.n = () => yeni();
-  if (/^[1-8]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
+  if (/^[1-9]$/.test(k)) map[k] = () => sekmeAc(PANES[+k - 1]);
   if (map[k]){ e.preventDefault(); e.stopPropagation(); map[k](); }
 }, true);
 
@@ -3920,7 +3970,7 @@ document.addEventListener("drop", async e => {
   if (!f) return;
   const aktif0 = (document.querySelector(".pane.active") || {}).id;
   if (e.dataTransfer.files.length > 1){                                   // birden çok dosya: açık araca sırayla
-    dosyalariYukle(e.dataTransfer.files, {"pane-points": "nokta", "pane-circles": "daire", "pane-notes": "cizgi"}[aktif0] || "alan");
+    dosyalariYukle(e.dataTransfer.files, {"pane-points": "nokta", "pane-circles": "daire", "pane-lines": "cizgi"}[aktif0] || "alan");
     return;
   }
   if (/\.paftauydu$/i.test(f.name)){ paketDosyadan(f); return; }
@@ -5176,6 +5226,150 @@ $("xl-ekle").onclick = xlEkle;
 [$("xl-x"), $("xl-iptal")].forEach(b => b.onclick = () => { $("xl").hidden = true; });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("xl").hidden){ e.stopPropagation(); $("xl").hidden = true; } }, true);
 
+/* ============ çok gruplu nokta tablosu: bir satırda birden çok enlem/boylam çifti ============ */
+/* Örnek başlık: Count, başlangıç noktası enlem, başlangıç noktası boylam, bitiş enlem, bitiş boylam,
+   as1 enlem, as1_xverisi, as1_boylam, as2 enlem, ... Başlıkta "enlem"/"boylam" (ya da lat/lon) geçen sütunlar
+   kalan adlarına göre eşleşir; her çift bir nokta grubudur ve kendi rengini alır. Bütün satırlarda (neredeyse) aynı
+   kalan grup (başlangıç, bitiş) tek nokta olarak yazılır. */
+
+const GRUP_RENKLERI = ["#d62828", "#1d4ed8", "#2a9d4a", "#7b2cbf", "#e07a00", "#0e7490", "#c2185b", "#6b8e23", "#8d5524", "#455a64",
+                       "#b8860b", "#00838f", "#5e35b1", "#ad1457", "#2e7d32", "#ef6c00"];
+
+/* CSV / TSV / noktalı virgüllü metin -> satır dizisi (tırnaklı alanlar desteklenir) */
+function csvOku(metin){
+  metin = metin.replace(/^﻿/, "");
+  const ilk = (metin.split(/\r?\n/).find(l => l.trim()) || "");
+  const ayir = ["\t", ";", ","].map(a => [a, ilk.split(a).length]).sort((x, y) => y[1] - x[1])[0][0];
+  const out = []; let satir = [], alan = "", tirnak = false;
+  for (let i = 0; i < metin.length; i++){
+    const c = metin[i];
+    if (tirnak){
+      if (c === '"'){ if (metin[i + 1] === '"'){ alan += '"'; i++; } else tirnak = false; }
+      else alan += c;
+    } else if (c === '"' && !alan) tirnak = true;
+    else if (c === ayir){ satir.push(alan); alan = ""; }
+    else if (c === "\n" || c === "\r"){
+      if (c === "\r" && metin[i + 1] === "\n") i++;
+      satir.push(alan); out.push(satir); satir = []; alan = "";
+    } else alan += c;
+  }
+  if (alan || satir.length){ satir.push(alan); out.push(satir); }
+  return out;
+}
+
+const ENLEM_RE = /enlem|latitude|(^|[^a-zğüşıöç])lat([^a-zğüşıöç]|$)/i, BOYLAM_RE = /boylam|longitude|(^|[^a-zğüşıöç])(lon|lng|long)([^a-zğüşıöç]|$)/i;
+/* başlık hücresinden grup adı: enlem/boylam sözcüğü ve kenardaki ayraçlar atılır */
+function grupAdi(h){
+  return String(h).replace(/enlem|latitude|boylam|longitude/ig, " ").replace(/(^|[^a-zğüşıöç])(lat|lon|lng|long)(?=[^a-zğüşıöç]|$)/ig, "$1 ")
+    .replace(/[\s_\-.:()\[\]]+/g, " ").trim();
+}
+function cokGrupCoz(tablo){
+  const bi = tablo.findIndex(r => r.some(v => v !== "" && v != null));
+  if (bi < 0) return null;
+  const baslik = tablo[bi].map(v => v == null ? "" : String(v).trim());
+  const la = [], lo = [];
+  baslik.forEach((h, j) => { if (ENLEM_RE.test(h)) la.push(j); else if (BOYLAM_RE.test(h)) lo.push(j); });
+  if (la.length < 2 || lo.length < 2) return null;
+  // aynı adlı enlem ve boylam eşleşir; eşi bulunamayanlar sırayla eşleşir
+  const anahtar = j => grupAdi(baslik[j]).toLocaleLowerCase("tr");
+  const kalanLo = lo.slice(), gruplar = [], esiz = [];
+  la.forEach(j => {
+    const k = kalanLo.findIndex(m => anahtar(m) === anahtar(j));
+    if (k >= 0) gruplar.push({j, m: kalanLo.splice(k, 1)[0]}); else esiz.push(j);
+  });
+  esiz.forEach((j, i) => { if (kalanLo[i] != null) gruplar.push({j, m: kalanLo[i]}); });
+  if (gruplar.length < 2) return null;
+  gruplar.sort((a, b) => a.j - b.j);
+  const sayCol = baslik.findIndex(h => /^(count|sayı|sayi|sayaç|sayac|no|sıra|sira|id|#|index)$/i.test(h));
+  return {
+    gruplar: gruplar.map((g, i) => ({ad: grupAdi(baslik[g.j]) || "Grup " + (i + 1), la: g.j, lo: g.m})),
+    sayCol, satirlar: tablo.slice(bi + 1).filter(r => r.some(v => v !== "" && v != null))
+  };
+}
+
+/* hücre değeri -> koordinat metni (Excel sayısı, ondalık virgül) */
+function grupHucre(v){
+  if (v == null) return "";
+  if (typeof v === "number") return String(v);
+  const t = String(v).trim();
+  return /^[+-]?\d+,\d+$/.test(t) ? t.replace(",", ".") : t;
+}
+/* çözülmüş tablo -> nokta listesi satırları ve özet */
+function cokGrupMetin(g, renkBas){
+  const n = g.satirlar.length, satirlar = [], ozet = [];
+  let okunamayan = 0;
+  g.gruplar.forEach((gr, gi) => {
+    const renk = GRUP_RENKLERI[(gi + (renkBas || 0)) % GRUP_RENKLERI.length];
+    const noktalar = [];
+    g.satirlar.forEach((r, i) => {
+      const a = grupHucre(r[gr.la]), b = grupHucre(r[gr.lo]);
+      if (!a && !b) return;
+      const k = koordBul(a + "\t" + b);
+      if (!k || k.hata){ okunamayan++; return; }
+      const no = g.sayCol >= 0 && r[g.sayCol] !== "" && r[g.sayCol] != null ? String(r[g.sayCol]).trim() : String(i + 1);
+      noktalar.push({lat: k.lat, lon: k.lon, no});
+    });
+    if (!noktalar.length){ ozet.push({ad: gr.ad, renk, say: 0, sabit: false}); return; }
+    const farkli = new Map();
+    noktalar.forEach(p => { const key = p.lat.toFixed(6) + "," + p.lon.toFixed(6); if (!farkli.has(key)) farkli.set(key, p); });
+    // her satırda tekrarlanan konum (başlangıç, bitiş): tek nokta
+    const sabit = noktalar.length > 1 && farkli.size <= Math.max(1, Math.floor(noktalar.length * .05));
+    const yaz = (ad, p) => satirlar.push(ad + "\t" + p.lat.toFixed(6) + "\t" + p.lon.toFixed(6) + "\t" + renk);
+    if (sabit){
+      let i = 0;
+      farkli.forEach(p => yaz(gr.ad + (farkli.size > 1 ? " " + (++i) : ""), p));
+    } else noktalar.forEach(p => yaz(gr.ad + " #" + p.no, p));
+    ozet.push({ad: gr.ad, renk, say: sabit ? farkli.size : noktalar.length, sabit, satir: noktalar.length});
+  });
+  return {metin: satirlar.join("\n"), ozet, okunamayan, satirSay: n};
+}
+function cokGrupYukle(g, ad, ekle){
+  const ta = $("p-input");
+  const renkBas = ekle && ta.value.trim() ? new Set(POINTS.map(p => p.color)).size : 0;
+  const r = cokGrupMetin(g, renkBas);
+  sekmeAc("pane-points");
+  ta.value = ekle && ta.value.trim() ? ta.value.replace(/\s+$/, "") + "\n" + r.metin : r.metin;
+  ta.dispatchEvent(new Event("input", {bubbles: true}));
+  buildPoints();
+  const f = v => v.toLocaleString("tr-TR");
+  const parca = r.ozet.map(o => o.ad + ": " + (o.sabit ? f(o.say) + " nokta (" + f(o.satir) + " satırda aynı)" : f(o.say) + " nokta")).join(" · ");
+  $("p-msg").innerHTML = '<span class="ok">' + esc(ad) + ": " + f(r.satirSay) + " satır, " + r.ozet.length + " grup.</span><br>" +
+    r.ozet.map(o => '<span class="grup-renk" style="background:' + o.renk + '"></span>' + esc(o.ad) + ": " + (o.sabit ? f(o.say) + " nokta (tekrar eden konum tek gösterildi)" : f(o.say) + " nokta")).join("<br>") +
+    (r.okunamayan ? '<br><span class="warn">' + f(r.okunamayan) + " koordinat okunamadı (atlandı).</span>" : "");
+  toast(ad + ": " + r.ozet.length + " nokta grubu yüklendi");
+  return parca;
+}
+
+/* tablo dosyasından çok gruplu tablo çıkar (yoksa null) */
+async function cokGrupDosya(f){
+  try {
+    if (/\.(xlsx|xlsm)$/i.test(f.name)){
+      const s = xlsxOku(await f.arrayBuffer()).find(s => s.satirlar.some(r => r.some(v => v !== "" && v != null)));
+      return s ? cokGrupCoz(s.satirlar) : null;
+    }
+    if (/\.(csv|tsv|txt)$/i.test(f.name)) return cokGrupCoz(csvOku(await f.text()));
+  } catch (e){}
+  return null;
+}
+const dosyaYukleTekGrup = dosyaYukle;
+dosyaYukle = async function(f, hedef, ekle){
+  const g = await cokGrupDosya(f);
+  if (g){ cokGrupYukle(g, f.name, ekle); return; }
+  return dosyaYukleTekGrup(f, hedef);
+};
+const dosyalariYukleTekGrup = dosyalariYukle;
+dosyalariYukle = async function(liste, hedef){
+  const dosyalar = [...liste];
+  if (dosyalar.length < 2) return dosyalariYukleTekGrup(dosyalar, hedef);
+  const kalan = [];
+  let ilk = true;
+  for (const f of dosyalar){
+    const g = await cokGrupDosya(f);
+    if (g){ cokGrupYukle(g, f.name, !ilk); ilk = false; } else kalan.push(f);
+  }
+  if (kalan.length) return dosyalariYukleTekGrup(kalan, hedef);
+};
+
 /* ============ KML / KMZ'den al ============ */
 /* Google Earth ve benzerlerinden gelen .kml ve .kmz (ZIP içinde doc.kml) dosyaları okunur.
    Poligonlar alan, noktalar nokta, çizgiler Notlar'da çizgi olur; daireye benzeyen kapalı halkalar
@@ -5443,7 +5637,7 @@ function kmlEkle(){
         const pts = o.geo === "daire" ? geodesicRingPts(o.daire) : o.pts.slice();
         if (o.geo !== "cizgi") pts.push(pts[0]);                  // kapalı şekil kapalı kalsın
         const w = o.kalinlik || 2.5;
-        NOTLAR.push({tur: "cizgi", pts, metin: o.ad, renk: renkli && o.renk || nr, boyut: 13, tip: "duz", kalinlik: w <= 2 ? 1.5 : w <= 3 ? 2.5 : 4});
+        NOTLAR.push({tur: "cizgi", pts, metin: o.ad, renk: renkli && o.renk || $("l-renk").value, boyut: 13, tip: "duz", kalinlik: w <= 2 ? 1.5 : w <= 3 ? 2.5 : 4});
       }
     });
     if (C.length){ notListe(); hideEmpty(); }
@@ -5458,7 +5652,7 @@ function kmlEkle(){
   } finally { SUPPRESS_FIT = false; }
   $("kml").hidden = true;
   degisti();
-  sekmeAc(A.length ? "pane-areas" : D.length ? "pane-circles" : N.length ? "pane-points" : C.length ? "pane-notes" : "pane-measure");
+  sekmeAc(A.length ? "pane-areas" : D.length ? "pane-circles" : N.length ? "pane-points" : C.length ? (C.some(o => o.hedef !== "not") ? "pane-lines" : "pane-notes") : "pane-measure");
   fitAll();
   toast(KML_SON.ad + ": " + O.length.toLocaleString("tr-TR") + " öğe eklendi");
 }
@@ -5882,23 +6076,20 @@ var NOTLAR = [];             // {tur:"not", lat, lon, metin, renk, boyut} | {tur
 var NOT_AKTIF = false, NOT_OK_BAS = null, NOT_IMLEC = null;
 var NOT_CIZGI = [];          // çizilmekte olan çizginin köşeleri
 const NOT_RENKLER = ["#16222a", "#a4123f", "#00798c", "#e08e0b", "#3c6e2a", "#6a3d9a"];
-function notKip(){ return document.querySelector('input[name="n-kip"]:checked').value; }
+var CIZGI_AKTIF = false;      // Çizgiler sekmesi açık: tıklamalar çizgi köşesi ekler
+function notKip(){ return CIZGI_AKTIF ? "cizgi" : document.querySelector('input[name="n-kip"]:checked').value; }
 
 function notEkle(n){ NOTLAR.push(n); hideEmpty(); notListe(); draw(); degisti(); }
 
 /* ---- çizgi kipi ---- */
 function cizgiDugmeleri(){
-  const ck = notKip() === "cizgi";
-  $("n-cizgi-ayar").hidden = !ck;
-  $("n-liste-kutu").hidden = !ck;
-  $("btn-n-bitir").hidden = !ck;
   $("btn-n-bitir").disabled = NOT_CIZGI.length < 2;
 }
 function cizgiBitir(){
   const pts = NOT_CIZGI;
   NOT_CIZGI = [];
   if (pts.length >= 2)
-    notEkle({tur: "cizgi", pts, metin: "", renk: $("n-renk").value, boyut: +$("n-boyut").value,
+    notEkle({tur: "cizgi", pts, metin: "", renk: $("l-renk").value, boyut: +$("l-boyut").value,
              tip: $("n-tip").value, kalinlik: +$("n-kalinlik").value, egri: $("n-egri").checked});
   else draw();
   cizgiDugmeleri();
@@ -6016,7 +6207,7 @@ function drawNotlar(){
     ctx.beginPath(); okUcu(x1, y1, x2, y2, 14); ctx.stroke();
   }
   if (NOT_CIZGI.length){                                          // çizgi önizlemesi
-    const w = +$("n-kalinlik").value, renk = $("n-renk").value;
+    const w = +$("n-kalinlik").value, renk = $("l-renk").value;
     ctx.strokeStyle = renk; ctx.lineWidth = w;
     ctx.setLineDash(cizgiTireleri($("n-tip").value, w));
     cizgiYolu(NOT_CIZGI, $("n-egri").checked); ctx.stroke();
@@ -6057,10 +6248,13 @@ function notTutamaclari(dene){
 
 /* ---- liste ---- */
 function notListe(){
-  const host = $("n-list");
-  host.innerHTML = "";
-  $("n-msg").innerHTML = NOTLAR.length ? "" : '<span class="warn">Henüz not yok — haritaya tıklayın.</span>';
-  NOTLAR.forEach((n, i) => {
+  const hNot = $("n-list"), hCiz = $("l-list");
+  hNot.innerHTML = ""; hCiz.innerHTML = "";
+  const cizgiSay = NOTLAR.filter(n => n.tur === "cizgi").length, notSay = NOTLAR.length - cizgiSay;
+  $("n-msg").innerHTML = notSay ? "" : '<span class="warn">Henüz not yok — haritaya tıklayın.</span>';
+  $("l-msg").innerHTML = cizgiSay ? "" : '<span class="warn">Henüz çizgi yok — haritaya tıklayın ya da koordinat listesinden çizin.</span>';
+  NOTLAR.forEach(n => {
+    const host = n.tur === "cizgi" ? hCiz : hNot;
     const row = document.createElement("div");
     row.className = "zone not-satir";
     const tek = n.tur === "ok" || n.tur === "cizgi";
@@ -6088,7 +6282,7 @@ function notListe(){
       smallBtn("odak", () => n.tur === "cizgi"
         ? focusOn(Math.min(...n.pts.map(p => p.lat)), Math.min(...n.pts.map(p => p.lon)), Math.max(...n.pts.map(p => p.lat)), Math.max(...n.pts.map(p => p.lon)))
         : n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
-      smallBtn("sil", () => { NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
+      smallBtn("sil", () => { const i = NOTLAR.indexOf(n); if (i >= 0) NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
     vurguBagla(row, {tur: "not", n});
     secimBagla(row, [secD("not", n)]);
     host.appendChild(row);
@@ -6104,7 +6298,7 @@ function cizgileriCiz(){
     const e = eski.get(z.name);
     return {tur: "cizgi", kaynak: "liste", metin: z.name,
             pts: z.points.map(p => ({lat: p.lat, lon: p.lon, li: p.li, cs: p.cs, ce: p.ce})),
-            renk: e ? e.renk : $("n-renk").value, boyut: e ? e.boyut : +$("n-boyut").value,
+            renk: e ? e.renk : $("l-renk").value, boyut: e ? e.boyut : +$("l-boyut").value,
             tip: e ? e.tip : $("n-tip").value, kalinlik: e ? e.kalinlik : +$("n-kalinlik").value,
             egri: e ? e.egri : $("n-egri").checked};
   });
@@ -6127,7 +6321,7 @@ function listeKonumlariBagla(){
 }
 $("btn-n-liste").onclick = cizgileriCiz;
 $("btn-n-liste-temizle").onclick = () => { $("n-liste").value = ""; NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste"); $("n-liste-msg").textContent = ""; notListe(); draw(); degisti(); };
-XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-notes", ad: "Çizgiler"};
+XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-lines", ad: "Çizgiler"};
 
 /* ---- haritaya tıklama ---- */
 cv.addEventListener("click", e => {
@@ -6169,7 +6363,8 @@ document.addEventListener("keydown", e => {
 });
 document.querySelectorAll(".tab[data-pane]").forEach(t => t.addEventListener("click", () => {
   if (NOT_CIZGI.length) cizgiBitir();                            // sekme değişince yarım çizgi kaydolur (2+ köşe)
-  NOT_AKTIF = t.dataset.pane === "pane-notes";
+  NOT_AKTIF = t.dataset.pane === "pane-notes" || t.dataset.pane === "pane-lines";
+  CIZGI_AKTIF = t.dataset.pane === "pane-lines";
   NOT_OK_BAS = null;
   if (NOT_AKTIF) cv.classList.add("measure");
   draw();
@@ -6180,10 +6375,12 @@ document.querySelectorAll('input[name="n-kip"]').forEach(r => r.addEventListener
   cizgiDugmeleri(); draw();
 }));
 $("btn-n-bitir").onclick = cizgiBitir;
-["n-tip", "n-kalinlik", "n-renk"].forEach(id => $(id).addEventListener("input", () => { if (NOT_CIZGI.length) draw(); }));
-$("btn-n-clear").onclick = () => { NOTLAR = []; NOT_OK_BAS = null; NOT_CIZGI = []; cizgiDugmeleri(); notListe(); draw(); degisti(); };
+["n-tip", "n-kalinlik", "l-renk", "n-egri"].forEach(id => $(id).addEventListener("input", () => { if (NOT_CIZGI.length) draw(); }));
+$("btn-n-clear").onclick = () => { NOTLAR = NOTLAR.filter(n => n.tur === "cizgi"); NOT_OK_BAS = null; notListe(); draw(); degisti(); };
+$("btn-l-clear").onclick = () => { NOTLAR = NOTLAR.filter(n => n.tur !== "cizgi"); NOT_CIZGI = []; cizgiDugmeleri(); notListe(); draw(); degisti(); };
 $("opt-layer-notes").addEventListener("change", draw);
 $("n-renk").value = NOT_RENKLER[1];
+$("l-renk").value = NOT_RENKLER[1];
 
 /* ---- proje dosyası ---- */
 const projeToplaNotsuz = projeTopla;
@@ -6562,12 +6759,13 @@ function rozetler(){
   const merkez = new Set(CIRCLES.map(c => c.li + "|" + c.lat + "|" + c.lon)).size;
   const say = {
     "pane-areas": ZONES.length, "pane-circles": merkez, "pane-rings": RINGS.length, "pane-points": POINTS.length,
-    "pane-measure": MEASURE.reduce((s, ch) => s + ch.pts.length, 0), "pane-notes": NOTLAR.length
+    "pane-measure": MEASURE.reduce((s, ch) => s + ch.pts.length, 0),
+    "pane-notes": NOTLAR.filter(n => n.tur !== "cizgi").length, "pane-lines": NOTLAR.filter(n => n.tur === "cizgi").length
   };
   const anahtar = JSON.stringify(say);
   if (anahtar === ROZET_ESKI) return;
   ROZET_ESKI = anahtar;
-  const ad = {"pane-areas": "alan", "pane-circles": "merkez", "pane-rings": "eğri", "pane-points": "nokta", "pane-measure": "ölçüm noktası", "pane-notes": "not"};
+  const ad = {"pane-areas": "alan", "pane-circles": "merkez", "pane-rings": "eğri", "pane-points": "nokta", "pane-measure": "ölçüm noktası", "pane-notes": "not", "pane-lines": "çizgi"};
   Object.keys(say).forEach(id => {
     const t = document.querySelector('.tab[data-pane="' + id + '"]');
     if (!t) return;
@@ -6581,7 +6779,7 @@ function rozetler(){
 
 /* ============ noktalar: alanların dışında kalan noktalar ============ */
 /* draw() bu dosyadaki fonksiyonları modül kodundan önce de çağırabilir: durum var ile, yardımcılar function ile. */
-var DIS = {sig: "", dis: null, n: 0, disSay: 0, alanSay: 0, metin: ""};
+var DIS = {sig: "", dis: null, n: 0, disSay: 0, alanSay: 0, metin: "", adlar: []};
 
 function disAcik(){ const e = document.getElementById("p-dis"); return !!(e && e.checked); }
 
@@ -6597,46 +6795,68 @@ function disHesapla(){
   for (const c of daireler){ a += c.lat * 3 + c.lon * 5 + c.d; k++; }
   let b = 0;
   for (let i = 0; i < POINTS.length; i++) b += POINTS[i].lat * (i % 11 + 1) + POINTS[i].lon * (i % 5 + 1);
-  const sig = [view.mode, view.phi0, alanlar.length, daireler.length, k, a.toFixed(6), POINTS.length, b.toFixed(6)].join("|");
+  const hedefEl = document.getElementById("p-dis-hedef"), hedef = hedefEl ? hedefEl.value : "";
+  const sig = [view.mode, view.phi0, alanlar.length, daireler.length, k, a.toFixed(6), POINTS.length, b.toFixed(6), hedef].join("|");
   if (DIS.sig === sig) return DIS;
   const polys = [];
-  const ekle = (xy) => {
+  const ekle = (xy, ad) => {
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (let i = 0; i < xy.length; i += 2){ if (xy[i] < x0) x0 = xy[i]; if (xy[i] > x1) x1 = xy[i]; if (xy[i+1] < y0) y0 = xy[i+1]; if (xy[i+1] > y1) y1 = xy[i+1]; }
-    polys.push({xy, x0, x1, y0, y1});
+    polys.push({xy, x0, x1, y0, y1, ad, ic: 0});
   };
-  for (const z of alanlar){ const xy = []; z.points.forEach(p => xy.push(wx(p.lon), wy(p.lat))); ekle(xy); }
-  for (const c of daireler){ const xy = []; for (let i = 0; i < c.ring.length; i += 2) xy.push(wx(c.ring[i]), wy(c.ring[i+1])); ekle(xy); }
+  for (const z of alanlar){ const xy = []; z.points.forEach(p => xy.push(wx(p.lon), wy(p.lat))); ekle(xy, z.name); }
+  for (const c of daireler){ const xy = []; for (let i = 0; i < c.ring.length; i += 2) xy.push(wx(c.ring[i]), wy(c.ring[i+1])); ekle(xy, c.name + " " + c.label); }
+  // aynı adlı alanlar ayırt edilsin
+  const adSay = {}; polys.forEach(q => adSay[q.ad] = (adSay[q.ad] || 0) + 1);
+  const adSira = {}; polys.forEach(q => { if (adSay[q.ad] > 1){ adSira[q.ad] = (adSira[q.ad] || 0) + 1; q.ad += " (" + adSira[q.ad] + ")"; } });
+  const hi = hedef === "" ? -1 : polys.findIndex(q => q.ad === hedef);      // vurgulanacak: -1 = hiçbir alanın içinde olmayanlar
   const dis = new Set();
   let ic = 0;
   for (const p of POINTS){
     const x = wx(p.lon), y = wy(p.lat);
-    let icinde = false;
-    for (const q of polys){
+    let icinde = false, hedefte = false;
+    for (let qi = 0; qi < polys.length; qi++){
+      const q = polys[qi];
       if (x < q.x0 || x > q.x1 || y < q.y0 || y > q.y1) continue;
       const v = q.xy; let c = false;
       for (let i = 0, j = v.length - 2; i < v.length; j = i, i += 2)
         if ((v[i+1] > y) !== (v[j+1] > y) && x < (v[j] - v[i]) * (y - v[i+1]) / (v[j+1] - v[i+1]) + v[i]) c = !c;
-      if (c){ icinde = true; break; }
+      if (c){ icinde = true; q.ic++; if (qi === hi) hedefte = true; }
     }
-    if (icinde) ic++; else dis.add(p);
+    if (icinde) ic++;
+    if (hi >= 0 ? !hedefte : !icinde) dis.add(p);
   }
   const n = POINTS.length, f = v => v.toLocaleString("tr-TR");
   const yuz = v => "%" + (100 * v / n).toLocaleString("tr-TR", {minimumFractionDigits: 1, maximumFractionDigits: 1});
-  DIS = {sig, dis: polys.length ? dis : null, n, disSay: n - ic, alanSay: polys.length,
+  const satir = (ad, v) => '<div class="dis-satir"><span>' + esc(ad) + '</span><span><b>' + f(v) + "</b> nokta · " + yuz(v) + "</span></div>";
+  DIS = {sig, dis: polys.length ? dis : null, n, disSay: n - ic, alanSay: polys.length, adlar: polys.map(q => q.ad), hedef: hi >= 0 ? polys[hi].ad : "",
     metin: polys.length
-      ? '<b>' + f(n - ic) + '</b> / ' + f(n) + ' nokta ' + (daireler.length ? "alan ve dairelerin" : "alanların") + ' dışında (' + yuz(n - ic) + '); ' + f(ic) + ' nokta içinde (' + yuz(ic) + ').'
+      ? '<div class="dis-baslik">Toplam <b>' + f(n) + "</b> nokta" + (hi >= 0 ? " · vurgulanan: " + esc(polys[hi].ad) + " dışındakiler" : "") + "</div>" +
+        '<div class="dis-liste">' + polys.map(q => satir(q.ad + " dışında", n - q.ic)).join("") + "</div>" +
+        (polys.length > 1 ? '<div class="dis-ozet">' + satir("Hiçbir " + (daireler.length ? "alan ya da dairenin" : "alanın") + " içinde olmayan", n - ic) + "</div>" : "")
       : '<span class="warn">Çizili alan yok; dışarıda sayılacak bir şey yok.</span>'};
   return DIS;
 }
 function disSonucYaz(){
   const el = document.getElementById("p-dis-sonuc");
   if (!el) return;
-  const d = disAcik() ? DIS : null;
+  const acik = disAcik(), d = acik ? DIS : null;
   const m = d && d.metin ? d.metin : "";
   if (el.dataset.m !== m){ el.dataset.m = m; el.innerHTML = m; }
   el.hidden = !m;
-  const r = document.getElementById("p-dis-daire-satir"); if (r) r.hidden = !disAcik();
+  const r = document.getElementById("p-dis-daire-satir"); if (r) r.hidden = !acik;
+  // vurgulanacak alan seçimi: alan adları değişince seçenekler yenilenir
+  const sel = document.getElementById("p-dis-hedef"), sr = document.getElementById("p-dis-hedef-satir");
+  if (!sel) return;
+  const adlar = d && d.adlar ? d.adlar : [];
+  sr.hidden = !acik || adlar.length < 2;
+  const anahtar = adlar.join("\u0001");
+  if (sel.dataset.a !== anahtar){
+    const eski = sel.value;
+    sel.dataset.a = anahtar;
+    sel.innerHTML = '<option value="">hiçbir alanın içinde olmayanlar</option>' + adlar.map(a => '<option value="' + esc(a) + '">' + esc(a) + " dışındakiler</option>").join("");
+    sel.value = adlar.includes(eski) ? eski : "";
+  }
 }
 
 /* dışarıdaki noktalar kırmızı halkayla; baskıda çizilmez */
@@ -6665,6 +6885,7 @@ function drawNoktaVurgu(){
 
 $("p-dis").addEventListener("change", () => { disSonucYaz(); scheduleDraw(); });
 $("p-dis-daire").addEventListener("change", () => scheduleDraw());
+$("p-dis-hedef").addEventListener("change", () => scheduleDraw());
 disSonucYaz();
 
 /* ============ Dosya menüsü ve tema ============ */
@@ -6760,7 +6981,7 @@ var SEC = null;                      // Map: öğe nesnesi -> {tur, o, key, ...}
 var KUTU = null;                     // Shift+sürükleme ile çizilen seçim dikdörtgeni
 var SEC_IMZA = null;
 const SEC_MAVI = "#3b8de0";
-const SEC_AD = {alan: "alan", daire: "daire", egri: "mesafe eğrisi", nokta: "nokta", olcumNokta: "ölçüm noktası", olcumHat: "ölçüm hattı", not: "not"};
+const SEC_AD = {alan: "alan", daire: "daire", egri: "mesafe eğrisi", nokta: "nokta", olcumNokta: "ölçüm noktası", olcumHat: "ölçüm hattı", not: "not", cizgi: "çizgi"};
 
 function secD(tur, o, ek){ return Object.assign({tur, o, key: o}, ek || {}); }
 function secimAcik(){ return !PICK && !MEASURE_ACTIVE && !NOT_AKTIF; }
@@ -6811,7 +7032,7 @@ function secimYenile(){
   bar.classList.toggle("on", n > 0 && secimAcik());
   if (n){
     const say = {};
-    SEC.forEach(d => say[d.tur] = (say[d.tur] || 0) + 1);
+    SEC.forEach(d => { const t = d.tur === "not" && d.o.tur === "cizgi" ? "cizgi" : d.tur; say[t] = (say[t] || 0) + 1; });
     const parca = Object.keys(say).map(t => say[t].toLocaleString("tr-TR") + " " + SEC_AD[t]).join(", ");
     $("secim-metin").textContent = n.toLocaleString("tr-TR") + " öğe seçili" + (Object.keys(say).length > 1 || n > 1 ? " (" + parca + ")" : "");
   }

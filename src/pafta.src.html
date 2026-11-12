@@ -109,6 +109,7 @@
   .msg:empty{display:none}
   .msg .ok{color:#8fd0a6}
   .msg .warn{color:#ffcd6b}
+  .grup-renk{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
   .busy{opacity:.55;pointer-events:none}
 
   /* anahtar düğmeler */
@@ -174,6 +175,11 @@
   .zone.secili,.chain-head.secili,.mpt.secili{background:#16303b;outline:1px solid #3b8de0;outline-offset:-1px}
   html.acik .zone.secili,html.acik .chain-head.secili,html.acik .mpt.secili{background:#dcebf7}
   .dis-sonuc{margin-top:8px}
+  .dis-liste{max-height:132px;overflow-y:auto;scrollbar-width:thin;margin-top:4px}
+  .dis-satir{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+  .dis-satir span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dis-satir span:last-child{white-space:nowrap;color:var(--text)}
+  .dis-ozet{border-top:1px solid var(--line);margin-top:4px;padding-top:3px}
   .liste-say{margin:6px 0 0;font-size:11.5px;color:var(--dim)}
   #zones:not(:empty),#c-list:not(:empty),#r-list:not(:empty),#p-list:not(:empty),#m-list:not(:empty){margin-top:14px}
 
@@ -478,9 +484,13 @@
       <svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M11 6.2 5.5 20.5M13 6.2l5.5 14.3"/><path d="M7.4 15.5a7.5 7.5 0 0 0 9.2 0"/></svg>
       Ölçüm
     </button>
-    <button class="tab" data-pane="pane-notes" title="Haritaya not, ok ve çizgi ekle">
+    <button class="tab" data-pane="pane-notes" title="Haritaya not ve ok ekle">
       <svg viewBox="0 0 24 24"><path d="M4 5h12v8H9l-3.5 3v-3H4Z"/><path d="M13 19.5 20 12.5M20 12.5h-4.2M20 12.5v4.2"/></svg>
       Notlar
+    </button>
+    <button class="tab" data-pane="pane-lines" title="Haritaya tıklayarak ya da koordinat listesinden çizgi çiz">
+      <svg viewBox="0 0 24 24"><path d="M3.5 18.5 9 9.5l5 6 6.5-11"/><circle cx="3.5" cy="18.5" r="1.4"/><circle cx="9" cy="9.5" r="1.4"/><circle cx="14" cy="15.5" r="1.4"/><circle cx="20.5" cy="4.5" r="1.4"/></svg>
+      Çizgiler
     </button>
     <div class="spacer"></div>
     <div class="sep"></div>
@@ -656,6 +666,9 @@
         <label class="check">Etikette koordinatı da göster <input type="checkbox" class="toggle" id="p-coords"></label>
         <label class="check">Alanların dışındaki noktaları vurgula <input type="checkbox" class="toggle" id="p-dis"></label>
         <label class="check" id="p-dis-daire-satir" hidden>Daireleri de alan say <input type="checkbox" class="toggle" id="p-dis-daire"></label>
+        <label class="fld" id="p-dis-hedef-satir" hidden>Haritada vurgulanan
+          <select id="p-dis-hedef" data-yerel="1"></select>
+        </label>
       </div>
     </div>
 
@@ -704,14 +717,13 @@
     <div class="pane" id="pane-notes">
       <header class="pane-head">
         <h2>Notlar</h2>
-        <p>Haritaya açıklama notları, oklar ve çizgiler ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
+        <p>Haritaya açıklama notları ve oklar ekler; paftayla birlikte basılır ve projeye kaydedilir.</p>
       </header>
       <div class="group">
         <div class="mode-on">Not modu açık</div>
         <div class="seg" role="radiogroup" aria-label="Eklenecek öğe">
           <label><input type="radio" name="n-kip" value="not" checked><span>Not</span></label>
           <label><input type="radio" name="n-kip" value="ok"><span>Ok</span></label>
-          <label><input type="radio" name="n-kip" value="cizgi"><span>Çizgi</span></label>
         </div>
         <div class="grid2" style="margin-top:12px">
           <label class="fld" style="margin-top:0">Renk
@@ -725,7 +737,25 @@
             </select>
           </label>
         </div>
-        <div class="grid2" id="n-cizgi-ayar" style="margin-top:10px" hidden>
+        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Notlar ve ok uçları sürüklenerek taşınır. Çizgiler için soldaki <b>Çizgiler</b> sekmesini kullanın.</p>
+        <div class="row"><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
+        <div class="msg" id="n-msg"></div>
+        <div id="n-list" class="kaydir"></div>
+      </div>
+    </div>
+
+    <!-- ÇİZGİLER -->
+    <div class="pane" id="pane-lines">
+      <header class="pane-head">
+        <h2>Çizgiler</h2>
+        <p>Haritaya tıklayarak ya da sıralı koordinatlardan düz veya eğri çizgiler çizer; paftayla birlikte basılır ve projeye kaydedilir.</p>
+      </header>
+      <div class="group">
+        <div class="mode-on">Çizgi modu açık</div>
+        <div class="grid2">
+          <label class="fld" style="margin-top:0">Renk
+            <input type="color" id="l-renk" value="#a4123f">
+          </label>
           <label class="fld" style="margin-top:0">Çizgi tipi
             <select id="n-tip">
               <option value="duz" selected>düz</option>
@@ -733,30 +763,39 @@
               <option value="noktali">noktalı</option>
             </select>
           </label>
-          <label class="fld" style="margin-top:0">Kalınlık
+          <label class="fld">Kalınlık
             <select id="n-kalinlik">
               <option value="1.5">ince</option>
               <option value="2.5" selected>orta</option>
               <option value="4">kalın</option>
             </select>
           </label>
-          <label class="check" style="grid-column:1/-1;margin-top:6px">Eğri (noktalardan geçen yumuşak çizgi) <input type="checkbox" class="toggle" id="n-egri"></label>
+          <label class="fld">Etiket boyutu
+            <select id="l-boyut">
+              <option value="11">küçük</option>
+              <option value="13" selected>orta</option>
+              <option value="16">büyük</option>
+            </select>
+          </label>
         </div>
-        <div id="n-liste-kutu" hidden>
-          <div class="group-head" style="margin-top:14px"><h3>Koordinatlarla çizgi</h3><span class="head-btns"><button class="pick" data-hedef="n-liste" title="Haritaya tıklayarak köşe ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
-          <textarea id="n-liste" class="short" spellcheck="false" placeholder="Rota 1&#9;1&#9;41°00'00&quot;K&#9;29°00'00&quot;D&#10;&#9;2&#9;41°20'00&quot;K&#9;30°10'00&quot;D&#10;&#9;3&#9;41°05'00&quot;K&#9;31°30'00&quot;D"></textarea>
-          <div class="row">
-            <button class="btn primary" id="btn-n-liste">Çizgileri çiz</button>
-            <button class="btn" data-dosya="cizgi" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
-            <button class="btn quiet" id="btn-n-liste-temizle">Temizle</button>
-          </div>
-          <p class="hint">Sıralı koordinatlar Alanlar ile aynı biçimde yazılır; her grup bir çizgidir, boş satır ya da yeni ad yeni çizgi başlatır. Çizgiler yukarıdaki renk, tip, kalınlık ve eğri ayarlarıyla çizilir; köşeleri sürükleyince yeni koordinat listeye yazılır.</p>
-          <div class="msg" id="n-liste-msg"></div>
+        <label class="check" style="margin-top:10px">Eğri (noktalardan geçen yumuşak çizgi) <input type="checkbox" class="toggle" id="n-egri"></label>
+        <p class="hint">Haritaya her tıklama bir köşe ekler; son köşeye yeniden tıklamak, çift tıklamak ya da Enter çizgiyi bitirir, Geri tuşu son köşeyi siler, Esc yarım çizgiyi bırakır. Köşeler sürüklenerek taşınır.</p>
+        <div class="row"><button class="btn" id="btn-n-bitir" disabled>Çizgiyi bitir</button><button class="btn quiet" id="btn-l-clear">Hepsini sil</button></div>
+      </div>
+      <div class="group" id="n-liste-kutu">
+        <div class="group-head"><h3>Koordinatlarla çizgi</h3><span class="head-btns"><button class="pick" data-hedef="n-liste" title="Haritaya tıklayarak köşe ekle"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.6"/><path d="M8 .8v3.4M8 11.8v3.4M.8 8h3.4M11.8 8h3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none"/></svg>Haritadan seç</button></span></div>
+        <textarea id="n-liste" class="short" spellcheck="false" placeholder="Rota 1&#9;1&#9;41°00'00&quot;K&#9;29°00'00&quot;D&#10;&#9;2&#9;41°20'00&quot;K&#9;30°10'00&quot;D&#10;&#9;3&#9;41°05'00&quot;K&#9;31°30'00&quot;D"></textarea>
+        <div class="row">
+          <button class="btn primary" id="btn-n-liste">Çizgileri çiz</button>
+          <button class="btn" data-dosya="cizgi" title="Metin, CSV, Excel (.xlsx) ya da Google Earth (.kml, .kmz) dosyası">Dosyadan al</button>
+          <button class="btn quiet" id="btn-n-liste-temizle">Temizle</button>
         </div>
-        <p class="hint">Not kipinde haritaya tıklayın ve metni aşağıya yazın (Enter yeni satır). Ok kipinde önce başlangıca, sonra ucuna tıklayın; Esc yarım oku bırakır. Çizgi kipinde her tıklama bir köşe ekler; son köşeye yeniden tıklamak, çift tıklamak ya da Enter çizgiyi bitirir, Geri tuşu son köşeyi siler, Esc yarım çizgiyi bırakır. Notlar, ok uçları ve çizgi köşeleri sürüklenerek taşınır.</p>
-        <div class="row"><button class="btn" id="btn-n-bitir" hidden>Çizgiyi bitir</button><button class="btn quiet" id="btn-n-clear">Hepsini sil</button></div>
-        <div class="msg" id="n-msg"></div>
-        <div id="n-list" class="kaydir"></div>
+        <p class="hint">Sıralı koordinatlar Alanlar ile aynı biçimde yazılır; her grup bir çizgidir, boş satır ya da yeni ad yeni çizgi başlatır. Çizgiler yukarıdaki renk, tip, kalınlık ve eğri ayarlarıyla çizilir; köşeleri sürükleyince yeni koordinat listeye yazılır.</p>
+        <div class="msg" id="n-liste-msg"></div>
+      </div>
+      <div class="group">
+        <div class="msg" id="l-msg"></div>
+        <div id="l-list" class="kaydir"></div>
       </div>
     </div>
 
@@ -1103,7 +1142,7 @@
         <dt><kbd>Ctrl</kbd> <kbd>O</kbd></dt><dd>Proje aç</dd>
         <dt class="desk-only"><kbd>Ctrl</kbd> <kbd>N</kbd></dt><dd class="desk-only">Yeni pafta</dd>
         <dt><kbd>Ctrl</kbd> <kbd>E</kbd></dt><dd>Haritayı PNG olarak kaydet</dd>
-        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>8</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Notlar, Görünüm, Çıktı</dd>
+        <dt><kbd>Ctrl</kbd> <kbd>1</kbd>…<kbd>9</kbd></dt><dd>Araçlar: Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Notlar, Çizgiler, Görünüm, Çıktı</dd>
         <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> · <kbd>Ctrl</kbd> <kbd>Y</kbd></dt><dd>Geri al, yinele</dd>
         <dt><kbd>Ctrl</kbd> <kbd>0</kbd></dt><dd>Çizime sığdır</dd>
         <dt><kbd>Ctrl</kbd> <kbd>U</kbd></dt><dd>Uydu görüntüsünü aç/kapat</dd>
@@ -2559,9 +2598,20 @@ function legendRows(){
   if (opt("opt-layer-rings"))
     RINGS.forEach(lv => rows.push({kind: "band", color: lv.color, t: RING_LABEL === "Mavi Vatan sınırı" ? "Mavi Vatan'dan" : "TR sınırından", v: lv.label}));
   if (opt("opt-layer-points") && POINTS.length){
+    // renk başına bir satır; o renkteki noktaların adı ortak bir kökle başlıyorsa ("as1 #12", "as1 #13") satır o adı alır
     const seen = new Map();
-    POINTS.forEach(p => seen.set(p.color, (seen.get(p.color) || 0) + 1));
-    seen.forEach((n, c) => rows.push({kind: "marker", color: c, t: seen.size === 1 ? "Noktalar" : "Nokta grubu", v: n + " adet"}));
+    for (const p of POINTS){
+      const g = seen.get(p.color);
+      if (!g){ seen.set(p.color, {n: 1, kok: p.name.replace(/\s*#\d+$/, "")}); continue; }
+      g.n++;
+      if (g.kok && !(p.name === g.kok || p.name.startsWith(g.kok + " #"))) g.kok = "";
+    }
+    let i = 0;
+    seen.forEach((g, c) => {
+      if (++i > LEJANT_ALAN) return;
+      rows.push({kind: "marker", color: c, t: g.kok && (seen.size > 1 || g.n > 1) ? g.kok : seen.size === 1 ? "Noktalar" : "Nokta grubu", v: g.n.toLocaleString("tr-TR") + " adet"});
+    });
+    if (seen.size > LEJANT_ALAN) rows.push({kind: "more", color: "#16222a", t: "+ " + (seen.size - LEJANT_ALAN) + " nokta grubu daha", v: ""});
   }
   if (opt("opt-layer-measure"))
     {

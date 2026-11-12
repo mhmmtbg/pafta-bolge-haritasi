@@ -1,5 +1,12 @@
 # Değişiklik Günlüğü
 
+## v2.8.0 — 2026-11-12
+
+- **Çok gruplu nokta tablosu:** Başlığında birden çok enlem/boylam sütun çifti olan CSV ya da Excel dosyası (`Count, başlangıç noktası enlem, başlangıç noktası boylam, bitiş enlem, bitiş boylam, as1 enlem, as1_xverisi, as1_boylam, …`) Noktalar'a gruplar hâlinde yüklenir. Sütunlar enlem/boylam sözcüğü atılınca kalan adlarına göre eşleşir; grup sayısı ve adları serbesttir, aradaki başka sütunlar atlanır. Her grup ayrı renk alır, noktalar `as1 #12` gibi adlandırılır. Bütün satırlarda aynı kalan başlangıç ve bitiş konumları tek nokta olarak yazılır. Noktalı virgüllü, ondalık virgüllü CSV ve birden çok dosya desteklenir. 26.000 satır × 5 grupluk (130.000 nokta) dosya yaklaşık 3 saniyede yüklenir.
+- **Lejantta nokta grupları:** Renk başına bir satır grup adıyla yazılır (*as1 · 26.000 adet*).
+- **Alan başına dışarıdaki noktalar:** Alan dışı hesabı artık her alan için ayrı satır verir (*Alan 1 dışında: 1.234 nokta · %4,7*); en altta hiçbir alanın içinde olmayanlar. Haritada hangi noktaların işaretleneceği **Haritada vurgulanan** seçiminden belirlenir.
+- **Çizgiler sol panelde ayrı bölüm:** Çizgi aracı Notlar'dan çıkıp kendi bölümüne (`Ctrl+7`) taşındı: renk, tip, kalınlık, etiket boyutu, eğri, koordinatlarla çizgi ve çizgi listesi orada. Notlar bölümünde not ve ok kalır. Görünüm ve Çıktı kısayolları `Ctrl+8` ve `Ctrl+9` oldu. Proje dosyası biçimi değişmedi.
+
 ## v2.7.0 — 2026-10-21
 
 - **Haritada seçim:** Nokta, alan (köşesi, kenarı ya da içi), daire, mesafe eğrisi, ölçüm noktası ve hattı, not, ok ve çizgiler tıklanarak seçilir. `Ctrl` / `Shift` ile tıklamak seçime ekler ya da çıkarır; boşluğa tıklamak seçimi kaldırır. **Shift + sürükle** dikdörtgenle, **Ctrl+A** hepsini seçer. Seçilenler haritada mavi halkayla işaretlenir; üstte kaç öğenin seçili olduğunu gösteren bir çubuk çıkar. Ölçüm ve Not araçları açıkken tıklama o araçların işini yapar; seçim için başka bir sekme açın.

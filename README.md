@@ -19,7 +19,10 @@ Kapalı ağdaki, yönetici yetkisi olmayan bilgisayarlarda çalışmak üzere ta
 - **Sınır mesafesi:** Türkiye kara sınırı ve kıyısından eşit uzaklık eğrileri. İsteğe bağlı olarak Mavi Vatan da hesaba katılır; mesafenin **Mavi Vatan dış sınırından** mı **Türkiye kara sınırından** mı ölçüleceği seçilir. Eğriler arası bantlar ayrı renklerle doldurulur.
 - **Noktalar:** İsimli konumlar; beş işaret şekli, tek tek renk; adlar haritada gösterilip gizlenebilir.
 - **Ölçüm:** Haritaya tıklayarak noktalar ekleyin; her parçanın mesafesi (km / NM) ve kerterizi hatta yazılır, toplam hat sonunda gösterilir. Mesafeler WGS84 elipsoidi üzerinde Vincenty yöntemiyle hesaplanır.
-- **Notlar, oklar ve çizgiler:** Paftaya açıklama notları, oklar ve düz, kesikli ya da noktalı çok köşeli çizgiler.
+- **Notlar ve oklar:** Paftaya açıklama notları ve oklar.
+- **Çizgiler:** Ayrı bölümde, haritaya tıklayarak ya da koordinat listesinden düz, kesikli ya da noktalı çok köşeli çizgiler.
+- **Çok gruplu nokta tablosu:** Bir satırda birden çok enlem/boylam çifti olan CSV ve Excel dosyaları gruplara ayrılıp her grup ayrı renkte yüklenir; tekrar eden başlangıç ve bitiş noktaları tek nokta olur.
+- **Alan dışındaki noktalar:** Her alan için dışarıda kalan nokta sayısı ve yüzdesi; seçilen alanın dışındakiler haritada işaretlenir.
 - **Haritada düzenleme:** Köşeler, noktalar, daire merkezleri ve notlar sürüklenerek taşınır, yeni koordinat listeye yazılır; **geri al / yinele** (`Ctrl+Z` / `Ctrl+Y`).
 - **Pafta öğeleri:** Dereceli çerçeve ve koordinat kılavuzu, km ve deniz milli çift ölçek çubuğu, lejant, **bulduru haritası** ve başlık, ölçek, projeksiyon, datum, tarih ve kuzey okunu taşıyan **pafta künyesi**.
 - **İl ve ilçe sınırları:** Türkiye'ye yaklaştıkça önce 81 ilin sınırları ve adları, daha yakında 973 ilçenin sınırları ve adları görünür. Bu ölçekte kıyı da ayrıntılı (1:10 milyon) veriye geçer.

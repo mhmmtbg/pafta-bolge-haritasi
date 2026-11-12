@@ -48,6 +48,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `15_alan_stil.js` | Alan etiketi yeri (polylabel, ekrana kırpma), tarama desenleri, taraklı sınır, dolgu yoğunluğu |
 | `20_notam.js` | NOTAM / NAVTEX metninden alan, daire ve nokta çıkarma |
 | `22_excel_al.js` | Dosyadan al: metin ve Excel; sütun eşleştirme penceresi |
+| `23_cok_grup.js` | Çok gruplu nokta tablosu: `csvOku` (ayraç tahmini, tırnaklı alan), `cokGrupCoz` (başlıkta enlem/boylam sütunlarını grup adına göre eşleştirir), `cokGrupMetin` (renk, sabit konumların tekilleştirilmesi); `dosyaYukle` ve `dosyalariYukle` sarmalanır |
 | `24_kml_al.js` | KML / KMZ içe aktarma: stiller (StyleMap), daire tanıma, sadeleştirme, önizleme penceresi |
 | `25_kerteriz.js` | Vincenty doğru problemi; kerteriz ve mesafeyle konum |
 | `30_rapor.js` | İlçe poligonları, `ilIlceBul`, alan raporu ve Excel çıktısı |
@@ -55,7 +56,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `40_duzenle.js` | Haritada sürükleyerek düzenleme, geri al / yinele |
 | `45_baski.js` | Ölçekli PDF baskı (bağımlılıksız PDF yazıcı, JPEG gömülü) |
 | `50_panel.js` | Listeden haritaya vurgu, sekme rozetleri |
-| `52_nokta_secim.js` | Listeden seçilen nokta, alanların dışındaki noktalar (`disHesapla`: izdüşüm koordinatında çokgen içi sınaması, sonuç alanlar/noktalar/görünüm imzasıyla önbellekte) ve bunların haritada vurgusu |
+| `52_nokta_secim.js` | Alanların dışındaki noktalar (`disHesapla`: izdüşüm koordinatında çokgen içi sınaması, alan başına içeride sayısı, vurgulanacak alan seçimi; sonuç alanlar/noktalar/görünüm imzasıyla önbellekte) ve haritada vurgusu |
 | `56_secim.js` | Seçim (`SEC`: öğe nesnesi → {tur, o}): tıklama ile bulma (`secimBul`, çizgilerde `isPointInStroke`), Shift+sürükle kutusu, listelerle bağ (`secimBagla`, `row._sec`), `Delete` ile silme (`secimSil`; `satirlariSil` metin satırını doğrulayıp çıkarır ve kalan nesnelerin `li` numaralarını kaydırır) |
 | `55_menu.js` | Dosya menüsü, açık/koyu tema (tema `localStorage`'da `pafta-tema`) |
 

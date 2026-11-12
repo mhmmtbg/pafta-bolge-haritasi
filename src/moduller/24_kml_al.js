@@ -265,7 +265,7 @@ function kmlEkle(){
         const pts = o.geo === "daire" ? geodesicRingPts(o.daire) : o.pts.slice();
         if (o.geo !== "cizgi") pts.push(pts[0]);                  // kapalı şekil kapalı kalsın
         const w = o.kalinlik || 2.5;
-        NOTLAR.push({tur: "cizgi", pts, metin: o.ad, renk: renkli && o.renk || nr, boyut: 13, tip: "duz", kalinlik: w <= 2 ? 1.5 : w <= 3 ? 2.5 : 4});
+        NOTLAR.push({tur: "cizgi", pts, metin: o.ad, renk: renkli && o.renk || $("l-renk").value, boyut: 13, tip: "duz", kalinlik: w <= 2 ? 1.5 : w <= 3 ? 2.5 : 4});
       }
     });
     if (C.length){ notListe(); hideEmpty(); }
@@ -280,7 +280,7 @@ function kmlEkle(){
   } finally { SUPPRESS_FIT = false; }
   $("kml").hidden = true;
   degisti();
-  sekmeAc(A.length ? "pane-areas" : D.length ? "pane-circles" : N.length ? "pane-points" : C.length ? "pane-notes" : "pane-measure");
+  sekmeAc(A.length ? "pane-areas" : D.length ? "pane-circles" : N.length ? "pane-points" : C.length ? (C.some(o => o.hedef !== "not") ? "pane-lines" : "pane-notes") : "pane-measure");
   fitAll();
   toast(KML_SON.ad + ": " + O.length.toLocaleString("tr-TR") + " öğe eklendi");
 }

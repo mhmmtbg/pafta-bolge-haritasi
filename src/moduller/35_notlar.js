@@ -7,23 +7,20 @@ var NOTLAR = [];             // {tur:"not", lat, lon, metin, renk, boyut} | {tur
 var NOT_AKTIF = false, NOT_OK_BAS = null, NOT_IMLEC = null;
 var NOT_CIZGI = [];          // çizilmekte olan çizginin köşeleri
 const NOT_RENKLER = ["#16222a", "#a4123f", "#00798c", "#e08e0b", "#3c6e2a", "#6a3d9a"];
-function notKip(){ return document.querySelector('input[name="n-kip"]:checked').value; }
+var CIZGI_AKTIF = false;      // Çizgiler sekmesi açık: tıklamalar çizgi köşesi ekler
+function notKip(){ return CIZGI_AKTIF ? "cizgi" : document.querySelector('input[name="n-kip"]:checked').value; }
 
 function notEkle(n){ NOTLAR.push(n); hideEmpty(); notListe(); draw(); degisti(); }
 
 /* ---- çizgi kipi ---- */
 function cizgiDugmeleri(){
-  const ck = notKip() === "cizgi";
-  $("n-cizgi-ayar").hidden = !ck;
-  $("n-liste-kutu").hidden = !ck;
-  $("btn-n-bitir").hidden = !ck;
   $("btn-n-bitir").disabled = NOT_CIZGI.length < 2;
 }
 function cizgiBitir(){
   const pts = NOT_CIZGI;
   NOT_CIZGI = [];
   if (pts.length >= 2)
-    notEkle({tur: "cizgi", pts, metin: "", renk: $("n-renk").value, boyut: +$("n-boyut").value,
+    notEkle({tur: "cizgi", pts, metin: "", renk: $("l-renk").value, boyut: +$("l-boyut").value,
              tip: $("n-tip").value, kalinlik: +$("n-kalinlik").value, egri: $("n-egri").checked});
   else draw();
   cizgiDugmeleri();
@@ -141,7 +138,7 @@ function drawNotlar(){
     ctx.beginPath(); okUcu(x1, y1, x2, y2, 14); ctx.stroke();
   }
   if (NOT_CIZGI.length){                                          // çizgi önizlemesi
-    const w = +$("n-kalinlik").value, renk = $("n-renk").value;
+    const w = +$("n-kalinlik").value, renk = $("l-renk").value;
     ctx.strokeStyle = renk; ctx.lineWidth = w;
     ctx.setLineDash(cizgiTireleri($("n-tip").value, w));
     cizgiYolu(NOT_CIZGI, $("n-egri").checked); ctx.stroke();
@@ -182,10 +179,13 @@ function notTutamaclari(dene){
 
 /* ---- liste ---- */
 function notListe(){
-  const host = $("n-list");
-  host.innerHTML = "";
-  $("n-msg").innerHTML = NOTLAR.length ? "" : '<span class="warn">Henüz not yok — haritaya tıklayın.</span>';
-  NOTLAR.forEach((n, i) => {
+  const hNot = $("n-list"), hCiz = $("l-list");
+  hNot.innerHTML = ""; hCiz.innerHTML = "";
+  const cizgiSay = NOTLAR.filter(n => n.tur === "cizgi").length, notSay = NOTLAR.length - cizgiSay;
+  $("n-msg").innerHTML = notSay ? "" : '<span class="warn">Henüz not yok — haritaya tıklayın.</span>';
+  $("l-msg").innerHTML = cizgiSay ? "" : '<span class="warn">Henüz çizgi yok — haritaya tıklayın ya da koordinat listesinden çizin.</span>';
+  NOTLAR.forEach(n => {
+    const host = n.tur === "cizgi" ? hCiz : hNot;
     const row = document.createElement("div");
     row.className = "zone not-satir";
     const tek = n.tur === "ok" || n.tur === "cizgi";
@@ -213,7 +213,7 @@ function notListe(){
       smallBtn("odak", () => n.tur === "cizgi"
         ? focusOn(Math.min(...n.pts.map(p => p.lat)), Math.min(...n.pts.map(p => p.lon)), Math.max(...n.pts.map(p => p.lat)), Math.max(...n.pts.map(p => p.lon)))
         : n.tur === "ok" ? focusOn(n.a.lat, n.a.lon, n.b.lat, n.b.lon) : focusOn(n.lat, n.lon, n.lat, n.lon)),
-      smallBtn("sil", () => { NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
+      smallBtn("sil", () => { const i = NOTLAR.indexOf(n); if (i >= 0) NOTLAR.splice(i, 1); notListe(); draw(); degisti(); }));
     vurguBagla(row, {tur: "not", n});
     secimBagla(row, [secD("not", n)]);
     host.appendChild(row);
@@ -229,7 +229,7 @@ function cizgileriCiz(){
     const e = eski.get(z.name);
     return {tur: "cizgi", kaynak: "liste", metin: z.name,
             pts: z.points.map(p => ({lat: p.lat, lon: p.lon, li: p.li, cs: p.cs, ce: p.ce})),
-            renk: e ? e.renk : $("n-renk").value, boyut: e ? e.boyut : +$("n-boyut").value,
+            renk: e ? e.renk : $("l-renk").value, boyut: e ? e.boyut : +$("l-boyut").value,
             tip: e ? e.tip : $("n-tip").value, kalinlik: e ? e.kalinlik : +$("n-kalinlik").value,
             egri: e ? e.egri : $("n-egri").checked};
   });
@@ -252,7 +252,7 @@ function listeKonumlariBagla(){
 }
 $("btn-n-liste").onclick = cizgileriCiz;
 $("btn-n-liste-temizle").onclick = () => { $("n-liste").value = ""; NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste"); $("n-liste-msg").textContent = ""; notListe(); draw(); degisti(); };
-XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-notes", ad: "Çizgiler"};
+XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-lines", ad: "Çizgiler"};
 
 /* ---- haritaya tıklama ---- */
 cv.addEventListener("click", e => {
@@ -294,7 +294,8 @@ document.addEventListener("keydown", e => {
 });
 document.querySelectorAll(".tab[data-pane]").forEach(t => t.addEventListener("click", () => {
   if (NOT_CIZGI.length) cizgiBitir();                            // sekme değişince yarım çizgi kaydolur (2+ köşe)
-  NOT_AKTIF = t.dataset.pane === "pane-notes";
+  NOT_AKTIF = t.dataset.pane === "pane-notes" || t.dataset.pane === "pane-lines";
+  CIZGI_AKTIF = t.dataset.pane === "pane-lines";
   NOT_OK_BAS = null;
   if (NOT_AKTIF) cv.classList.add("measure");
   draw();
@@ -305,10 +306,12 @@ document.querySelectorAll('input[name="n-kip"]').forEach(r => r.addEventListener
   cizgiDugmeleri(); draw();
 }));
 $("btn-n-bitir").onclick = cizgiBitir;
-["n-tip", "n-kalinlik", "n-renk"].forEach(id => $(id).addEventListener("input", () => { if (NOT_CIZGI.length) draw(); }));
-$("btn-n-clear").onclick = () => { NOTLAR = []; NOT_OK_BAS = null; NOT_CIZGI = []; cizgiDugmeleri(); notListe(); draw(); degisti(); };
+["n-tip", "n-kalinlik", "l-renk", "n-egri"].forEach(id => $(id).addEventListener("input", () => { if (NOT_CIZGI.length) draw(); }));
+$("btn-n-clear").onclick = () => { NOTLAR = NOTLAR.filter(n => n.tur === "cizgi"); NOT_OK_BAS = null; notListe(); draw(); degisti(); };
+$("btn-l-clear").onclick = () => { NOTLAR = NOTLAR.filter(n => n.tur !== "cizgi"); NOT_CIZGI = []; cizgiDugmeleri(); notListe(); draw(); degisti(); };
 $("opt-layer-notes").addEventListener("change", draw);
 $("n-renk").value = NOT_RENKLER[1];
+$("l-renk").value = NOT_RENKLER[1];
 
 /* ---- proje dosyası ---- */
 const projeToplaNotsuz = projeTopla;

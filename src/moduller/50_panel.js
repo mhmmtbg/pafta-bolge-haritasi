@@ -48,12 +48,13 @@ function rozetler(){
   const merkez = new Set(CIRCLES.map(c => c.li + "|" + c.lat + "|" + c.lon)).size;
   const say = {
     "pane-areas": ZONES.length, "pane-circles": merkez, "pane-rings": RINGS.length, "pane-points": POINTS.length,
-    "pane-measure": MEASURE.reduce((s, ch) => s + ch.pts.length, 0), "pane-notes": NOTLAR.length
+    "pane-measure": MEASURE.reduce((s, ch) => s + ch.pts.length, 0),
+    "pane-notes": NOTLAR.filter(n => n.tur !== "cizgi").length, "pane-lines": NOTLAR.filter(n => n.tur === "cizgi").length
   };
   const anahtar = JSON.stringify(say);
   if (anahtar === ROZET_ESKI) return;
   ROZET_ESKI = anahtar;
-  const ad = {"pane-areas": "alan", "pane-circles": "merkez", "pane-rings": "eğri", "pane-points": "nokta", "pane-measure": "ölçüm noktası", "pane-notes": "not"};
+  const ad = {"pane-areas": "alan", "pane-circles": "merkez", "pane-rings": "eğri", "pane-points": "nokta", "pane-measure": "ölçüm noktası", "pane-notes": "not", "pane-lines": "çizgi"};
   Object.keys(say).forEach(id => {
     const t = document.querySelector('.tab[data-pane="' + id + '"]');
     if (!t) return;

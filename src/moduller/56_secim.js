@@ -4,7 +4,7 @@ var SEC = null;                      // Map: öğe nesnesi -> {tur, o, key, ...}
 var KUTU = null;                     // Shift+sürükleme ile çizilen seçim dikdörtgeni
 var SEC_IMZA = null;
 const SEC_MAVI = "#3b8de0";
-const SEC_AD = {alan: "alan", daire: "daire", egri: "mesafe eğrisi", nokta: "nokta", olcumNokta: "ölçüm noktası", olcumHat: "ölçüm hattı", not: "not"};
+const SEC_AD = {alan: "alan", daire: "daire", egri: "mesafe eğrisi", nokta: "nokta", olcumNokta: "ölçüm noktası", olcumHat: "ölçüm hattı", not: "not", cizgi: "çizgi"};
 
 function secD(tur, o, ek){ return Object.assign({tur, o, key: o}, ek || {}); }
 function secimAcik(){ return !PICK && !MEASURE_ACTIVE && !NOT_AKTIF; }
@@ -55,7 +55,7 @@ function secimYenile(){
   bar.classList.toggle("on", n > 0 && secimAcik());
   if (n){
     const say = {};
-    SEC.forEach(d => say[d.tur] = (say[d.tur] || 0) + 1);
+    SEC.forEach(d => { const t = d.tur === "not" && d.o.tur === "cizgi" ? "cizgi" : d.tur; say[t] = (say[t] || 0) + 1; });
     const parca = Object.keys(say).map(t => say[t].toLocaleString("tr-TR") + " " + SEC_AD[t]).join(", ");
     $("secim-metin").textContent = n.toLocaleString("tr-TR") + " öğe seçili" + (Object.keys(say).length > 1 || n > 1 ? " (" + parca + ")" : "");
   }
