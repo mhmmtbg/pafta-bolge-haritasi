@@ -214,7 +214,7 @@ function kmlOnizle(){
 }
 function kmlSay(){
   const n = {}; KML_SON.ogeler.forEach(o => { if (o.hedef) n[o.hedef] = (n[o.hedef] || 0) + 1; });
-  const ad = {alan: "alan", daire: "daire", nokta: "nokta", not: "not", cizgi: "çizgi", olcum: "ölçüm hattı"};
+  const ad = {alan: "alan", daire: "daire", nokta: "nokta", not: "not", cizgi: "rota", olcum: "ölçüm hattı"};
   const t = Object.keys(ad).filter(k => n[k]).map(k => n[k].toLocaleString("tr-TR") + " " + ad[k]);
   $("kml-ozet").textContent = t.length ? "Eklenecek: " + t.join(", ") : "Eklenecek öğe seçilmedi.";
   $("kml-ekle").disabled = !t.length;

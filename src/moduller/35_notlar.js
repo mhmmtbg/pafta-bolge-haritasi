@@ -7,7 +7,7 @@ var NOTLAR = [];             // {tur:"not", lat, lon, metin, renk, boyut} | {tur
 var NOT_AKTIF = false, NOT_OK_BAS = null, NOT_IMLEC = null;
 var NOT_CIZGI = [];          // çizilmekte olan çizginin köşeleri
 const NOT_RENKLER = ["#16222a", "#a4123f", "#00798c", "#e08e0b", "#3c6e2a", "#6a3d9a"];
-var CIZGI_AKTIF = false;      // Çizgiler sekmesi açık: tıklamalar çizgi köşesi ekler
+var CIZGI_AKTIF = false;      // Rotalar sekmesi açık: tıklamalar rota köşesi ekler
 function notKip(){ return CIZGI_AKTIF ? "cizgi" : document.querySelector('input[name="n-kip"]:checked').value; }
 
 function notEkle(n){ NOTLAR.push(n); hideEmpty(); notListe(); draw(); degisti(); }
@@ -169,7 +169,7 @@ function notTutamaclari(dene){
         bitir: () => {                                              // listeden gelen çizgide yeni koordinat satıra yazılır
           if (n.kaynak === "liste"){
             const ce = satirYaz("n-liste", p.li, p.cs, p.ce, p.lat, p.lon);
-            if (ce) p.ce = ce; else toast("Koordinat listesi değişmiş; yeni konum listeye yazılamadı. \"Çizgileri çiz\" ile yenileyin.", true);
+            if (ce) p.ce = ce; else toast("Koordinat listesi değişmiş; yeni konum listeye yazılamadı. \"Rotaları çiz\" ile yenileyin.", true);
           }
           notListe();
         }}));
@@ -183,7 +183,7 @@ function notListe(){
   hNot.innerHTML = ""; hCiz.innerHTML = "";
   const cizgiSay = NOTLAR.filter(n => n.tur === "cizgi").length, notSay = NOTLAR.length - cizgiSay;
   $("n-msg").innerHTML = notSay ? "" : '<span class="warn">Henüz not yok — haritaya tıklayın.</span>';
-  $("l-msg").innerHTML = cizgiSay ? "" : '<span class="warn">Henüz çizgi yok — haritaya tıklayın ya da koordinat listesinden çizin.</span>';
+  $("l-msg").innerHTML = cizgiSay ? "" : '<span class="warn">Henüz rota yok — haritaya tıklayın ya da koordinat listesinden çizin.</span>';
   NOTLAR.forEach(n => {
     const host = n.tur === "cizgi" ? hCiz : hNot;
     const row = document.createElement("div");
@@ -191,13 +191,13 @@ function notListe(){
     const tek = n.tur === "ok" || n.tur === "cizgi";
     const inp = document.createElement(tek ? "input" : "textarea");
     inp.className = "not-metin"; inp.value = n.metin || ""; inp.spellcheck = false;
-    inp.placeholder = n.tur === "ok" ? "Ok etiketi (isteğe bağlı)" : n.tur === "cizgi" ? "Çizgi etiketi (isteğe bağlı)" : "Not metni";
+    inp.placeholder = n.tur === "ok" ? "Ok etiketi (isteğe bağlı)" : n.tur === "cizgi" ? "Rota etiketi (isteğe bağlı)" : "Not metni";
     if (!tek) inp.rows = Math.min(4, Math.max(1, (n.metin || "").split("\n").length));
     inp.oninput = () => { n.metin = inp.value; scheduleDraw(); };
     const meta = document.createElement("span");
     meta.className = "zone-meta";
     meta.textContent = n.tur === "cizgi"
-      ? (n.egri ? "Eğri" : "Çizgi") + " · " + n.pts.length + " köşe · " + fmtDist(cizgiUzunluk(n.pts, n.egri)) + (n.kaynak === "liste" ? " · listeden" : "")
+      ? (n.egri ? "Eğri rota" : "Rota") + " · " + n.pts.length + " köşe · " + fmtDist(cizgiUzunluk(n.pts, n.egri)) + (n.kaynak === "liste" ? " · listeden" : "")
       : n.tur === "ok"
       ? "Ok · " + fmtDist(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).d) + " · " + String(Math.round(vincenty(n.a.lat, n.a.lon, n.b.lat, n.b.lon).az)).padStart(3, "0") + "°"
       : "Not · " + fk(n.lat, n.lon);
@@ -236,7 +236,7 @@ function cizgileriCiz(){
   NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste").concat(yeni);
   const tek = res.zones.filter(z => z.points.length < 2).length;
   $("n-liste-msg").innerHTML = yeni.length
-    ? '<span class="ok">' + yeni.length + " çizgi, " + yeni.reduce((s, n) => s + n.pts.length, 0) + " köşe çizildi.</span>" +
+    ? '<span class="ok">' + yeni.length + " rota, " + yeni.reduce((s, n) => s + n.pts.length, 0) + " köşe çizildi.</span>" +
       (tek ? ' <span class="warn">' + tek + " grup tek noktalı, atlandı.</span>" : "")
     : '<span class="warn">En az iki koordinatlık bir grup gerekli.</span>';
   if (res.errors.length) $("n-liste-msg").innerHTML += '<br><span class="warn">' + res.errors.slice(0, 6).map(esc).join("<br>") + "</span>";
@@ -252,7 +252,7 @@ function listeKonumlariBagla(){
 }
 $("btn-n-liste").onclick = cizgileriCiz;
 $("btn-n-liste-temizle").onclick = () => { $("n-liste").value = ""; NOTLAR = NOTLAR.filter(n => n.kaynak !== "liste"); $("n-liste-msg").textContent = ""; notListe(); draw(); degisti(); };
-XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-lines", ad: "Çizgiler"};
+XL_HEDEF.cizgi = {ta: "n-liste", ciz: () => cizgileriCiz(), pane: "pane-lines", ad: "Rotalar"};
 
 /* ---- haritaya tıklama ---- */
 cv.addEventListener("click", e => {

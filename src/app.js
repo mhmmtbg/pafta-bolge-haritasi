@@ -32,7 +32,7 @@ $("modal-x").onclick = helpClose;
 $("modal").addEventListener("mousedown", e => { if (e.target === $("modal")) helpClose(); });
 
 /* ---- sekme geçişi ---- */
-const PANES = ["pane-areas","pane-circles","pane-rings","pane-points","pane-measure","pane-notes","pane-lines","pane-view","pane-export"];
+const PANES = ["pane-areas","pane-points","pane-lines","pane-measure","pane-rings","pane-circles","pane-notes","pane-view","pane-export"];
 function sekmeAc(id){ const t = document.querySelector('.tab[data-pane="' + id + '"]'); if (t) t.click(); }
 
 /* ---- proje durumu ---- */

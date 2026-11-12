@@ -1,5 +1,14 @@
 # Değişiklik Günlüğü
 
+## v2.9.0 — 2026-11-12
+
+- **Kutu seç aracı:** Araç çubuğundaki **Kutu seç** açıkken haritada sürüklemek harita yerine bir seçim dikdörtgeni çizer; içinde kalan noktalar (ve tamamı içinde kalan öteki öğeler) seçilir. Seçim çubuğu seçilen nokta sayısını ve gruplara (renklere) dağılımını gösterir (*● as1 400 · ● as2 834*); Delete hepsini siler. `Shift`/`Ctrl` ile önceki seçime eklenir, `Esc` önce seçimi, sonra kipi kapatır. Seçim çubuğu lejantla çakışmasın diye haritanın altına alındı.
+- **Sol panel sırası:** Alanlar, Noktalar, Rotalar, Ölçüm, Sınır mesafesi, Daireler, Notlar (`Ctrl+1` … `Ctrl+7`); Görünüm `Ctrl+8`, Çıktı `Ctrl+9`.
+- **Çizgiler → Rotalar:** Bölüm ve düğme adları "rota" oldu; proje dosyası biçimi değişmedi.
+- **Lejant seçimi:** Görünüm → Lejant altında lejanda girebilecek her satır (alanlar, yarıçaplar, sınır mesafeleri, nokta grupları, ölçüm hatları) onay kutusuyla açılıp kapatılır; **Tümü** / **Hiçbiri**. Projeye kaydedilir.
+- **Alan koşulları:** Alan dışı hesabında her alan için **dışında / içinde / fark etmez** seçilir; haritada vurgulanan ve sayılan noktalar bütün koşulları sağlayanlardır (ör. Alan 1 içinde, Alan 2 dışında). Varsayılan, eskisi gibi hiçbir alanın içinde olmayanlardır. Koşullar projeye kaydedilir.
+- **Masaüstü sürümü tam ekran (büyütülmüş) açılır;** son normal pencere boyutu ve konumu "Önceki boyut" için saklanır.
+
 ## v2.8.0 — 2026-11-12
 
 - **Çok gruplu nokta tablosu:** Başlığında birden çok enlem/boylam sütun çifti olan CSV ya da Excel dosyası (`Count, başlangıç noktası enlem, başlangıç noktası boylam, bitiş enlem, bitiş boylam, as1 enlem, as1_xverisi, as1_boylam, …`) Noktalar'a gruplar hâlinde yüklenir. Sütunlar enlem/boylam sözcüğü atılınca kalan adlarına göre eşleşir; grup sayısı ve adları serbesttir, aradaki başka sütunlar atlanır. Her grup ayrı renk alır, noktalar `as1 #12` gibi adlandırılır. Bütün satırlarda aynı kalan başlangıç ve bitiş konumları tek nokta olarak yazılır. Noktalı virgüllü, ondalık virgüllü CSV ve birden çok dosya desteklenir. 26.000 satır × 5 grupluk (130.000 nokta) dosya yaklaşık 3 saniyede yüklenir.

@@ -54,7 +54,7 @@ function rozetler(){
   const anahtar = JSON.stringify(say);
   if (anahtar === ROZET_ESKI) return;
   ROZET_ESKI = anahtar;
-  const ad = {"pane-areas": "alan", "pane-circles": "merkez", "pane-rings": "eğri", "pane-points": "nokta", "pane-measure": "ölçüm noktası", "pane-notes": "not", "pane-lines": "çizgi"};
+  const ad = {"pane-areas": "alan", "pane-circles": "merkez", "pane-rings": "eğri", "pane-points": "nokta", "pane-measure": "ölçüm noktası", "pane-notes": "not", "pane-lines": "rota"};
   Object.keys(say).forEach(id => {
     const t = document.querySelector('.tab[data-pane="' + id + '"]');
     if (!t) return;

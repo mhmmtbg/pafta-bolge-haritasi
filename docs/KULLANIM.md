@@ -23,11 +23,11 @@ Bütün araçlar aynı ayrıştırıcıyı kullanır. Tablolar Excel veya Word'd
 
 **İmleç göstergesi:** Haritanın altındaki gösterge imlecin koordinatını seçili biçimde yazar; Türkiye içindeyse il ve ilçeyi, sağ ucunda da anlık ölçeği gösterir.
 
-**Çok sayıda nokta:** Noktalar ve Ölçüm sekmelerinde liste kendi kutusunda kaydırılır; başlık, girdi alanı ve işaret ayarları yerinde kalır. Liste yalnız görünen satırları oluşturduğu için on binlerce nokta da akıcıdır. Noktalar sekmesindeki **arama kutusu** adı ya da koordinatı yazılana göre listeyi süzer. Haritada çok sıkışık görünümde bazı nokta adları yazılmaz; yaklaştıkça görünür. Lejant en çok 12 alan ve 8 ölçüm hattı sayar, fazlasını "+ N daha" diye özetler.
+**Çok sayıda nokta:** Noktalar ve Ölçüm sekmelerinde liste kendi kutusunda kaydırılır; başlık, girdi alanı ve işaret ayarları yerinde kalır. Liste yalnız görünen satırları oluşturduğu için on binlerce nokta da akıcıdır. Noktalar sekmesindeki **arama kutusu** adı ya da koordinatı yazılana göre listeyi süzer. Haritada çok sıkışık görünümde bazı nokta adları yazılmaz; yaklaştıkça görünür. Lejant en çok 12 alan, 12 nokta grubu ve 8 ölçüm hattı sayar, fazlasını "+ N daha" diye özetler.
 
 **Çok gruplu nokta tablosu:** Bir CSV ya da Excel dosyasının başlığında *enlem* ve *boylam* (ya da lat/lon) geçen birden çok sütun çifti varsa (örnek: `Count, başlangıç noktası enlem, başlangıç noktası boylam, bitiş enlem, bitiş boylam, as1 enlem, as1_xverisi, as1_boylam, as2 enlem, …`), dosya Noktalar'a gruplar hâlinde yüklenir. Sütunlar enlem/boylam sözcüğü atılınca kalan adlarına göre eşleşir (`as1 enlem` ile `as1_boylam` → *as1*); grup sayısı serbesttir, aradaki başka sütunlar (`as1_xverisi`) atlanır. Her grup ayrı renk alır ve lejantta kendi adıyla görünür; noktalar `as1 #12` gibi grup adı ve Count değeriyle adlandırılır. Bütün satırlarda aynı kalan konumlar (başlangıç, bitiş) tek nokta olarak gösterilir. Noktalı virgüllü ve ondalık virgüllü CSV de okunur; birden çok dosya seçilirse gruplar alt alta eklenir.
 
-**Alan dışındaki noktalar:** Noktalar → İşaret → *Alanların dışındaki noktaları vurgula* açıkken nokta listesinin üstünde toplam nokta sayısı ve her alan için ayrı bir satır yazılır: *Alan 1 dışında: 1.234 nokta · %4,7*, *Alan 2 dışında: …*, en altta da *Hiçbir alanın içinde olmayan* noktalar. Haritada kırmızı halkayla işaretlenecek noktalar **Haritada vurgulanan** seçimiyle belirlenir: hiçbir alanın içinde olmayanlar ya da tek bir alanın dışındakiler. Alanların içi ekrandaki çizgilere göre (çokgenin köşelerini birleştiren doğrular) hesaplanır; gizli alanlar sayılmaz. *Daireleri de alan say* ile daireler de içeri sayılır.
+**Alan dışındaki noktalar:** Noktalar → İşaret → *Alanların dışındaki noktaları vurgula* açıkken nokta listesinin üstünde toplam nokta sayısı ve her alan için bir satır yazılır: alanın adı, dışında kalan nokta sayısı ve yüzdesi, bir de koşul seçimi (**dışında**, **içinde**, **fark etmez**). Haritada kırmızı halkayla işaretlenen ve en altta sayılan noktalar bu koşulların hepsini sağlayanlardır. Varsayılan (her alan *dışında*) hiçbir alanın içinde olmayan noktalardır; örneğin Alan 1 *içinde*, Alan 2 *dışında* seçilirse Alan 1'de olup Alan 2'de olmayanlar, yalnız Alan 2 *dışında* (ötekiler *fark etmez*) seçilirse Alan 2'nin dışındakilerin hepsi işaretlenir. Koşullar projeye kaydedilir. Alanların içi ekrandaki çizgilere göre (çokgenin köşelerini birleştiren doğrular) hesaplanır; gizli alanlar sayılmaz. *Daireleri de alan say* ile daireler de içeri sayılır.
 
 **Sekme rozetleri:** Sol şeritteki araç düğmelerinin köşesindeki sayı, o araçtaki öğe sayısıdır (alan, daire merkezi, mesafe eğrisi, nokta, ölçüm noktası, not).
 
@@ -55,7 +55,7 @@ Alanlar bölümündeki **Metinden al** düğmesi bir pencere açar. NOTAM, NAVTE
 
 ## Dosyadan al ve Excel
 
-Alanlar, Daireler, Noktalar ve Çizgiler bölümlerindeki **Dosyadan al** düğmesi metin (`.txt`, `.csv`), Excel (`.xlsx`) ve Google Earth (`.kml`, `.kmz`) dosyalarını okur. Dosyayı haritaya sürükleyip bırakmak da aynı işi yapar (açık bölüme yüklenir).
+Alanlar, Noktalar, Rotalar ve Daireler bölümlerindeki **Dosyadan al** düğmesi metin (`.txt`, `.csv`), Excel (`.xlsx`) ve Google Earth (`.kml`, `.kmz`) dosyalarını okur. Dosyayı haritaya sürükleyip bırakmak da aynı işi yapar (açık bölüme yüklenir).
 
 **Birden çok dosya** aynı anda seçilebilir ya da sürüklenebilir. Metin ve CSV dosyaları tek listede birleşir; adı olmayan bir alan ya da çizgi dosya adını alır (`saha_kuzey.txt` → "saha kuzey"). Excel ve KML dosyalarının pencereleri sırayla, biri kapanınca öteki açılır. `.pafta` dosyaları çoklu seçimde atlanır.
 
@@ -72,7 +72,7 @@ Aynı bölge adının her satırda tekrarlandığı tablolar tek alan olarak oku
 
 Google Earth'ten ya da başka bir programdan gelen `.kml` ve `.kmz` dosyaları **Dosyadan al** ile seçilir ya da haritaya sürüklenir. Bir önizleme penceresi açılır:
 
-- **Poligonlar** alan, **noktalar** nokta, **çizgiler** Çizgiler bölümüne çizgi olarak önerilir. Daireye benzeyen kapalı şekiller (köşeleri bir merkezden eşit uzaklıkta) merkez ve yarıçapıyla **daire** olarak tanınır.
+- **Poligonlar** alan, **noktalar** nokta, **çizgiler** Rotalar bölümüne rota olarak önerilir. Daireye benzeyen kapalı şekiller (köşeleri bir merkezden eşit uzaklıkta) merkez ve yarıçapıyla **daire** olarak tanınır.
 - Her satırın sağındaki seçimle öğenin nereye ekleneceği değiştirilir: alan, daire, nokta, not, çizgi, ölçüm hattı ya da **Alma**. Üstteki **Hepsini** seçimleri bir türün tamamını tek seferde değiştirir.
 - **KML renklerini kullan** açıkken çizgi, dolgu ve ikon renkleri alınır (beyaz ve saydam renkler hariç).
 - **Mevcut listeleri değiştir** kapalıyken öğeler listelerin sonuna eklenir.
@@ -161,9 +161,9 @@ Notlar bölümü açıkken haritaya açıklama notları ve oklar eklenir; paftay
 - **Ok** kipinde önce okun başlangıcına, sonra ucuna tıklayın (`Esc` yarım oku bırakır). Oka isteğe bağlı bir etiket yazılabilir; listede uzunluğu ve kerterizi görünür.
 - Renk ve yazı boyutu yeni eklenenlere uygulanır; listedeki renk kutusuyla tek tek değiştirilir. **Hepsini sil** yalnız not ve okları siler.
 
-### Çizgiler
+### Rotalar
 
-Sol paneldeki **Çizgiler** bölümü (`Ctrl+7`) açıkken haritaya çizgi çizilir; çizgiler paftayla basılır ve projeye kaydedilir.
+Sol paneldeki **Rotalar** bölümü (`Ctrl+3`) açıkken haritaya rota (çok köşeli çizgi) çizilir; rotalar paftayla basılır ve projeye kaydedilir.
 
 - Haritaya her tıklama bir köşe ekler. Son köşeye yeniden tıklamak, çift tıklamak, `Enter` ya da **Çizgiyi bitir** çizgiyi tamamlar; `Geri` tuşu son köşeyi siler, `Esc` yarım çizgiyi bırakır.
 - **Renk**, **çizgi tipi** (düz, kesikli, noktalı), **kalınlık** ve **etiket boyutu** yeni çizgilere uygulanır. Çizgiye isteğe bağlı bir etiket yazılabilir (ortasında görünür); listede köşe sayısı ve toplam uzunluğu yazar.
@@ -180,7 +180,7 @@ Alan köşeleri, noktalar, daire merkezleri, ölçüm noktaları, notlar, ok uç
 
 ## Seçme ve silme
 
-Ölçüm, Notlar ve Çizgiler araçları açık değilken haritada tıklamak tıklanan öğeyi seçer: **nokta**, **alan** (köşesine, kenarına ya da içine), **daire** (halkasına), **mesafe eğrisi**, **ölçüm noktası** ya da **hattı**, **not**, **ok** ve **çizgi**. En üstteki öğe önceliklidir (nokta, ölçüm noktası, not, alan köşesi, çizgiler, alan içi). `Ctrl` ya da `Shift` ile tıklamak seçime ekler veya çıkarır, boşluğa tıklamak seçimi kaldırır. `Shift` ile sürükleyerek çizilen dikdörtgen, tamamı içinde kalan öğeleri seçer; `Ctrl+A` görünen katmanlardaki her şeyi seçer. Haritadan seçilen nokta, Noktalar sekmesi açıksa listede de görünür kalır.
+Ölçüm, Notlar ve Rotalar araçları açık değilken haritada tıklamak tıklanan öğeyi seçer: **nokta**, **alan** (köşesine, kenarına ya da içine), **daire** (halkasına), **mesafe eğrisi**, **ölçüm noktası** ya da **hattı**, **not**, **ok** ve **çizgi**. En üstteki öğe önceliklidir (nokta, ölçüm noktası, not, alan köşesi, çizgiler, alan içi). `Ctrl` ya da `Shift` ile tıklamak seçime ekler veya çıkarır, boşluğa tıklamak seçimi kaldırır. Araç çubuğundaki **Kutu seç** açıkken haritada sürüklemek (kapalıyken `Shift` + sürüklemek) bir dikdörtgen çizer ve tamamı içinde kalan öğeleri seçer; kutu seçimde `Shift` ya da `Ctrl` önceki seçime ekler, `Esc` önce seçimi, sonra Kutu seç kipini kapatır. Seçim çubuğu seçilen nokta sayısını ve noktaların gruplara (renklere) dağılımını gösterir; `Ctrl+A` görünen katmanlardaki her şeyi seçer. Haritadan seçilen nokta, Noktalar sekmesi açıksa listede de görünür kalır.
 
 Seçili öğeler haritada mavi halkayla, listelerde mavi çerçeveli satırla işaretlenir; listedeki bir satıra tıklamak da onu seçer. Haritanın üstündeki çubuk seçili öğe sayısını ve türlerini gösterir.
 
@@ -200,7 +200,7 @@ Görünüm → **Alan adlarını göster** ile alan adları haritada gizlenebili
 | Projeksiyon | Mercator (açı koruyan) ya da eş uzaklıklı silindirik |
 | Pafta künyesi | Başlık, alt satır, ölçek, projeksiyon, datum, tarih ve kuzey oku (sağ alt). Künye gizliyken sağ altta bağımsız bir kuzey oku çizilir. |
 | Bulduru haritası | Görüntülenen alanı daha geniş bir çevre içinde gösteren küçük harita (künyenin üstünde); ülke sınırları ve ince kılavuzla |
-| Lejant | Tüm katmanlar, alanlar ve toplamlarla (sol üst) |
+| Lejant | Tüm katmanlar, alanlar ve toplamlarla (sol üst). Altındaki **Lejantta gösterilecekler** listesinden her satır (alan, yarıçap, sınır mesafesi, nokta grubu, ölçüm hattı) tek tek açılıp kapatılır; **Tümü** / **Hiçbiri** hepsini değiştirir. Seçim projeye kaydedilir |
 | Koordinat kılavuzu ve çerçeve | Yakınlaşmaya göre sıklaşan kılavuz; dört kenarda dereceli çerçeve ve etiketler |
 | İl ve ilçe sınırları, adları | Türkiye'ye yaklaştıkça: yaklaşık 1:17 milyondan itibaren il sınırları, 1:10 milyondan itibaren il adları, 1:2,6 milyondan itibaren ilçe sınırları, 1:1,2 milyondan itibaren ilçe adları. Adlar sığdığı kadar yazılır; alanı büyük olan önce yer bulur. |
 | FIR sınırları ve adları, ülke sınırları, şehirler | Taban harita öğeleri. Türkiye ve çevresinde yaklaşınca kıyı ayrıntılı veriye geçer. |
@@ -283,7 +283,7 @@ Dosya adları künye başlığından türetilir (`Karadeniz Test Bölgeleri` →
 | `Ctrl+O` | Aç |
 | `Ctrl+N` | Yeni pafta (masaüstü) |
 | `Ctrl+E` | PNG kaydet |
-| `Ctrl+1` … `Ctrl+9` | Alanlar, Daireler, Sınır mesafesi, Noktalar, Ölçüm, Notlar, Çizgiler, Görünüm, Çıktı |
+| `Ctrl+1` … `Ctrl+9` | Alanlar, Noktalar, Rotalar, Ölçüm, Sınır mesafesi, Daireler, Notlar, Görünüm, Çıktı |
 | `Ctrl+Z` / `Ctrl+Y` | Geri al / yinele (metin kutusu dışında) |
 | `Ctrl+0` | Çizime sığdır |
 | `Ctrl+U` | Uydu görüntüsü |

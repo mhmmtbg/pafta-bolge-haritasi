@@ -58,6 +58,7 @@ Bütün kod tek bir `<script>` içinde çalışır. `draw()` modül kodu çalı�
 | `50_panel.js` | Listeden haritaya vurgu, sekme rozetleri |
 | `52_nokta_secim.js` | Alanların dışındaki noktalar (`disHesapla`: izdüşüm koordinatında çokgen içi sınaması, alan başına içeride sayısı, vurgulanacak alan seçimi; sonuç alanlar/noktalar/görünüm imzasıyla önbellekte) ve haritada vurgusu |
 | `56_secim.js` | Seçim (`SEC`: öğe nesnesi → {tur, o}): tıklama ile bulma (`secimBul`, çizgilerde `isPointInStroke`), Shift+sürükle kutusu, listelerle bağ (`secimBagla`, `row._sec`), `Delete` ile silme (`secimSil`; `satirlariSil` metin satırını doğrulayıp çıkarır ve kalan nesnelerin `li` numaralarını kaydırır) |
+| `58_lejant.js` | Lejant satırlarının görünürlüğü (`LEJ_GIZLI` anahtarları: `a:` alan, `c:` yarıçap, `r:` eğri, `p:` nokta rengi, `m:` ölçüm hattı), Görünüm'deki seçim listesi, proje kaydı |
 | `55_menu.js` | Dosya menüsü, açık/koyu tema (tema `localStorage`'da `pafta-tema`) |
 
 `src/pafta.src.html` içindeki ana bölümler (`/* ============ ... ============ */` başlıklarıyla ayrılmıştır):

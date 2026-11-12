@@ -1,10 +1,11 @@
 /* ============ seçim: haritadaki öğeleri seçme, listelerde işaretleme, Delete ile silme ============ */
 /* draw() bu dosyadaki fonksiyonları modül kodundan önce de çağırabilir: durum var ile, yardımcılar function ile. */
 var SEC = null;                      // Map: öğe nesnesi -> {tur, o, key, ...}; tur: alan, daire, egri, nokta, olcumNokta, olcumHat, not
-var KUTU = null;                     // Shift+sürükleme ile çizilen seçim dikdörtgeni
+var KUTU = null;                     // Shift+sürükleme (ya da Kutu seç aracı) ile çizilen seçim dikdörtgeni
+var KUTU_KIP = false;                // araç çubuğundaki "Kutu seç" açık: sürükleme haritayı kaydırmaz, kutu çizer
 var SEC_IMZA = null;
 const SEC_MAVI = "#3b8de0";
-const SEC_AD = {alan: "alan", daire: "daire", egri: "mesafe eğrisi", nokta: "nokta", olcumNokta: "ölçüm noktası", olcumHat: "ölçüm hattı", not: "not", cizgi: "çizgi"};
+const SEC_AD = {alan: "alan", daire: "daire", egri: "mesafe eğrisi", nokta: "nokta", olcumNokta: "ölçüm noktası", olcumHat: "ölçüm hattı", not: "not", cizgi: "rota"};
 
 function secD(tur, o, ek){ return Object.assign({tur, o, key: o}, ek || {}); }
 function secimAcik(){ return !PICK && !MEASURE_ACTIVE && !NOT_AKTIF; }
@@ -52,12 +53,25 @@ function secimYenile(){
   if (typeof noktaPencere === "function"){ PL.bas = PL.son = -1; noktaPencere(); }
   if (typeof olcumPencere === "function"){ ML.bas = ML.son = -1; olcumPencere(); }
   const bar = $("secim-cubuk"), n = SEC.size;
-  bar.classList.toggle("on", n > 0 && secimAcik());
+  bar.classList.toggle("on", n > 0 && (secimAcik() || KUTU_KIP));
   if (n){
     const say = {};
     SEC.forEach(d => { const t = d.tur === "not" && d.o.tur === "cizgi" ? "cizgi" : d.tur; say[t] = (say[t] || 0) + 1; });
     const parca = Object.keys(say).map(t => say[t].toLocaleString("tr-TR") + " " + SEC_AD[t]).join(", ");
     $("secim-metin").textContent = n.toLocaleString("tr-TR") + " öğe seçili" + (Object.keys(say).length > 1 || n > 1 ? " (" + parca + ")" : "");
+    // seçili noktaların renk gruplarına dağılımı; gruptaki adlar ortak bir kökle başlıyorsa ("as1 #12") o ad yazılır
+    const g = new Map();
+    SEC.forEach(d => {
+      if (d.tur !== "nokta") return;
+      const kok = d.o.name.replace(/\s*#\d+$/, ""), x = g.get(d.o.color);
+      if (!x) g.set(d.o.color, {n: 1, kok: /#\d+$/.test(d.o.name) ? kok : ""});
+      else { x.n++; if (x.kok && x.kok !== kok) x.kok = ""; }
+    });
+    const gl = [...g.entries()].sort((a, b) => b[1].n - a[1].n);
+    const el = $("secim-gruplar");
+    el.hidden = g.size < 2;
+    el.innerHTML = g.size < 2 ? "" : gl.slice(0, 6).map(([c, x]) => '<i style="background:' + c + '"></i>' + (x.kok ? esc(x.kok) + " " : "") + x.n.toLocaleString("tr-TR")).join(" · ") + (gl.length > 6 ? " · +" + (gl.length - 6) + " grup" : "");
+    el.title = gl.map(([c, x]) => (x.kok || c) + ": " + x.n.toLocaleString("tr-TR")).join("\n");
   }
 }
 
@@ -315,7 +329,7 @@ function noktaListedeGoster(i){
   if (y < host.scrollTop || y + NOKTA_SATIR > host.scrollTop + host.clientHeight) host.scrollTop = Math.max(0, y - host.clientHeight / 2);
 }
 cv.addEventListener("mousedown", e => {
-  if (e.button !== 0 || !e.shiftKey || !secimAcik()) return;
+  if (e.button !== 0 || !(KUTU_KIP || (e.shiftKey && secimAcik()))) return;
   dragging = false; if (typeof SURUK !== "undefined") SURUK = null;     // harita kaymasın, tutamaç sürüklenmesin
   KUTU = {x0: e.offsetX, y0: e.offsetY, x1: e.offsetX, y1: e.offsetY, basladi: false};
 });
@@ -328,7 +342,7 @@ cv.addEventListener("mousemove", e => {
 window.addEventListener("mouseup", e => {
   if (!KUTU) return;
   const k = KUTU; KUTU = null;
-  if (k.basladi){ moved = true; secimKutu(k, e.ctrlKey || e.metaKey); } else scheduleDraw();
+  if (k.basladi){ moved = true; secimKutu(k, e.ctrlKey || e.metaKey || (KUTU_KIP && e.shiftKey)); } else scheduleDraw();
 });
 
 function metinKutusunda(){
@@ -340,6 +354,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Delete" && SEC.size && !metinKutusunda() && !PICK && !(typeof NOT_CIZGI !== "undefined" && NOT_CIZGI.length)){
     e.preventDefault(); e.stopPropagation(); secimSil(); return;
   }
+  if (e.key === "Escape" && !SEC.size && KUTU_KIP && !metinKutusunda() && !MENU_ACIK){ e.stopPropagation(); kutuKip(false); return; }
   if (e.key === "Escape" && SEC.size && !MEASURE_ACTIVE && !NOT_OK_BAS && !NOT_CIZGI.length && !PICK && !MENU_ACIK){
     e.stopPropagation(); SEC.clear(); secimYenile(); draw(); return;
   }
@@ -350,6 +365,13 @@ document.addEventListener("keydown", e => {
   }
 }, true);
 $("secim-sil").onclick = secimSil;
+function kutuKip(acik){
+  KUTU_KIP = !!acik;
+  $("btn-kutu").setAttribute("aria-pressed", KUTU_KIP ? "true" : "false");
+  cv.classList.toggle("kutu-kip", KUTU_KIP);
+  secimYenile();
+}
+$("btn-kutu").onclick = () => kutuKip(!KUTU_KIP);
 $("secim-kaldir").onclick = () => { SEC.clear(); secimYenile(); draw(); };
 /* sekme değişince: ölçüm/not/seçim modu çakışmasın; çubuk yalnız seçim kipinde görünsün */
 document.querySelectorAll(".tab[data-pane]").forEach(t => t.addEventListener("click", () => setTimeout(secimYenile, 0)));

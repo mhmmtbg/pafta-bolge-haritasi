@@ -1,6 +1,9 @@
 /* ============ noktalar: alanların dışında kalan noktalar ============ */
 /* draw() bu dosyadaki fonksiyonları modül kodundan önce de çağırabilir: durum var ile, yardımcılar function ile. */
 var DIS = {sig: "", dis: null, n: 0, disSay: 0, alanSay: 0, metin: "", adlar: []};
+/* alan başına koşul: "dis" (dışında olsun, varsayılan), "ic" (içinde olsun), "yok" (fark etmez); vurgulanan noktalar hepsini sağlar */
+var DIS_KOSUL = null;
+function disKosul(ad){ return (DIS_KOSUL && DIS_KOSUL.get(ad)) || "dis"; }
 
 function disAcik(){ const e = document.getElementById("p-dis"); return !!(e && e.checked); }
 
@@ -16,7 +19,7 @@ function disHesapla(){
   for (const c of daireler){ a += c.lat * 3 + c.lon * 5 + c.d; k++; }
   let b = 0;
   for (let i = 0; i < POINTS.length; i++) b += POINTS[i].lat * (i % 11 + 1) + POINTS[i].lon * (i % 5 + 1);
-  const hedefEl = document.getElementById("p-dis-hedef"), hedef = hedefEl ? hedefEl.value : "";
+  const hedef = DIS_KOSUL ? [...DIS_KOSUL.entries()].map(e => e.join("=")).join(";") : "";
   const sig = [view.mode, view.phi0, alanlar.length, daireler.length, k, a.toFixed(6), POINTS.length, b.toFixed(6), hedef].join("|");
   if (DIS.sig === sig) return DIS;
   const polys = [];
@@ -30,31 +33,39 @@ function disHesapla(){
   // aynı adlı alanlar ayırt edilsin
   const adSay = {}; polys.forEach(q => adSay[q.ad] = (adSay[q.ad] || 0) + 1);
   const adSira = {}; polys.forEach(q => { if (adSay[q.ad] > 1){ adSira[q.ad] = (adSira[q.ad] || 0) + 1; q.ad += " (" + adSira[q.ad] + ")"; } });
-  const hi = hedef === "" ? -1 : polys.findIndex(q => q.ad === hedef);      // vurgulanacak: -1 = hiçbir alanın içinde olmayanlar
+  const kosul = polys.map(q => disKosul(q.ad));                     // her alan için: dis | ic | yok
   const dis = new Set();
   let ic = 0;
   for (const p of POINTS){
     const x = wx(p.lon), y = wy(p.lat);
-    let icinde = false, hedefte = false;
+    let icinde = false, uyar = true;
     for (let qi = 0; qi < polys.length; qi++){
       const q = polys[qi];
-      if (x < q.x0 || x > q.x1 || y < q.y0 || y > q.y1) continue;
-      const v = q.xy; let c = false;
-      for (let i = 0, j = v.length - 2; i < v.length; j = i, i += 2)
-        if ((v[i+1] > y) !== (v[j+1] > y) && x < (v[j] - v[i]) * (y - v[i+1]) / (v[j+1] - v[i+1]) + v[i]) c = !c;
-      if (c){ icinde = true; q.ic++; if (qi === hi) hedefte = true; }
+      let c = false;
+      if (!(x < q.x0 || x > q.x1 || y < q.y0 || y > q.y1)){
+        const v = q.xy;
+        for (let i = 0, j = v.length - 2; i < v.length; j = i, i += 2)
+          if ((v[i+1] > y) !== (v[j+1] > y) && x < (v[j] - v[i]) * (y - v[i+1]) / (v[j+1] - v[i+1]) + v[i]) c = !c;
+      }
+      if (c){ icinde = true; q.ic++; }
+      if ((kosul[qi] === "dis" && c) || (kosul[qi] === "ic" && !c)) uyar = false;
     }
     if (icinde) ic++;
-    if (hi >= 0 ? !hedefte : !icinde) dis.add(p);
+    if (uyar) dis.add(p);
   }
   const n = POINTS.length, f = v => v.toLocaleString("tr-TR");
   const yuz = v => "%" + (100 * v / n).toLocaleString("tr-TR", {minimumFractionDigits: 1, maximumFractionDigits: 1});
-  const satir = (ad, v) => '<div class="dis-satir"><span>' + esc(ad) + '</span><span><b>' + f(v) + "</b> nokta · " + yuz(v) + "</span></div>";
-  DIS = {sig, dis: polys.length ? dis : null, n, disSay: n - ic, alanSay: polys.length, adlar: polys.map(q => q.ad), hedef: hi >= 0 ? polys[hi].ad : "",
+  const sec = (ad, k) => '<select class="dis-kosul" data-ad="' + esc(ad) + '" aria-label="' + esc(ad) + ' için koşul">' +
+    [["dis", "dışında"], ["ic", "içinde"], ["yok", "fark etmez"]].map(([v, t]) => '<option value="' + v + '"' + (k === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select>";
+  const varsayilan = kosul.every(k => k === "dis");
+  const tarif = varsayilan ? "hiçbir " + (daireler.length ? "alan ya da dairenin" : "alanın") + " içinde olmayanlar"
+    : polys.map((q, i) => kosul[i] === "yok" ? "" : q.ad + " " + (kosul[i] === "ic" ? "içinde" : "dışında")).filter(Boolean).join(", ") || "bütün noktalar";
+  DIS = {sig, dis: polys.length ? dis : null, n, disSay: dis.size, alanSay: polys.length, adlar: polys.map(q => q.ad),
     metin: polys.length
-      ? '<div class="dis-baslik">Toplam <b>' + f(n) + "</b> nokta" + (hi >= 0 ? " · vurgulanan: " + esc(polys[hi].ad) + " dışındakiler" : "") + "</div>" +
-        '<div class="dis-liste">' + polys.map(q => satir(q.ad + " dışında", n - q.ic)).join("") + "</div>" +
-        (polys.length > 1 ? '<div class="dis-ozet">' + satir("Hiçbir " + (daireler.length ? "alan ya da dairenin" : "alanın") + " içinde olmayan", n - ic) + "</div>" : "")
+      ? '<div class="dis-baslik">Toplam <b>' + f(n) + "</b> nokta</div>" +
+        '<div class="dis-liste">' + polys.map((q, i) =>
+          '<div class="dis-satir"><span title="' + esc(q.ad) + '">' + esc(q.ad) + '</span><span><b>' + f(n - q.ic) + "</b> dışında · " + yuz(n - q.ic) + "</span>" + sec(q.ad, kosul[i]) + "</div>").join("") + "</div>" +
+        '<div class="dis-ozet"><div class="dis-satir"><span>Vurgulanan: ' + esc(tarif) + '</span><span><b>' + f(dis.size) + "</b> nokta · " + yuz(dis.size) + "</span></div></div>"
       : '<span class="warn">Çizili alan yok; dışarıda sayılacak bir şey yok.</span>'};
   return DIS;
 }
@@ -66,18 +77,6 @@ function disSonucYaz(){
   if (el.dataset.m !== m){ el.dataset.m = m; el.innerHTML = m; }
   el.hidden = !m;
   const r = document.getElementById("p-dis-daire-satir"); if (r) r.hidden = !acik;
-  // vurgulanacak alan seçimi: alan adları değişince seçenekler yenilenir
-  const sel = document.getElementById("p-dis-hedef"), sr = document.getElementById("p-dis-hedef-satir");
-  if (!sel) return;
-  const adlar = d && d.adlar ? d.adlar : [];
-  sr.hidden = !acik || adlar.length < 2;
-  const anahtar = adlar.join("\u0001");
-  if (sel.dataset.a !== anahtar){
-    const eski = sel.value;
-    sel.dataset.a = anahtar;
-    sel.innerHTML = '<option value="">hiçbir alanın içinde olmayanlar</option>' + adlar.map(a => '<option value="' + esc(a) + '">' + esc(a) + " dışındakiler</option>").join("");
-    sel.value = adlar.includes(eski) ? eski : "";
-  }
 }
 
 /* dışarıdaki noktalar kırmızı halkayla; baskıda çizilmez */
@@ -106,5 +105,15 @@ function drawNoktaVurgu(){
 
 $("p-dis").addEventListener("change", () => { disSonucYaz(); scheduleDraw(); });
 $("p-dis-daire").addEventListener("change", () => scheduleDraw());
-$("p-dis-hedef").addEventListener("change", () => scheduleDraw());
+$("p-dis-sonuc").addEventListener("change", e => {
+  const s = e.target.closest(".dis-kosul"); if (!s) return;
+  if (s.value === "dis") DIS_KOSUL.delete(s.dataset.ad); else DIS_KOSUL.set(s.dataset.ad, s.value);
+  draw(); degisti();
+});
+DIS_KOSUL = new Map();
+/* koşullar projeye kaydedilir (yalnız varsayılandan farklı olanlar) */
+const projeToplaKosulsuz = projeTopla;
+projeTopla = function(){ const o = projeToplaKosulsuz(); if (DIS_KOSUL.size) o.disKosul = Object.fromEntries(DIS_KOSUL); return o; };
+const projeYukleKosulsuz = projeYukle;
+projeYukle = function(o){ DIS_KOSUL = new Map(o && o.disKosul && typeof o.disKosul === "object" ? Object.entries(o.disKosul).filter(e => e[1] === "ic" || e[1] === "yok") : []); DIS.sig = ""; return projeYukleKosulsuz(o); };
 disSonucYaz();

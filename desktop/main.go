@@ -336,17 +336,15 @@ func yerlesimKaydet(hwnd uintptr) {
 	saveState(st)
 }
 
-/* Son kapanıştaki boyut ve konum; ekran artık yoksa (ör. ikinci monitör çıkarıldı) tam ekran açılır */
+/* Pencere tam ekran (büyütülmüş) açılır; son kapanıştaki normal boyut ve konum korunur. Ekran artık yoksa (ör. ikinci monitör çıkarıldı) yalnız büyütülür */
 func yerlesimUygula(hwnd uintptr) {
 	y := loadState().Pencere
 	if y != nil && y.Sag-y.Sol >= 640 && y.Alt-y.Ust >= 420 {
 		rc := rect{y.Sol, y.Ust, y.Sag, y.Alt}
 		if m, _, _ := pMonitorFromRect.Call(uintptr(unsafe.Pointer(&rc)), 0); m != 0 {
-			wp := windowPlacement{ShowCmd: swShowNormal, NormalPos: rc}
+			// her zaman tam ekran (büyütülmüş) açılır; son normal boyut ve konum "Önceki boyut"a basınca geri gelir
+			wp := windowPlacement{ShowCmd: swMaximize, NormalPos: rc}
 			wp.Length = uint32(unsafe.Sizeof(wp))
-			if y.Buyuk {
-				wp.ShowCmd = swMaximize
-			}
 			pSetWindowPlacement.Call(hwnd, uintptr(unsafe.Pointer(&wp)))
 			return
 		}
